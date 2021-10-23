@@ -1,0 +1,17 @@
+# Ignore everything
+**
+
+# ... except for source
+!backend
+!frontend
+
+# ... but do ignore its virtual env and useless stuff
+.venv*
+.mypy_cache
+.git
+*.venv
+*.mypy_cache
+*.git
+
+node_modules
+build

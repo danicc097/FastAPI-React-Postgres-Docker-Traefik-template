@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+cd frontend || exit
+yarn
+yarn build
+touch build/_redirects
+echo '/*  /index.html   200' >build/_redirects
+netlify deploy --prod

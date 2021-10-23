@@ -1,0 +1,4 @@
+#!/bin/bash
+
+docker-compose -f "traefik/docker-compose.yml" down
+docker-compose -f "traefik/docker-compose.yml" up -d --build

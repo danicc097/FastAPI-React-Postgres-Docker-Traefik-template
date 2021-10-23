@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+cd backend || exit
+heroku login --interactive
+rm -fr .git
+git init && git add . && git commit -m "deploy"
+git push --set-upstream https://git.heroku.com/react-myapp.git master -f

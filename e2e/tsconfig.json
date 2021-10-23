@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./__tests__",
+    "sourceMap": true,
+    "types": ["jest", "puppeteer", "jest-environment-puppeteer"],
+    "outDir": "dist"
+  },
+  "include": ["./__tests__"]
+}

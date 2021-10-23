@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+source "${BASH_SOURCE%/*}/.helpers.sh"
+
+backend/scripts/run-tests.sh -n 4 --dist loadscope || exit 1
+
+cd frontend || exit && yarn test:nowatch || exit 1

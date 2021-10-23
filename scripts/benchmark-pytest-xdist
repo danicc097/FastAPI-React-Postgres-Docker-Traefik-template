@@ -1,0 +1,12 @@
+#!/bin/bash
+
+n_runs=$1
+n_workers=$2
+dist=$3
+
+for ((i = 0; i < n_runs; i++)); do
+
+  echo "[RUN $i/$n_runs] -n $n_workers --dist $dist" - >>./benchmark-pytest.log
+  run-tests.sh "-n $n_workers --dist $dist" | grep "===========" >>./benchmark-pytest.log
+  # append the command itself to the log file
+done

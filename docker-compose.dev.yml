@@ -1,0 +1,95 @@
+version: "3.8"
+
+services:
+  myapp_server_dev:
+    container_name: backend_myapp_dev
+    networks:
+      - traefik-net
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # vol rw only necessary in dev mode - hot reloading!
+    volumes:
+      - ./backend/:/backend/
+      - ./backend/logs/:/backend/logs/:rw
+      # venv volume to be used in e2e compose prepending project name
+      # - venv:/backend/.venv/
+    # app.api.server refers to the path to server.py
+    # :app refers to the app object inside server.py
+    # use uvicorn in local dev to have reload
+    # ensure to watch app folder only, not .venv! else cpu usage is unbearable
+    command: uvicorn app.api.server:app --reload --reload-dir app/ --workers 2 --host 0.0.0.0 --port ${SERVER_PORT_DEV}
+    env_file:
+      - ./backend/.env
+    environment:
+      APP_ENV: development
+    depends_on:
+      - myapp_db_dev
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.myapp.rule=Host(`myapp-backend.dev.localhost`)
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.myapp.entrypoints=websecure
+      - traefik.http.routers.myapp.tls=true
+      - traefik.http.services.myapp.loadbalancer.server.port=${SERVER_PORT_DEV}
+
+  myapp_db_dev:
+    image: postgres:13-alpine
+    container_name: postgres_db_myapp_dev
+    user: postgres
+    networks:
+      - traefik-net
+    environment:
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - myapp_pg_data_dev:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+      - ./backend/.env # requires same env as backend
+    ports:
+      - $DB_PORT_DEV:5432
+    restart: unless-stopped
+
+  myapp_frontend_dev:
+    container_name: myapp_frontend_myapp_dev
+    networks:
+      - traefik-net
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    # vol rw only necessary in dev mode - hot reloading!
+    volumes:
+      - ./frontend/:/frontend/
+      # - node_modules:/frontend/node_modules/
+    env_file:
+      - ./frontend/.env.development
+      - ./.env
+    depends_on:
+      - myapp_db_dev
+    restart: unless-stopped
+    labels:
+      # Explicitly tell Traefik to expose this container
+      - traefik.enable=true
+      - traefik.http.routers.myappreact.rule=Host(`myapp-frontend.dev.localhost`)
+      # we're NOT using nginx in dev Dockerfile, NOT 80
+      - traefik.port=${FRONTEND_PORT_DEV}
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.myappreact.entrypoints=websecure
+      - traefik.http.routers.myappreact.tls=true
+      - traefik.http.services.myappreact.loadbalancer.server.port=${FRONTEND_PORT_DEV}
+
+volumes:
+  # venv: # prepend project name
+  #   external: true
+  #   name: myapp_dev_venv
+  # node_modules: # prepend project name
+  #   external: true
+  #   name: myapp_dev_node_modules
+  myapp_pg_data_dev:
+  myapp_logs_dev:
+
+networks:
+  traefik-net:
+    name: traefik-net
+    external: true

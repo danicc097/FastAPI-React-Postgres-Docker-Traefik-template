@@ -1,0 +1,95 @@
+{
+  "browserslist": {
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ],
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ]
+  },
+  "dependencies": {
+    "@babel/core": "^7.14.6",
+    "@babel/eslint-parser": "^7.14.7",
+    "@elastic/datemath": "^5.0.3",
+    "@elastic/eui": "~38.1.0",
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@fortawesome/react-fontawesome": "^0.1.15",
+    "@reduxjs/toolkit": "^1.6.0",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^12.0.0",
+    "@testing-library/user-event": "^12.8.3",
+    "@types/node": "^15.12.4",
+    "@types/react": "^17.0.11",
+    "@types/react-dom": "^17.0.8",
+    "@types/react-helmet": "^6.1.1",
+    "@types/react-redux": "^7.1.16",
+    "@types/react-router-dom": "^5.1.8",
+    "@types/styled-components": "^5.1.10",
+    "@types/webpack-env": "^1.16.0",
+    "@typescript-eslint/eslint-plugin": "^4.28.0",
+    "@typescript-eslint/parser": "^4.28.0",
+    "axios": "^0.21.1",
+    "eslint": "^7.29.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-airbnb-typescript": "^12.3.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-html": "^6.1.2",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jest-dom": "^3.9.0",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "faker": "^5.5.3",
+    "framer-motion": "^4.1.17",
+    "history": "^5.0.0",
+    "moment": "^2.29.1",
+    "prettier": "^2.3.1",
+    "prop-types": "^15.7.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-helmet": "^6.1.0",
+    "react-redux": "^7.2.4",
+    "react-router-dom": "6.0.0-beta.0",
+    "react-scripts": "4.0.3",
+    "redux": "^4.1.0",
+    "redux-thunk": "^2.3.0",
+    "styled-components": "^5.3.0",
+    "typescript": "^4.3.4",
+    "web-vitals": "^1.1.2"
+  },
+  "devDependencies": {
+    "eslint-plugin-testing-library": "^4.12.4",
+    "openapi-typescript": "^4.0.1",
+    "webpack-bundle-analyzer": "^4.4.2"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "project": "./tsconfig.json"
+    }
+  },
+  "jest": {
+    "watchPathIgnorePatterns": [
+      "test-utils"
+    ]
+  },
+  "name": "myapp-react",
+  "packageManager": "yarn@2.4.3",
+  "private": true,
+  "scripts": {
+    "build": "react-scripts build",
+    "eject": "react-scripts eject",
+    "lint": "eslint --config ./.eslintrc.json --ignore-path .gitignore --ext .js,.jsx,.ts,.tsx ./src",
+    "lint:fix": "eslint --config ./.eslintrc.json --ext .js,.jsx,.ts,.tsx --fix ./src",
+    "serve": "yarn dlx serve -s build",
+    "start": "react-scripts start",
+    "test": "react-scripts test --setupFiles ./src/setupTests.js",
+    "test:nowatch": "react-scripts test --setupFiles ./src/setupTests.js --watchAll=false"
+  },
+  "version": "0.1.0"
+}

@@ -1,0 +1,37 @@
+
+# TODO https://stackoverflow.com/questions/37089162/docker-compose-volume-mount-before-run
+# apt-get for slim
+FROM python:3.9.5-slim-buster
+
+WORKDIR /backend
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONBUFFERED=1
+# ENV PORT=$PORT
+
+COPY ./Pipfile /backend/Pipfile
+COPY ./Pipfile.lock /backend/Pipfile.lock
+# use -d to include dev dependencies with pipenv lock
+# dont use --no-install-recommends (psycopg2 error)
+RUN apt-get update \
+  && BUILD_DEPS='libpq-dev libffi-dev musl-dev gcc' \
+  && DEBIAN_FRONTEND=noninteractive \
+  && apt-get install -y netcat ${BUILD_DEPS} \
+  && apt-get clean \
+  && pip install psycopg2 \
+  && pip install --upgrade pip \
+  && pip install pipenv \
+  && virtualenv .venv \
+  && pipenv lock -rd >requirements.txt \
+  && rm -rf .venv Pipfile Pipfile.lock \
+  # && exit \
+  && pip install -r requirements.txt \
+  && apt-get autoremove -y ${BUILD_DEPS} \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists /tmp/* /var/tmp/*
+
+COPY . /backend
+
+RUN useradd -m rootless
+RUN mkdir /backend/logs
+RUN chown -R rootless:rootless /backend/logs
+USER rootless

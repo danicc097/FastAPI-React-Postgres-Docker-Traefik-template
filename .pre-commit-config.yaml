@@ -1,0 +1,89 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: local
+    hooks:
+      # requires dev compose up and running
+      - id: get-updated-api-schema
+        name: get-updated-api-schema
+        entry: frontend/scripts/generate-ts-types.sh
+        language: script
+        types: [text]
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+        args: ["--maxkb=2000"]
+      - id: no-commit-to-branch
+        args: ["--branch", "master", "--branch", "main"]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    # check version in pipfile lock
+    rev: v0.910
+    hooks:
+      - id: mypy
+        files: ^backend/ # only check py files in backend
+        additional_dependencies: [pydantic] # add if use pydantic
+
+  - repo: https://github.com/psf/black
+    # check version in pipfile lock
+    rev: 21.9b0
+    hooks:
+      - id: black
+        args: [--config=backend/pyproject.toml] # it's nested, not being picked up otherwise
+
+  - repo: https://github.com/PyCQA/isort
+    # check version in pipfile lock
+    rev: 5.9.3
+    hooks:
+      - id: isort
+
+  # run after black
+  - repo: https://gitlab.com/pycqa/flake8
+    # check version in pipfile lock
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        args: ["--config=backend/tox.ini"]
+
+  - repo: local
+    hooks:
+      # # requires dev compose up and running
+      # - id: run-tests-backend
+      #   files: ^backend/
+      #   name: run-tests-backend
+      #   entry: backend/scripts/run-tests.sh -n 4 --dist loadscope
+      #   language: script
+      #   types: [text]
+      #   pass_filenames: false
+
+      - id: run-eslint-frontend
+        files: ^frontend/
+        name: run-eslint-frontend
+        entry: bash -c 'cd frontend && npm run lint'
+        language: system
+        types: [text]
+        pass_filenames: false
+
+      - id: run-tsc-frontend
+        name: run-tsc-frontend
+        entry: frontend/scripts/tsc-compilation-check.sh
+        language: script
+        types: [text]
+        pass_filenames: false
+        always_run: true
+
+      # - id: run-tests-frontend
+      #   files: ^frontend/
+      #   name: run-tests-frontend
+      #   entry: bash -c 'cd frontend && yarn test:nowatch'
+      #   language: system
+      #   types: [text]
+      #   pass_filenames: false

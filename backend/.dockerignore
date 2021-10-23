@@ -1,0 +1,10 @@
+.env
+.venv*
+.mypy_cache
+.git
+*.venv
+*.mypy_cache
+*.git
+myapp-logs
+/logs
+Dockerfile*
