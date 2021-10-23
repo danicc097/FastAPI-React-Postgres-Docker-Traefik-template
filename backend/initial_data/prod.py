@@ -6,8 +6,8 @@ from typing import Dict, Optional
 
 from databases import Database
 from loguru import logger
-from app.core.config import ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_USERNAME
 
+from app.core.config import ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_USERNAME
 from app.models.user import UserCreate
 from initial_data.utils import create_user, init_database
 

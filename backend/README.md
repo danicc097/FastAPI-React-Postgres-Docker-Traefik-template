@@ -20,11 +20,21 @@ More info about the postgres docker image at <https://hub.docker.com/_/postgres?
 
 # Using pytest-xdist
 
-If tests start taking more than 2 minutes to run, consider using ``pytest-xdist``. Worker names are available as env var ``PYTEST_XDIST_WORKER``, making it easy to create test databases. 
+If tests start taking more than 2 minutes to run, consider using ``pytest-xdist``. Worker names are available as env var ``PYTEST_XDIST_WORKER``, making it easy to create test databases.
 
 ```python
 DB_NAME = f"{POSTGRES_DB}_test_{pytest_worker}"
 ```
 
 Tests must be run with the appropiate ``dist`` flag depending on overhead. See https://github.com/pytest-dev/pytest-xdist
-benchmark those to figure out which one yields the fastest results depending on ``-n NUMCPUS``. Going above that will likely slow tests down due to worker overhead.
+benchmark those to figure out which one yields the fastest results depending on ``-n NUM_WORKERS``. A good place to start is ``-n MACHINE_CORE_COUNT``.
+
+VM Cores: 4
+| n workers | Average test run (s) |
+| --------- | -------------------- |
+| 1         | 116                  |
+| 2         | 99                   |
+| 4         | 66                   |
+| 6         | 52                   |
+| 8         | 54                   |
+| 10        | 52                   |
