@@ -1,0 +1,28 @@
+{
+  "python.analysis.extraPaths": ["backend"],
+  "python.autoComplete.extraPaths": ["backend"],
+  "python.linting.pylintArgs": ["--init-hook='import sys; sys.path.append(\"/workspace\")'"],
+  "python.defaultInterpreterPath": "backend/.venv/bin/python",
+  "python.pythonPath": "backend/.venv/bin/python",
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "python.linting.flake8Path": "backend/.venv/bin/flake8",
+  "python.sortImports.path": "backend/.venv/bin/isort",
+  "python.linting.mypyEnabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Args": ["--config=backend/tox.ini"],
+  "python.formatting.blackPath": "backend/.venv/bin/black",
+  "pytest.pythonPath": "cd backend && .venv/bin/python",
+  "pytest.command": "cd backend && .venv/bin/pytest",
+  "python.linting.mypyArgs": [
+    "--ignore-missing-imports",
+    // "--follow-imports=silent",
+    "--show-column-numbers"
+  ],
+  "python.testing.pytestArgs": ["backend"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "terminal.integrated.env.linux": {
+    "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/"
+  },
+  "python.formatting.provider": "black"
+}

@@ -1,0 +1,27 @@
+{
+  "exclude": ["playground_tests", "node_modules", "build", ".vscode"],
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "outDir": "./build",
+    "rootDir": "./src",
+    "sourceMap": true,
+    "noEmitOnError": true,
+    "types": ["node", "webpack-env", "jest", "react", "react-dom", "styled-components", "react-redux"]
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,351 @@
+# self-hosted agent "mydockeragent" in pool "Default".
+# Requires permission approval first time to run
+
+#################### important #######################
+# set secret env vars for prod,
+# e.g. REACT_APP_REMOTE_SERVER_URL in azure devops
+
+# TODOs
+# - cache node modules and venv
+# https://stackoverflow.com/questions/65958925/caching-node-modules-in-azure-pipelines-takes-longer-than-installing-them
+
+parameters:
+  - name: SelfHostedAgent
+    type: boolean
+    default: false
+
+trigger:
+  branches:
+    include:
+      - main
+
+resources:
+  - repo: self
+
+#! these are the actual environment variables that will be set
+#! env vars in docker compose tasks and the docker-compose itself are useless
+#! and will override them, so ONLY set them here:
+#! regardless, if our code has to read a .env.* file, a file must be there with duplicated values
+#! else we get <Config '{key}' is missing, and has no default.>
+variables:
+  # System.Debug: true # see debug logs for every pipeline
+  tag: "$(Build.BuildNumber)" # incremental build id as image tag
+  FRONTEND_PORT_CI: 80
+  FRONTEND_URL: https://myapp-frontend.testing.localhost
+  SERVER_PORT_CI: 8002
+  DB_PORT_CI: 5633
+  UNIQUE_KEY: supersecret
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_SERVER_CI: db_ci
+  POSTGRES_PORT: 5432
+  POSTGRES_DB: postgres
+  ACCESS_TOKEN_EXPIRE_MINUTES: 9450
+  REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
+  DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
+  DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
+
+stages:
+  - stage: check_env_variables
+    displayName: Check secrets and variables
+    jobs:
+      - job:
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - bash: |
+              if [ -z "$REACT_APP_REMOTE_SERVER_URL" ]; then
+                echo "REACT_APP_REMOTE_SERVER_URL is empty"
+                exit 1
+              fi
+            displayName: Check env vars are set
+            # map secret and regular env vars defined in azure devops
+            env:
+              # the recommended way to map to a secret env variable
+              REACT_APP_REMOTE_SERVER_URL: $(REACT_APP_REMOTE_SERVER_URL)
+
+  # #  Don't build staging images directly inside compose.ci in testing stage so that we
+  # #  can ensure images will work as expected when we build them with prod data
+  - stage: push_staging
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    # do not push to registry on PR checks
+    displayName: Build and push staging images to Registry
+    dependsOn: check_env_variables
+    jobs:
+      - job: build_push_backend
+        cancelTimeoutInMinutes: 30
+        displayName: Build and push backend
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - task: Docker@2
+            displayName: Build an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_BACKEND)
+              command: build
+              dockerfile: "$(Build.SourcesDirectory)/backend/Dockerfile" # dont use prod Dockerfile (we need dev deps)
+              tags: |
+                staging
+          - task: Docker@2
+            displayName: Push an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_BACKEND)
+              command: push
+              tags: |
+                staging
+
+      - job: build_push_frontend
+        cancelTimeoutInMinutes: 30
+        displayName: Build and push frontend
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - task: Docker@2
+            displayName: Build an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_FRONTEND)
+              command: build
+              arguments: "--build-arg REACT_APP_BUILD_NUMBER=$(tag) --build-arg
+                REACT_APP_REMOTE_SERVER_URL=$(REMOTE_SERVER_URL_STAGING)"
+              dockerfile: "$(Build.SourcesDirectory)/frontend/Dockerfile.prod"
+              tags: |
+                staging
+          - task: Docker@2
+            displayName: Push an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_FRONTEND)
+              command: push
+              tags: |
+                staging
+
+  - stage: test
+    dependsOn: push_staging
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    displayName: Compose up and test
+    jobs:
+      - job: compose_up_and_test
+        displayName: Bring up compose services and run tests
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - bash: |
+              docker network create traefik-net
+            displayName: Create external network
+
+          - task: Bash@3
+            displayName: mkcert for Traefik
+            inputs:
+              targetType: inline
+              script: |
+                wget --no-verbose -O mkcert https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64
+                chmod +x ./mkcert
+                sudo apt install libnss3-tools
+                ./mkcert -install
+                ./mkcert --cert-file localhost.pem --key-file localhost-key.pem \
+                  "app.localhost" "*.app.localhost" \
+                  "testing.localhost" "*.testing.localhost" \
+              workingDirectory: "$(Build.SourcesDirectory)/traefik/certificates/"
+              failOnStderr: false
+              noProfile: true
+
+          - task: DockerCompose@0
+            displayName: Traefik compose up
+            inputs:
+              dockerComposeFile: "**/traefik/docker-compose.yml"
+              action: "Run services"
+              buildImages: true
+              abortOnContainerExit: true
+
+          - task: DockerCompose@0
+            displayName: Compose up
+            inputs:
+              dockerComposeFile: "**/docker-compose.ci.yml"
+              action: "Run services"
+              buildImages: true
+              abortOnContainerExit: true
+              # # as per docs, use dockerComposeFileArgs instead of "env:" for compose run/build/push
+              # # update: unnecesary if variables are set in az-pipeline
+              # detached: false #uncomment to see container logs inplace, but wont let pipeline continue
+              # projectName: "myappci" # useful if container names clash
+
+          - bash: |
+              docker exec backend_myapp_ci /bin/bash -c "
+                printf '
+                \n CICD=$CICD
+                \n FRONTEND_PORT_CI=$FRONTEND_PORT_CI
+                \n SERVER_PORT_CI=$SERVER_PORT_CI
+                \n DB_PORT_CI=$DB_PORT_CI
+                \n POSTGRES_SERVER_CI=$POSTGRES_SERVER_CI
+                \n UNIQUE_KEY=$UNIQUE_KEY
+                \n POSTGRES_USER=$POSTGRES_USER
+                \n POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+                \n POSTGRES_PORT=$POSTGRES_PORT
+                \n POSTGRES_DB=$POSTGRES_DB
+                \n ACCESS_TOKEN_EXPIRE_MINUTES=$ACCESS_TOKEN_EXPIRE_MINUTES
+                '"
+            displayName: Print backend env vars
+
+            # requires downgrading to base first else it cant upgrade
+            # (maybe az reuses the same pool or something, who knows)
+          - bash: |
+              docker exec backend_myapp_ci /bin/bash -c "alembic downgrade base"
+              docker exec backend_myapp_ci /bin/bash -c "alembic upgrade head"
+            displayName: Migrate backend schema
+
+          - bash: |
+              docker exec backend_myapp_ci /bin/bash -c "python3 -m initial_data.e2e"
+            displayName: Create initial data for E2E
+
+          - bash: |
+              docker exec backend_myapp_ci /bin/bash -c "pytest -n 4 --dist loadscope"
+            displayName: Run backend tests
+
+          - bash: |
+              until [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-frontend.testing.localhost")" == "200" ] \
+              && [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-backend.testing.localhost/docs")" == "200" ]; do
+                  echo 'retrying...'
+                  sleep 5
+              done
+            displayName: Wait for 200 status from frontend and backend
+            continueOnError: true
+            timeoutInMinutes: 1
+
+          # E2E tests
+          # References for more efficient local dev setup sharing volumes
+          # https://jdlm.info/articles/2020/05/24/testing-node-docker-compose-end-to-end.html
+          - bash: |
+              if docker exec puppeteer_ci /bin/sh -c 'npm run test:ci ; exit $?'; then
+                printf '\nE2E tests passed\n'
+                exit 0
+              else
+                printf '\nE2E tests failed\n'
+                exit 1
+              fi
+            displayName: Run E2E tests
+
+    # not possible to build and then push even with the same agent in MS hosted pipeline
+  - stage: push_production
+    # do not push to registry on PR checks
+    dependsOn: check_env_variables
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    displayName: Build and push production images to Registry
+    jobs:
+      - job: build_push_backend
+        cancelTimeoutInMinutes: 30
+        displayName: Build and push backend
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - task: Docker@2
+            displayName: Build an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_BACKEND)
+              command: build
+              dockerfile: "$(Build.SourcesDirectory)/backend/Dockerfile.prod" # excludes devDeps
+              tags: |
+                $(tag)
+                latest
+          - task: Docker@2
+            displayName: Push an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_BACKEND)
+              command: push
+              tags: |
+                $(tag)
+                latest
+
+      - job: build_push_frontend
+        cancelTimeoutInMinutes: 30
+        displayName: Build and push frontend
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - task: Docker@2
+            displayName: Build an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_FRONTEND)
+              command: build
+              arguments: "--build-arg REACT_APP_BUILD_NUMBER=$(tag) --build-arg
+                REACT_APP_REMOTE_SERVER_URL=$(REACT_APP_REMOTE_SERVER_URL)"
+              dockerfile: "$(Build.SourcesDirectory)/frontend/Dockerfile.prod"
+              tags: |
+                $(tag)
+                latest
+          - task: Docker@2
+            displayName: Push an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_FRONTEND)
+              command: push
+              tags: |
+                $(tag)
+                latest
+
+#######################################################
+######## # # # # # # UTILITIES # # # # # # # # ########
+#######################################################
+
+#* check what files are available in remote server
+#* if we just need to see the git checkout we just set the debug variable above
+# - bash: |
+#     SEARCH_PATH=/home/vsts/work  # or any colon-delimited list of paths
+#     IFS=':' read -r -a PathDirs <<< "$SEARCH_PATH"
+#     echo "##[debug] Found directories"
+#     for element in "${PathDirs[@]}"; do
+#         echo "$element"
+#     done;
+#     echo;
+#     echo;
+#     echo "##[debug] Found files"
+#     for element in "${PathDirs[@]}"; do
+#         find "$element" -type f
+#     done

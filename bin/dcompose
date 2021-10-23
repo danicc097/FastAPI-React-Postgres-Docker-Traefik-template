@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#
+# Run docker-compose in the given environment.
+#
+
+set -e
+
+source "${BASH_SOURCE%/*}/.helpers.sh"
+
+docker_compose_in_env "$@"

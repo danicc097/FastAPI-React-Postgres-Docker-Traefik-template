@@ -1,0 +1,112 @@
+# WORKS OUT OF THE BOX.
+
+version: "3.8"
+
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: socket-proxy
+    restart: unless-stopped
+    privileged: true
+    # traefik will be using the socket at 2375 instead of unix:///var/run/docker.sock
+    ports:
+      - 2375:2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # disable unnecesary API endpoints as required
+    environment:
+      # ref: https://github.com/traefik/traefik/issues/4174#issuecomment-634450865
+      # BUILD: 1
+      # COMMIT: 1
+      # CONFIGS: 1
+      CONTAINERS: 1
+      # DISTRIBUTION: 1
+      # EXEC: 1
+      # IMAGES: 1
+      # INFO: 1
+      NETWORKS: 1
+      # NODES: 1
+      # PLUGINS: 1
+      SERVICES: 1
+      # SESSION: 1
+      # SWARM: 1
+      # SYSTEM: 1
+      TASKS: 1
+      VOLUMES: 1
+    # never connect to the outside world
+    networks:
+      docker-proxy-internal-net:
+
+  # ensure the socket proxy is being used with:
+  # sudo nsenter -t $(docker inspect -f '{{.State.Pid}}' <container_name>) -n netstat
+  # # Proto Recv-Q Send-Q Local Address           Foreign Address         State
+  # # tcp        0      0 172.18.0.3:53806        172.18.0.2:2375         ESTABLISHED
+  traefik:
+    depends_on:
+      - socket-proxy
+    image: traefik:v2.5
+    restart: unless-stopped
+    command:
+      # Enable the access log, with HTTP requests
+      - --accesslog
+      # Enable the Traefik log, for configurations and errors
+      - --log
+      # Enable the Dashboard and API
+      - --api
+    container_name: traefik
+    networks:
+      docker-proxy-internal-net:
+      traefik-net:
+      # not needed (if its *.localhost at least)
+      # aliases:
+      #   - myapp-frontend.dev.localhost
+      #   - myapp-backend.dev.localhost
+      #   - myapp-frontend.prod.localhost
+      #   - myapp-backend.prod.localhost
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    security_opt:
+      - no-new-privileges:true
+    #? traefik labels -> Dynamic configuration
+    labels:
+      # - traefik.port=8080
+      - traefik.enable=true
+      # - traefik.port=80 # disable for https
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.traefik=true
+      - traefik.http.routers.traefik.tls=true
+    volumes:
+      # with docker socket proxy, do not mount the socket anymore
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./dynamic_conf.yaml:/etc/traefik/dynamic_conf.yaml:ro
+      - ./certificates/:/etc/certs/:ro
+    # extra_hosts:
+    #   - "myapp-frontend.dev.localhost:127.0.0.1"
+    #   - "myapp-backend.dev.localhost:127.0.0.1"
+
+  whoami:
+    image: containous/whoami:latest
+    container_name: whoami
+    networks:
+      traefik-net:
+    # labels:
+    # - "traefik.enable=true"
+
+    # - "traefik.http.routers.whoami-traefik.rule=Host(`whoami.app.localhost`)"
+    # - "traefik.http.routers.whoami-traefik.tls=true"
+    restart: unless-stopped
+
+# we have to repeat the same network parameters as in the other compose...
+networks:
+  # docker network create traefik-net (bridge by default)
+  traefik-net:
+    name: traefik-net
+    external: true
+  docker-proxy-internal-net:
+    name: docker-proxy-internal-net
+    external: false
+    # don't confuse with external key (i.e. network created manually)
+    internal: true

@@ -1,0 +1,48 @@
+global:
+  sendAnonymousUsage: false
+
+api:
+  # (insecure by default without middleware, but good right now for local dev)
+  insecure: true
+  dashboard: true
+
+# must do entrypoints=web for any service to be passed to traefik
+entryPoints:
+  web:
+    address: ":80"
+    forwardedHeaders:
+      insecure: true
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: ":443"
+    forwardedHeaders:
+      insecure: true
+
+ping:
+  entryPoint: web
+
+# defines what and how services are accessible from the outside
+providers:
+  # via container labels
+  docker:
+    #? without proxy, endpoint: "unix:///var/run/docker.sock"
+    #? with docker socket proxy: connect to service (named socket-proxy), which resolves to
+    #? assigned container ip (see nslookup socket-proxy) port 2375 on socket proxy must be open
+    endpoint: "tcp://socket-proxy:2375"
+    exposedByDefault: false
+    # all containers to be proxied must connect to the network specified
+    network: "traefik-net"
+
+  # via a configuration file
+  file:
+    # path to moutend file
+    filename: /etc/traefik/dynamic_conf.yaml
+    watch: true
+
+log:
+  level: DEBUG
