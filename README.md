@@ -1,5 +1,5 @@
 
-[![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.myapp?branchName=main)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=3&branchName=main)
+[![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
 
 # Backend dev setup
 
