@@ -15,7 +15,7 @@ describe('Test admin panel', () => {
   })
 
   beforeEach(async () => {
-    await adminPo.waitUntilHTMLRendered(page, 25)
+    await adminPo.waitUntilHTMLRendered(page, 125)
   })
 
   test('verifying a user', async () => {
