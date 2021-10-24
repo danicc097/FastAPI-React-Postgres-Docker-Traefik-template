@@ -7,15 +7,9 @@ import profilePo from '../pages/profile.po'
 // })
 
 describe('Test admin panel', () => {
-  beforeAll(async () => {
-    await profilePo.go()
-    await profilePo.autoLogout()
+  beforeEach(async () => {
     await profilePo.login('admin')
     await adminPo.go()
-  })
-
-  beforeEach(async () => {
-    await adminPo.waitUntilHTMLRendered(page, 125)
   })
 
   test('verifying a user', async () => {
@@ -41,8 +35,9 @@ describe('Test admin panel', () => {
     expect(users['verified'].password).toBe(newPassword)
   })
 
-  test('accepting a user password reset request', async () => {
+  test('accepting and declining a user password reset request', async () => {
     await adminPo.openPasswordResetRequestsAccordion()
+
     // only passwordResetTestUser[*] are in the table
     const trigger = async () =>
       await adminPo.clickResetRequestsTableAction(users['passwordResetTestUser2'].email, 'reset')
@@ -50,16 +45,13 @@ describe('Test admin panel', () => {
     await page.waitForNetworkIdle()
     expect(newPassword).not.toBe('')
     expect(users['passwordResetTestUser2'].password).toBe(newPassword)
-  })
 
-  test('declining a user password reset request', async () => {
     await adminPo.clickResetRequestsTableAction(users['passwordResetTestUser'].email, 'delete')
   })
 })
 
 describe('Test verification and access to admin panel', () => {
   test('accessing our profile now that we are verified', async () => {
-    await profilePo.autoLogout()
     await page.waitForNetworkIdle()
     await profilePo.login('toBeVerified')
     const calloutErrors = (await profilePo.getFormCalloutErrors()).toString()

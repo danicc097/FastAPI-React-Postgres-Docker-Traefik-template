@@ -211,7 +211,6 @@ stages:
           - bash: |
               docker exec backend_myapp_ci /bin/bash -c "
                 printf '
-                \n CICD=$CICD
                 \n FRONTEND_PORT_CI=$FRONTEND_PORT_CI
                 \n SERVER_PORT_CI=$SERVER_PORT_CI
                 \n DB_PORT_CI=$DB_PORT_CI
