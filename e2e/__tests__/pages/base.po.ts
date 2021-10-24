@@ -111,8 +111,8 @@ export default abstract class BasePO {
 
   async navigate(url: string) {
     await page.goto(`${this.FRONTEND_URL}${url}`)
-    await this.waitUntilHTMLRendered(page, 25)
-    // await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 35)
+    await page.waitForNetworkIdle()
   }
 
   async getElementTextBySelector($selector: string): Promise<string> {
@@ -156,7 +156,7 @@ export default abstract class BasePO {
           await page.waitForTimeout(100)
         }
       })
-      await this.waitUntilHTMLRendered(page, 25) // necessary
+      await this.waitUntilHTMLRendered(page, 125) // necessary
     }
   }
   /**
@@ -194,7 +194,7 @@ export default abstract class BasePO {
 
     if (!!logoutButton) {
       await logoutButton.click()
-      // await page.waitForNetworkIdle()
+      await page.waitForNetworkIdle()
     } else {
       return // already logged out
     }
