@@ -250,6 +250,7 @@ stages:
           # References for more efficient local dev setup sharing volumes
           # https://jdlm.info/articles/2020/05/24/testing-node-docker-compose-end-to-end.html
           - bash: |
+              npm install 
               npm run test:ci
             workingDirectory: "$(Build.SourcesDirectory)/e2e"
             displayName: Run E2E tests
