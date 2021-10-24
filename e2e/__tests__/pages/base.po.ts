@@ -134,10 +134,12 @@ export default abstract class BasePO {
 
   /** Login as a predefined user */
   async login(user: userType | updatableUserType): Promise<void> {
+    await this.navigate(`/login`)
     await page.waitForNetworkIdle()
     await this.waitUntilHTMLRendered(page, 15)
     const isLoggedIn = await this.isLoggedIn(user)
     if (!isLoggedIn) {
+      await this.autoLogout() // in case we were testing someone else
       // avatar might take a while to render or something? selector might fail
       await this.waitForSelectorAndClick("[data-test-subj='avatar']")
 
