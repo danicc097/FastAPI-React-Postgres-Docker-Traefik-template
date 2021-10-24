@@ -8,7 +8,7 @@ class RegistrationPO extends BasePO {
 
   async register(user: keyof usersType): Promise<void> {
     // avatar leads to login page if unauthenticated
-    await this.waitForSelectorAndClick("[data-test-subj='avatar']")
+    await this.waitForVisibleSelectorAndClick("[data-test-subj='avatar']")
     // a link to the registration form in login page should appear
     const registrationLink = await page.$("a[href='/registration']")
     if (registrationLink) {
@@ -17,10 +17,10 @@ class RegistrationPO extends BasePO {
       await this.waitForSelectorAndType("[data-test-subj='username-input']", users[user].username)
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
       await this.waitForSelectorAndType("[data-test-subj='password-confirm-input']", users[user].password)
-      await this.waitForSelectorAndClick("[data-test-subj='registration-submit']")
+      await this.waitForVisibleSelectorAndClick("[data-test-subj='registration-submit']")
     } else {
       // close the dropdown we just opened to not interfere with autoLogout
-      await this.waitForSelectorAndClick("[data-test-subj='avatar']")
+      await this.waitForVisibleSelectorAndClick("[data-test-subj='avatar']")
       // logout the current user
       await this.autoLogout()
       // retry registration

@@ -153,11 +153,11 @@ export default abstract class BasePO {
     if (!isLoggedIn) {
       await this.autoLogout() // in case we were testing someone else
       // avatar might take a while to render or something? selector might fail
-      await this.waitForSelectorAndClick("[data-test-subj='avatar']")
+      await this.waitForVisibleSelectorAndClick("[data-test-subj='avatar']")
 
       await this.waitForSelectorAndType("[data-test-subj='email-input']", users[user].email)
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
-      await this.waitForSelectorAndClick("[data-test-subj='login-submit']")
+      await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
       // this almost fixes the Not Authenticated permanent error due to first
       // attempt to fetch token when visiting the page.
       page.once('response', async (response) => {
@@ -198,7 +198,7 @@ export default abstract class BasePO {
 
   /** Log out regardless of current user */
   async autoLogout(): Promise<void> {
-    await this.waitForSelectorAndClick("[data-test-subj='avatar']")
+    await this.waitForVisibleSelectorAndClick("[data-test-subj='avatar']")
     const logoutButton = await page.$("[data-test-subj='logout']")
 
     if (!!logoutButton) {

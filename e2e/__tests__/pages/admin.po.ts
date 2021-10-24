@@ -18,11 +18,11 @@ class AdminPO extends BasePO {
   //////////////////////////////////////////////////////////////////////////////
 
   async openUnverifiedUsersAccordion() {
-    await this.waitForSelectorAndClick(this.$UnverifiedUsersAccordion)
+    await this.waitForVisibleSelectorAndClick(this.$UnverifiedUsersAccordion)
   }
 
   async selectFromUnverifiedUsersTable(email: string) {
-    await this.waitForSelectorAndClick(`[data-test-subj="checkboxSelectRow-${email}"]`)
+    await this.waitForVisibleSelectorAndClick(`[data-test-subj="checkboxSelectRow-${email}"]`)
   }
 
   async clickVerifyUsersButton() {
@@ -32,21 +32,21 @@ class AdminPO extends BasePO {
   //////////////////////////////////////////////////////////////////////////////
 
   async openPasswordResetAccordion() {
-    await this.waitForSelectorAndClick(this.$PasswordResetAccordion)
+    await this.waitForVisibleSelectorAndClick(this.$PasswordResetAccordion)
   }
 
   async selectFromPasswordResetTable(email: string) {
-    await this.waitForSelectorAndClick(`.euiSelectableListItem[title="${email}"]`)
+    await this.waitForVisibleSelectorAndClick(`.euiSelectableListItem[title="${email}"]`)
   }
 
   async clickPasswordResetButton() {
-    await this.waitForSelectorAndClick(this.$EnabledPasswordResetFormButton)
+    await this.waitForVisibleSelectorAndClick(this.$EnabledPasswordResetFormButton)
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   async openPasswordResetRequestsAccordion() {
-    await this.waitForSelectorAndClick(this.$PasswordResetRequestsAccordion)
+    await this.waitForVisibleSelectorAndClick(this.$PasswordResetRequestsAccordion)
   }
 
   // We must rely on XPaths to get text content
