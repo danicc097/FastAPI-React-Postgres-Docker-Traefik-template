@@ -79,19 +79,22 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await page.waitForNetworkIdle()
     await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 10000 })
     await page.click($selector, { delay: 25 })
   }
 
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
+    await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 5000 })
     await page.type($selector, text)
   }
 
   /** Wait for element and click */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
+    await this.waitUntilHTMLRendered(page, 50)
     await page.waitForNetworkIdle()
     await page.waitForXPath($xXPath, { timeout: 10000 })
     const elements = await page.$x($xXPath)
@@ -134,10 +137,12 @@ export default abstract class BasePO {
 
   /** Login as a predefined user */
   async login(user: userType | updatableUserType): Promise<void> {
+    await this.navigate(`/login`)
     await page.waitForNetworkIdle()
-    await this.waitUntilHTMLRendered(page, 15)
+    await this.waitUntilHTMLRendered(page, 50)
     const isLoggedIn = await this.isLoggedIn(user)
     if (!isLoggedIn) {
+      await this.autoLogout() // in case we were testing someone else
       // avatar might take a while to render or something? selector might fail
       await this.waitForSelectorAndClick("[data-test-subj='avatar']")
 
@@ -151,7 +156,7 @@ export default abstract class BasePO {
           await page.waitForTimeout(100)
         }
       })
-      await this.waitUntilHTMLRendered(page, 25) // necessary
+      await this.waitUntilHTMLRendered(page, 125) // necessary
     }
   }
   /**

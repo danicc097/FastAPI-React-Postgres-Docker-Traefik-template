@@ -4,8 +4,8 @@ cd e2e || exit
 
 n_runs=$1
 
-rm ./benchmark-e2e-jest.log
+rm ../benchmark-e2e-jest.log
 
 for ((i = 0; i < n_runs; i++)); do
-  yarn test-local:headless 2>&1 | tee -a ./benchmark-e2e-jest.log
+  yarn test-local:headless 2>&1 | tee -a ../benchmark-e2e-jest.log
 done
