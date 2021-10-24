@@ -14,6 +14,7 @@ module.exports = {
       '--no-sandbox',
       '--no-zygote',
       '--allow-insecure-localhost',
+      '--user-agent=Mozilla/5.0 (Windows NT 10.0; W0W64; Trident/7.0; rv:11.0) like Gecko',
       // '–-ignore-certificate-errors',
     ],
     defaultViewport: null,

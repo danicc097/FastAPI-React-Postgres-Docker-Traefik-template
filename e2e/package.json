@@ -29,7 +29,7 @@
     "test": "jest --verbose --forceExit",
     "test-local:headful": "npm run init-e2e-data && FRONTEND_URL=https://myapp-frontend.testing.localhost HEADLESS=false jest --verbose --forceExit",
     "test-local:headless": "npm run init-e2e-data && FRONTEND_URL=https://myapp-frontend.testing.localhost jest --verbose --forceExit",
-    "test:ci": "jest --verbose  --runInBand --detectOpenHandles --forceExit"
+    "test:ci": "jest --verbose --forceExit"
   },
   "version": "1.0.0"
 }
