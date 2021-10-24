@@ -52,7 +52,7 @@ services:
     restart: unless-stopped
 
   myapp_frontend_dev:
-    container_name: myapp_frontend_myapp_dev
+    container_name: frontend_myapp_dev
     networks:
       - traefik-net
     build:

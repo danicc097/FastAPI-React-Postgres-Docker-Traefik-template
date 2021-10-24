@@ -43,7 +43,7 @@ services:
 
   myapp_frontend_ci:
     image: ${DOCKER_HUB_FRONTEND}:staging
-    container_name: myapp_frontend_myapp_ci
+    container_name: frontend_myapp_ci
     networks:
       traefik-net:
     environment:

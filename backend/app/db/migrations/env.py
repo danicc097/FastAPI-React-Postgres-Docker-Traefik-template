@@ -66,9 +66,9 @@ def run_migrations_online() -> None:
         alembic.context.configure(connection=connection, target_metadata=None)
         context = MigrationContext.configure(connection)
         current_rev = context.get_current_revision()
-        logger.info(f"Current alembic revision: {current_rev}")
         with alembic.context.begin_transaction():
             alembic.context.run_migrations()
+            logger.info(f"Current alembic revision: {current_rev}")
 
 
 def run_migrations_offline() -> None:
