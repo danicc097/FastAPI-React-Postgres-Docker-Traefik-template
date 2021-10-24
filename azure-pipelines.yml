@@ -236,7 +236,7 @@ stages:
             displayName: Create initial data for E2E
 
           - bash: |
-              docker exec backend_myapp_ci /bin/bash -c "pytest -n 4 --dist loadscope"
+              docker exec backend_myapp_ci /bin/bash -c "pytest -n auto --dist loadscope"
             displayName: Run backend tests
 
           - bash: |
@@ -253,13 +253,14 @@ stages:
           # References for more efficient local dev setup sharing volumes
           # https://jdlm.info/articles/2020/05/24/testing-node-docker-compose-end-to-end.html
           - bash: |
-              if docker exec puppeteer_ci /bin/sh -c 'npm run test:ci ; exit $?'; then
+              if [[ npm run test:ci ; exit $? ]] then
                 printf '\nE2E tests passed\n'
                 exit 0
               else
                 printf '\nE2E tests failed\n'
                 exit 1
               fi
+            workingDirectory: "$(Build.SourcesDirectory)/e2e"
             displayName: Run E2E tests
 
     # not possible to build and then push even with the same agent in MS hosted pipeline
