@@ -108,8 +108,8 @@ export default abstract class BasePO {
 
   async navigate(url: string) {
     await page.goto(`${this.FRONTEND_URL}${url}`)
-    await this.waitUntilHTMLRendered(page, 75)
     await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 75)
   }
 
   async getElementTextBySelector($selector: string): Promise<string> {
