@@ -66,7 +66,7 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 15)
+    await this.waitUntilHTMLRendered(page, 25)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
@@ -74,7 +74,7 @@ export default abstract class BasePO {
   }
 
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 15)
+    await this.waitUntilHTMLRendered(page, 25)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { visible: true, timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
@@ -82,7 +82,7 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 15)
+    await this.waitUntilHTMLRendered(page, 25)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 })
     await page.type($selector, text)

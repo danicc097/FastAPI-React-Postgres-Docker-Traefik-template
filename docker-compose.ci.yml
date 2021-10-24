@@ -64,6 +64,22 @@ services:
       - traefik.http.routers.myappreact.tls=true
       - traefik.http.services.myappreact.loadbalancer.server.port=${FRONTEND_PORT_CI}
 
+  myapp_puppeteer:
+    container_name: puppeteer_ci
+    network_mode: "host"
+    build:
+      context: ./e2e
+      dockerfile: Dockerfile
+      args:
+        - HEADLESS=true
+        - FRONTEND_URL=${FRONTEND_URL}
+        - SERVER_PORT_CI=${SERVER_PORT_CI}
+        - FRONTEND_PORT_CI=${FRONTEND_PORT_CI}
+    command: tail -F anything # keep container running forever until we execute npm run test
+    depends_on:
+      - myapp_frontend_ci
+      - myapp_server_ci
+
 volumes:
   myapp_pg_data_ci:
 
