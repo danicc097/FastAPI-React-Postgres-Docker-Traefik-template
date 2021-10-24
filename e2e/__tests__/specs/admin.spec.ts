@@ -7,8 +7,7 @@ import profilePo from '../pages/profile.po'
 // })
 
 afterEach(async () => {
-  // Make sure we don't kill any requests when a test completes before all reponses are returned.
-  await page.waitForNetworkIdle()
+  await adminPo.waitUntilHTMLRendered(page, 25)
 })
 
 describe('Test admin panel', () => {

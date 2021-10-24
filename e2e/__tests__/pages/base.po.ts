@@ -67,7 +67,7 @@ export default abstract class BasePO {
 
   async waitForSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 15)
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
     })
@@ -75,7 +75,7 @@ export default abstract class BasePO {
 
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 15)
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { visible: true, timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
     })
@@ -83,7 +83,7 @@ export default abstract class BasePO {
 
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 15)
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 })
     await page.type($selector, text)
   }
@@ -91,7 +91,7 @@ export default abstract class BasePO {
   /** Wait for element and click */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
     await page.waitForXPath($xXPath, { timeout: 30000 })
     const elements = await page.$x($xXPath)
     await elements[0]?.click()
@@ -134,7 +134,6 @@ export default abstract class BasePO {
   /** Login as a predefined user */
   async login(user: userType | updatableUserType): Promise<void> {
     await this.navigate(`/login`)
-    await page.waitForNetworkIdle()
     await this.waitUntilHTMLRendered(page, 50)
     const isLoggedIn = await this.isLoggedIn(user)
     if (!isLoggedIn) {
@@ -147,12 +146,10 @@ export default abstract class BasePO {
       await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
       // this almost fixes the Not Authenticated permanent error due to first
       // attempt to fetch token when visiting the page.
-      page.once('response', async (response) => {
-        while (!response.request().url().includes('users/me') && response.status() !== 200) {
-          await page.waitForTimeout(100)
-        }
+      await page.waitForResponse((response) => {
+        return response.request().url().includes('users/me') && response.status() === 200
       })
-      await this.waitUntilHTMLRendered(page, 125) // necessary
+      // await this.waitUntilHTMLRendered(page, 125) // necessary
     }
   }
   /**

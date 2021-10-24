@@ -16,10 +16,8 @@ beforeEach(async () => {
 // })
 
 afterEach(async () => {
-  // Make sure we don't kill any requests when a test completes before all reponses are returned.
-  await page.waitForNetworkIdle()
+  await profilePo.waitUntilHTMLRendered(page, 25)
 })
-
 
 describe('Test profile', () => {
   it('should not let us update with a taken username', async () => {

@@ -12,8 +12,7 @@ beforeEach(async () => {
 // })
 
 afterEach(async () => {
-  // Make sure we don't kill any requests when a test completes before all reponses are returned.
-  await page.waitForNetworkIdle()
+  await registrationPo.waitUntilHTMLRendered(page, 25)
 })
 
 describe('Test registration', () => {

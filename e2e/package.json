@@ -28,7 +28,7 @@
     "init-e2e-data": "sh scripts/initial-build-e2e.sh backend_myapp_e2e",
     "test": "jest --verbose --forceExit",
     "test-local:headful": "npm run init-e2e-data && FRONTEND_URL=https://myapp-frontend.testing.localhost HEADLESS=false jest --verbose --forceExit",
-    "test-local:headless": "npm run init-e2e-data && FRONTEND_URL=https://myapp-frontend.testing.localhost jest --runInBand --detectOpenHandles --verbose --forceExit",
+    "test-local:headless": "npm run init-e2e-data && FRONTEND_URL=https://myapp-frontend.testing.localhost jest --verbose --forceExit",
     "test:ci": "jest --verbose --forceExit"
   },
   "version": "1.0.0"
