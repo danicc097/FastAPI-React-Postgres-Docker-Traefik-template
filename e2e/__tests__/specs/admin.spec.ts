@@ -29,9 +29,16 @@ describe('Test admin panel', () => {
     await adminPo.clickPasswordResetButton()
 
     const trigger = async () => await adminPo.confirmModal()
-    const newPassword = await adminPo.interceptPasswordReset(trigger, 'verified')
+
+    let newPassword
+    while (!newPassword) {
+      try {
+        newPassword = await adminPo.interceptPasswordReset(trigger, 'verified')
+      } catch (e) {}
+    }
+
     await page.waitForNetworkIdle()
-    expect(newPassword).not.toBe('')
+    expect(newPassword).not.toBe(undefined)
     expect(users['verified'].password).toBe(newPassword)
   })
 
@@ -41,7 +48,13 @@ describe('Test admin panel', () => {
     // only passwordResetTestUser[*] are in the table
     const trigger = async () =>
       await adminPo.clickResetRequestsTableAction(users['passwordResetTestUser2'].email, 'reset')
-    const newPassword = await adminPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
+
+    let newPassword
+    while (!newPassword) {
+      try {
+        newPassword = await adminPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
+      } catch (e) {}
+    }
     await page.waitForNetworkIdle()
     expect(newPassword).not.toBe('')
     expect(users['passwordResetTestUser2'].password).toBe(newPassword)

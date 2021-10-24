@@ -116,10 +116,7 @@ export default function UserUpdateAccordion() {
         confirmButtonText="Yes, do it"
         defaultFocusedButton="confirm"
       >
-        <p>
-          {_.unescape(`You're about to update your credentials.
-        `)}
-        </p>
+        <p>{_.unescape(`You're about to update your credentials.`)}</p>
         <p>Are you sure you want to do this?</p>
       </EuiConfirmModal>
     )

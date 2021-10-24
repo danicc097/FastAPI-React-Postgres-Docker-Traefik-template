@@ -9,7 +9,7 @@ class ForgotPasswordPO extends BasePO {
   }
 
   async waitForPasswordResetRequestSuccessToast() {
-    await page.waitForSelector(this.$PasswordResetRequestSuccessToast, { visible: true, timeout: 10000 })
+    await page.waitForSelector(this.$PasswordResetRequestSuccessToast, { visible: true, timeout: 20000 })
   }
 
   async fillPasswordResetRequestForm(email: string, message: string) {

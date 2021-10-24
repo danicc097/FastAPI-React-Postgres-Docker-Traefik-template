@@ -26,10 +26,8 @@ class AdminPO extends BasePO {
   }
 
   async clickVerifyUsersButton() {
-    // Requires ``waitForSelector`` to be called with visible: true since the button
-    // is hidden by default and shown on row selection
-    await page.waitForSelector(this.$VerifyUserButton, { visible: true, timeout: 10000 })
-    await page.click(this.$VerifyUserButton)
+    // button is hidden by default and shown on row selection
+    await this.waitForVisibleSelectorAndClick(this.$VerifyUserButton)
   }
   //////////////////////////////////////////////////////////////////////////////
 
@@ -53,10 +51,10 @@ class AdminPO extends BasePO {
 
   // We must rely on XPaths to get text content
   async clickResetRequestsTableAction(email: string, action: 'reset' | 'delete') {
-    await page.waitForXPath(this.$xPasswordResetRequestsRow, { timeout: 6000 })
+    await page.waitForXPath(this.$xPasswordResetRequestsRow, { timeout: 20000 })
     const $xEmailCell = `${this.$xPasswordResetRequestsRow}//*[contains(text(), "${email}")]`
     const $xActionRow = `${$xEmailCell}/ancestor::*[@data-test-subj="passwordResetTable__row"]`
-    await page.waitForXPath($xActionRow, { timeout: 6000 })
+    await page.waitForXPath($xActionRow, { timeout: 20000 })
     // const row = await page.$x($xActionRow) // email is unique
     const $xResetAction = $xActionRow + '//*[@data-test-subj="passwordResetTable__resetAction"]'
     const $xDeleteAction = $xActionRow + '//*[@data-test-subj="passwordResetTable__deleteAction"]'

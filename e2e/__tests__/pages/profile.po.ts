@@ -10,11 +10,11 @@ class ProfilePO extends BasePO {
   }
 
   async waitForUserUpdateSuccessToast() {
-    await page.waitForSelector(this.$UserUpdateSuccessToast, { visible: true, timeout: 5000 })
+    await page.waitForSelector(this.$UserUpdateSuccessToast, { visible: true, timeout: 20000 })
   }
 
   async waitForUserUpdateFailureToast() {
-    await page.waitForSelector(this.$UserUpdateFailureToast, { visible: true, timeout: 5000 })
+    await page.waitForSelector(this.$UserUpdateFailureToast, { visible: true, timeout: 20000 })
   }
 
   async fillUserUpdateForm({
@@ -36,11 +36,13 @@ class ProfilePO extends BasePO {
   }
 
   async submitUserUpdateForm() {
+    // await this.waitUntilHTMLRendered(page, 50)
     await this.waitForSelectorAndClick("[data-test-subj='user-update-submit']")
+    await page.waitForNetworkIdle()
   }
 
   async openUserUpdateAccordion() {
-    await this.waitForSelectorAndClick(this.$UserUpdateAccordion)
+    await this.waitForVisibleSelectorAndClick(this.$UserUpdateAccordion)
   }
 }
 

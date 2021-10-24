@@ -64,13 +64,13 @@ export default abstract class BasePO {
   abstract go(): Promise<void> // to be derived from per page
 
   async confirmModal() {
-    await this.waitUntilHTMLRendered(page, 50)
-    await this.waitForSelectorAndClick(this.$ConfirmModal)
+    // await this.waitUntilHTMLRendered(page, 250)
+    await this.waitForVisibleSelectorAndClick(this.$ConfirmModal)
   }
 
   async cancelModal() {
-    await this.waitUntilHTMLRendered(page, 50)
-    await this.waitForSelectorAndClick(this.$CancelModal)
+    // await this.waitUntilHTMLRendered(page, 250)
+    await this.waitForVisibleSelectorAndClick(this.$CancelModal)
   }
 
   async getFormRowErrors(): Promise<(string | null)[]> {
@@ -79,16 +79,25 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForNetworkIdle()
-    await page.waitForSelector($selector, { timeout: 10000 })
-    await page.click($selector, { delay: 25 })
+    await this.waitUntilHTMLRendered(page, 15)
+    // await page.waitForNetworkIdle()
+    await page.waitForSelector($selector, { timeout: 30000 }).then(async () => {
+      await page.click($selector, { delay: 50 })
+    })
+  }
+
+  async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
+    await this.waitUntilHTMLRendered(page, 15)
+    // await page.waitForNetworkIdle()
+    await page.waitForSelector($selector, { visible: true, timeout: 30000 }).then(async () => {
+      await page.click($selector, { delay: 50 })
+    })
   }
 
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForNetworkIdle()
-    await page.waitForSelector($selector, { timeout: 5000 })
+    // await this.waitUntilHTMLRendered(page, 50)
+    // await page.waitForNetworkIdle()
+    await page.waitForSelector($selector, { timeout: 30000 })
     await page.type($selector, text)
   }
 
@@ -96,7 +105,7 @@ export default abstract class BasePO {
   async waitForXPathAndClick($xXPath: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 50)
     await page.waitForNetworkIdle()
-    await page.waitForXPath($xXPath, { timeout: 10000 })
+    await page.waitForXPath($xXPath, { timeout: 30000 })
     const elements = await page.$x($xXPath)
     await elements[0]?.click()
   }
@@ -148,7 +157,7 @@ export default abstract class BasePO {
 
       await this.waitForSelectorAndType("[data-test-subj='email-input']", users[user].email)
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
-      await page.click("[data-test-subj='login-submit']")
+      await this.waitForSelectorAndClick("[data-test-subj='login-submit']")
       // this almost fixes the Not Authenticated permanent error due to first
       // attempt to fetch token when visiting the page.
       page.once('response', async (response) => {
