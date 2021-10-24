@@ -9,6 +9,11 @@ beforeEach(async () => {
 //   page.close()
 // })
 
+afterEach(async () => {
+  // Make sure we don't kill any requests when a test completes before all reponses are returned.
+  await page.waitForNetworkIdle()
+})
+
 describe('Test logins', () => {
   it.each`
     userTitle             | message

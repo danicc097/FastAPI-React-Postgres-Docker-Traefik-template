@@ -36,7 +36,7 @@ class ProfilePO extends BasePO {
   }
 
   async submitUserUpdateForm() {
-    // await this.waitUntilHTMLRendered(page, 50)
+    // await this.waitUntilHTMLRendered(50)
     await this.waitForVisibleSelectorAndClick("[data-test-subj='user-update-submit']")
     await page.waitForNetworkIdle()
   }

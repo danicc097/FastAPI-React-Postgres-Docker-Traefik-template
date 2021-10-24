@@ -11,6 +11,11 @@ beforeEach(async () => {
 //   browser.close()
 // })
 
+afterEach(async () => {
+  // Make sure we don't kill any requests when a test completes before all reponses are returned.
+  await page.waitForNetworkIdle()
+})
+
 describe('Test registration', () => {
   it.each`
     userTitle       | error

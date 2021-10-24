@@ -15,6 +15,12 @@ beforeEach(async () => {
 //   page.close()
 // })
 
+afterEach(async () => {
+  // Make sure we don't kill any requests when a test completes before all reponses are returned.
+  await page.waitForNetworkIdle()
+})
+
+
 describe('Test profile', () => {
   it('should not let us update with a taken username', async () => {
     // await page.click("[data-test-subj='user-update-form']")

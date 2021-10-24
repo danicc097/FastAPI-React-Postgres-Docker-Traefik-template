@@ -2,45 +2,30 @@ import chalk from 'chalk'
 import { ElementHandle, Page } from 'puppeteer'
 import { users } from '../data/users'
 import * as expectPup from 'expect-puppeteer'
+import { createFunctionWaitForIdleNetwork, createFunctionWaitUntilHTMLRendered } from '../utils/network'
 
 export default abstract class BasePO {
   protected readonly FRONTEND_URL = FRONTEND_URL
   protected readonly $RowErrorContainer = '.euiFormErrorText'
   protected readonly $CalloutErrorContainer = '.euiForm__error'
-
   private readonly $ConfirmModal = "[data-test-subj='confirmModalConfirmButton']"
   private readonly $CancelModal = "[data-test-subj='confirmModalCancelButton']"
 
   /**
-   * Alternative to network idle check in waitForNavigation (not useful for SPA).
-   *
-   * Ref: https://stackoverflow.com/a/61304202/11995537
+   * Throw an error if ``failTimeout`` is reached and there are pending requests.
    */
-  async waitUntilHTMLRendered(page: Page, intervalCheck = 100): Promise<void> {
-    const maxChecks = (10 * 1000) / intervalCheck
-    let lastHTMLSize = 0
-    let checkCounts = 1
-    let countStableSizeIterations = 0
-    const minStableSizeIterations = 3
+  public waitForIdleNetwork = createFunctionWaitForIdleNetwork()
 
-    while (checkCounts++ <= maxChecks) {
-      let html = await page.content()
-      let currentHTMLSize = html.length
+  public waitUntilHTMLRendered = createFunctionWaitUntilHTMLRendered()
 
-      // let bodyHTMLSize = await page.evaluate(() => document.body.innerHTML.length)
-      // console.log('last: ', lastHTMLSize, ' <> curr: ', currentHTMLSize, ' body html size: ', bodyHTMLSize)
-
-      if (lastHTMLSize != 0 && currentHTMLSize == lastHTMLSize) countStableSizeIterations++
-      else countStableSizeIterations = 0 //reset the counter
-
-      if (countStableSizeIterations >= minStableSizeIterations) {
-        // console.log('Page rendered fully..')
-        break
-      }
-
-      lastHTMLSize = currentHTMLSize
-      await page.waitForTimeout(intervalCheck)
-    }
+  async waitForNetwork0(page: Page, timeout = 500) {
+    await new Promise((resolve) => {
+      let timer: NodeJS.Timeout
+      page.on('response', () => {
+        clearTimeout(timer)
+        timer = setTimeout(resolve, timeout)
+      })
+    })
   }
 
   async setupPuppeteerLogging() {
@@ -64,11 +49,13 @@ export default abstract class BasePO {
   abstract go(): Promise<void> // to be derived from per page
 
   async confirmModal() {
+    await page.waitForNetworkIdle()
     // await this.waitUntilHTMLRendered(page, 250)
     await this.waitForVisibleSelectorAndClick(this.$ConfirmModal)
   }
 
   async cancelModal() {
+    await page.waitForNetworkIdle()
     // await this.waitUntilHTMLRendered(page, 250)
     await this.waitForVisibleSelectorAndClick(this.$CancelModal)
   }
@@ -119,9 +106,9 @@ export default abstract class BasePO {
   }
 
   async navigate(url: string) {
-    await page.goto(`${this.FRONTEND_URL}${url}`)
+    await page.goto(`${this.FRONTEND_URL}${url}`, { waitUntil: 'domcontentloaded' })
     await this.waitUntilHTMLRendered(page, 75)
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
   }
 
   async getElementTextBySelector($selector: string): Promise<string> {

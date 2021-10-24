@@ -6,6 +6,11 @@ import profilePo from '../pages/profile.po'
 //   page.close()
 // })
 
+afterEach(async () => {
+  // Make sure we don't kill any requests when a test completes before all reponses are returned.
+  await page.waitForNetworkIdle()
+})
+
 describe('Test admin panel', () => {
   beforeEach(async () => {
     await profilePo.login('admin')
