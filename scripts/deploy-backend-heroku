@@ -2,8 +2,13 @@
 
 set -e
 
-cd backend || exit
-heroku login --interactive
-rm -fr .git
-git init && git add . && git commit -m "deploy"
-git push --set-upstream https://git.heroku.com/react-myapp.git master -f
+if [[ -z "${MYAPP_HEROKU_GIT}" ]]; then
+  echo "Set MYAPP_HEROKU_GIT repository to deploy backend to heroku"
+  exit 1
+else
+  cd backend || exit
+  heroku login --interactive
+  rm -fr .git
+  git init && git add . && git commit -m "deploy"
+  git push --set-upstream "$MYAPP_HEROKU_GIT" master -f
+fi

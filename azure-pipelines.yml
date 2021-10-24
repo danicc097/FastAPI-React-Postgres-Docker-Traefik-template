@@ -44,6 +44,7 @@ variables:
   REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
   DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
   DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
+  TRAEFIK_CERTIFICATES_DIR: $(Build.SourcesDirectory)/traefik/certificates/
 
 stages:
   - stage: check_env_variables
@@ -73,78 +74,75 @@ stages:
 
   # #  Don't build staging images directly inside compose.ci in testing stage so that we
   # #  can ensure images will work as expected when we build them with prod data
-  - stage: push_staging
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-    # do not push to registry on PR checks
-    displayName: Build and push staging images to Registry
-    dependsOn: check_env_variables
-    jobs:
-      - job: build_push_backend
-        cancelTimeoutInMinutes: 30
-        displayName: Build and push backend
-        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
-          pool:
-            name: Default
-            demands:
-              - agent.name -equals mydockeragent
-        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
-          pool:
-            name: Azure Pipelines
-            vmImage: ubuntu-20.04
-        steps:
-          - task: Docker@2
-            displayName: Build an image
-            inputs:
-              containerRegistry: "Docker Hub"
-              repository: $(DOCKER_HUB_BACKEND)
-              command: build
-              dockerfile: "$(Build.SourcesDirectory)/backend/Dockerfile" # dont use prod Dockerfile (we need dev deps)
-              tags: |
-                staging
-          - task: Docker@2
-            displayName: Push an image
-            inputs:
-              containerRegistry: "Docker Hub"
-              repository: $(DOCKER_HUB_BACKEND)
-              command: push
-              tags: |
-                staging
-
-      - job: build_push_frontend
-        cancelTimeoutInMinutes: 30
-        displayName: Build and push frontend
-        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
-          pool:
-            name: Default
-            demands:
-              - agent.name -equals mydockeragent
-        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
-          pool:
-            name: Azure Pipelines
-            vmImage: ubuntu-20.04
-        steps:
-          - task: Docker@2
-            displayName: Build an image
-            inputs:
-              containerRegistry: "Docker Hub"
-              repository: $(DOCKER_HUB_FRONTEND)
-              command: build
-              arguments: "--build-arg REACT_APP_BUILD_NUMBER=$(tag) --build-arg
-                REACT_APP_REMOTE_SERVER_URL=$(REMOTE_SERVER_URL_STAGING)"
-              dockerfile: "$(Build.SourcesDirectory)/frontend/Dockerfile.prod"
-              tags: |
-                staging
-          - task: Docker@2
-            displayName: Push an image
-            inputs:
-              containerRegistry: "Docker Hub"
-              repository: $(DOCKER_HUB_FRONTEND)
-              command: push
-              tags: |
-                staging
-
+  # - stage: push_staging
+  #   condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+  #   # do not push to registry on PR checks
+  #   displayName: Build and push staging images to Registry
+  #   dependsOn: check_env_variables
+  #   jobs:
+  #     - job: build_push_backend
+  #       cancelTimeoutInMinutes: 30
+  #       displayName: Build and push backend
+  #       ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+  #         pool:
+  #           name: Default
+  #           demands:
+  #             - agent.name -equals mydockeragent
+  #       ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+  #         pool:
+  #           name: Azure Pipelines
+  #           vmImage: ubuntu-20.04
+  #       steps:
+  #         - task: Docker@2
+  #           displayName: Build an image
+  #           inputs:
+  #             containerRegistry: "Docker Hub"
+  #             repository: $(DOCKER_HUB_BACKEND)
+  #             command: build
+  #             dockerfile: "$(Build.SourcesDirectory)/backend/Dockerfile" # dont use prod Dockerfile (we need dev deps)
+  #             tags: |
+  #               staging
+  #         - task: Docker@2
+  #           displayName: Push an image
+  #           inputs:
+  #             containerRegistry: "Docker Hub"
+  #             repository: $(DOCKER_HUB_BACKEND)
+  #             command: push
+  #             tags: |
+  #               staging
+  #     - job: build_push_frontend
+  #       cancelTimeoutInMinutes: 30
+  #       displayName: Build and push frontend
+  #       ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+  #         pool:
+  #           name: Default
+  #           demands:
+  #             - agent.name -equals mydockeragent
+  #       ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+  #         pool:
+  #           name: Azure Pipelines
+  #           vmImage: ubuntu-20.04
+  #       steps:
+  #         - task: Docker@2
+  #           displayName: Build an image
+  #           inputs:
+  #             containerRegistry: "Docker Hub"
+  #             repository: $(DOCKER_HUB_FRONTEND)
+  #             command: build
+  #             arguments: "--build-arg REACT_APP_BUILD_NUMBER=$(tag) --build-arg
+  #               REACT_APP_REMOTE_SERVER_URL=$(REMOTE_SERVER_URL_STAGING)"
+  #             dockerfile: "$(Build.SourcesDirectory)/frontend/Dockerfile.prod"
+  #             tags: |
+  #               staging
+  #         - task: Docker@2
+  #           displayName: Push an image
+  #           inputs:
+  #             containerRegistry: "Docker Hub"
+  #             repository: $(DOCKER_HUB_FRONTEND)
+  #             command: push
+  #             tags: |
+  #               staging
   - stage: test
-    dependsOn: push_staging
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     displayName: Compose up and test
     jobs:
@@ -164,6 +162,13 @@ stages:
               docker network create traefik-net
             displayName: Create external network
 
+          - bash: |
+              mkdir -p $TRAEFIK_CERTIFICATES_DIR
+            displayName: Create certificates directory
+            env:
+              # the recommended way to map to a secret env variable
+              TRAEFIK_CERTIFICATES_DIR: $(TRAEFIK_CERTIFICATES_DIR)
+
           - task: Bash@3
             displayName: mkcert for Traefik
             inputs:
@@ -176,7 +181,7 @@ stages:
                 ./mkcert --cert-file localhost.pem --key-file localhost-key.pem \
                   "app.localhost" "*.app.localhost" \
                   "testing.localhost" "*.testing.localhost" \
-              workingDirectory: "$(Build.SourcesDirectory)/traefik/certificates/"
+              workingDirectory: "$(TRAEFIK_CERTIFICATES_DIR)"
               failOnStderr: false
               noProfile: true
 
@@ -203,7 +208,6 @@ stages:
           - bash: |
               docker exec backend_myapp_ci /bin/bash -c "
                 printf '
-                \n CICD=$CICD
                 \n FRONTEND_PORT_CI=$FRONTEND_PORT_CI
                 \n SERVER_PORT_CI=$SERVER_PORT_CI
                 \n DB_PORT_CI=$DB_PORT_CI
@@ -229,7 +233,7 @@ stages:
             displayName: Create initial data for E2E
 
           - bash: |
-              docker exec backend_myapp_ci /bin/bash -c "pytest -n 4 --dist loadscope"
+              docker exec backend_myapp_ci /bin/bash -c "pytest -n auto --dist loadscope"
             displayName: Run backend tests
 
           - bash: |
@@ -246,13 +250,9 @@ stages:
           # References for more efficient local dev setup sharing volumes
           # https://jdlm.info/articles/2020/05/24/testing-node-docker-compose-end-to-end.html
           - bash: |
-              if docker exec puppeteer_ci /bin/sh -c 'npm run test:ci ; exit $?'; then
-                printf '\nE2E tests passed\n'
-                exit 0
-              else
-                printf '\nE2E tests failed\n'
-                exit 1
-              fi
+              npm install 
+              npm run test:ci
+            workingDirectory: "$(Build.SourcesDirectory)/e2e"
             displayName: Run E2E tests
 
     # not possible to build and then push even with the same agent in MS hosted pipeline
