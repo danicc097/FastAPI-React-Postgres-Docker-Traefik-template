@@ -44,6 +44,7 @@ variables:
   REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
   DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
   DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
+  TRAEFIK_CERTIFICATES_DIR: $(Build.SourcesDirectory)/traefik/certificates/
 
 stages:
   - stage: check_env_variables
@@ -164,6 +165,13 @@ stages:
               docker network create traefik-net
             displayName: Create external network
 
+          - bash: |
+              mkdir -p $TRAEFIK_CERTIFICATES_DIR
+            displayName: Create certificates directory
+            env:
+              # the recommended way to map to a secret env variable
+              TRAEFIK_CERTIFICATES_DIR: $(TRAEFIK_CERTIFICATES_DIR)
+
           - task: Bash@3
             displayName: mkcert for Traefik
             inputs:
@@ -176,7 +184,7 @@ stages:
                 ./mkcert --cert-file localhost.pem --key-file localhost-key.pem \
                   "app.localhost" "*.app.localhost" \
                   "testing.localhost" "*.testing.localhost" \
-              workingDirectory: "$(Build.SourcesDirectory)/traefik/certificates/"
+              workingDirectory: "$(TRAEFIK_CERTIFICATES_DIR)"
               failOnStderr: false
               noProfile: true
 
