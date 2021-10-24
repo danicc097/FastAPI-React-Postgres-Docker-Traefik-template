@@ -146,12 +146,9 @@ export default abstract class BasePO {
       await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
       // this almost fixes the Not Authenticated permanent error due to first
       // attempt to fetch token when visiting the page.
-      await page.waitForResponse(
-        (response) => {
-          return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
-        },
-        { timeout: 5000 },
-      )
+      await page.waitForResponse((response) => {
+        return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
+      })
       // await this.waitUntilHTMLRendered(page, 125) // necessary
     }
   }
