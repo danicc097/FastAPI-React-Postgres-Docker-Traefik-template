@@ -143,7 +143,6 @@ stages:
   #             tags: |
   #               staging
   - stage: test
-    dependsOn: push_staging
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     displayName: Compose up and test
     jobs:
