@@ -15,6 +15,7 @@ import {
   EuiTextColor,
   EuiTitle,
 } from '@elastic/eui'
+import _ from 'lodash'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
@@ -115,7 +116,10 @@ export default function UserUpdateAccordion() {
         confirmButtonText="Yes, do it"
         defaultFocusedButton="confirm"
       >
-        <p>You&rsquo;re about to do update your credentials.</p>
+        <p>
+          {_.unescape(`You're about to update your credentials.
+        `)}
+        </p>
         <p>Are you sure you want to do this?</p>
       </EuiConfirmModal>
     )

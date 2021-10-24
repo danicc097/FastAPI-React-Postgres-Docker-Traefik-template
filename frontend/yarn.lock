@@ -2724,6 +2724,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/lodash@npm:^4.14.176":
+  version: 4.14.176
+  resolution: "@types/lodash@npm:4.14.176"
+  checksum: 9e949704dfffab60365b5cdca0477926af6eabe82c64b7be8f74b3a117bb373d58371be962c2b159dd0cf8fad49a7dcacc748564aea4ce6b6883c197a6f0bfa8
+  languageName: node
+  linkType: hard
+
 "@types/mdast@npm:^3.0.0":
   version: 3.0.10
   resolution: "@types/mdast@npm:3.0.10"
@@ -11310,6 +11317,7 @@ fsevents@^1.2.7:
     "@testing-library/jest-dom": ^5.14.1
     "@testing-library/react": ^12.0.0
     "@testing-library/user-event": ^12.8.3
+    "@types/lodash": ^4.14.176
     "@types/node": ^15.12.4
     "@types/react": ^17.0.11
     "@types/react-dom": ^17.0.8
@@ -11336,6 +11344,7 @@ fsevents@^1.2.7:
     faker: ^5.5.3
     framer-motion: ^4.1.17
     history: ^5.0.0
+    lodash: ^4.17.21
     moment: ^2.29.1
     openapi-typescript: ^4.0.1
     prettier: ^2.3.1
