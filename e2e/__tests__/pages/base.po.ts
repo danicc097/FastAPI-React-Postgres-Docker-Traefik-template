@@ -79,23 +79,23 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 15)
+    // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 10000 })
     await page.click($selector, { delay: 25 })
   }
 
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 15)
+    // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 5000 })
     await page.type($selector, text)
   }
 
   /** Wait for element and click */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 15)
+    // await page.waitForNetworkIdle()
     await page.waitForXPath($xXPath, { timeout: 10000 })
     const elements = await page.$x($xXPath)
     await elements[0]?.click()
@@ -111,8 +111,8 @@ export default abstract class BasePO {
 
   async navigate(url: string) {
     await page.goto(`${this.FRONTEND_URL}${url}`)
-    await this.waitUntilHTMLRendered(page, 75)
-    await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 25)
+    // await page.waitForNetworkIdle()
   }
 
   async getElementTextBySelector($selector: string): Promise<string> {
@@ -156,7 +156,7 @@ export default abstract class BasePO {
           await page.waitForTimeout(100)
         }
       })
-      await this.waitUntilHTMLRendered(page, 125) // necessary
+      await this.waitUntilHTMLRendered(page, 25) // necessary
     }
   }
   /**
@@ -194,7 +194,7 @@ export default abstract class BasePO {
 
     if (!!logoutButton) {
       await logoutButton.click()
-      await page.waitForNetworkIdle()
+      // await page.waitForNetworkIdle()
     } else {
       return // already logged out
     }
