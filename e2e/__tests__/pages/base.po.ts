@@ -67,7 +67,7 @@ export default abstract class BasePO {
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 125)
+    await this.waitUntilHTMLRendered(page, 50)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
@@ -76,7 +76,7 @@ export default abstract class BasePO {
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 125)
+    await this.waitUntilHTMLRendered(page, 50)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { visible: true, timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
@@ -85,7 +85,7 @@ export default abstract class BasePO {
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 125)
+    await this.waitUntilHTMLRendered(page, 50)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 })
     await page.type($selector, text)
@@ -101,8 +101,7 @@ export default abstract class BasePO {
   }
 
   async getFormCalloutErrors(): Promise<(string | null)[]> {
-    await page.waitForNetworkIdle()
-    await this.waitUntilHTMLRendered(page, 15)
+    await this.waitUntilHTMLRendered(page, 50)
     const errors = await page.$$(this.$CalloutErrorContainer)
     // handle multiple promises, else it will nested promises and not the actual error
     return Promise.all(errors.map((error) => error.evaluate((node) => node.textContent)))
@@ -110,7 +109,7 @@ export default abstract class BasePO {
 
   async navigate(url: string) {
     await page.goto(`${this.FRONTEND_URL}${url}`, { waitUntil: 'domcontentloaded' })
-    await this.waitUntilHTMLRendered(page, 125)
+    await this.waitUntilHTMLRendered(page, 50)
     // await page.waitForNetworkIdle()
   }
 
@@ -135,7 +134,7 @@ export default abstract class BasePO {
   }
 
   /** Login as a predefined user */
-  async login(user: userType | updatableUserType, expectResponse: boolean = false): Promise<void> {
+  async login(user: userType | updatableUserType, expectSuccess: boolean = false): Promise<void> {
     await this.navigate(`/login`)
     await this.waitUntilHTMLRendered(page, 50)
     const isLoggedIn = await this.isLoggedIn(user)
@@ -148,10 +147,13 @@ export default abstract class BasePO {
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
       await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
 
-      if (expectResponse) {
-        await page.waitForResponse((response) => {
-          return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
-        })
+      if (expectSuccess) {
+        await page.waitForResponse(
+          (response) => {
+            return response.request().url().includes('users/me') && response.status() === 200
+          },
+          { timeout: 10000 },
+        )
       }
       await this.waitUntilHTMLRendered(page, 50) // will redirect to profile immediately
     }
