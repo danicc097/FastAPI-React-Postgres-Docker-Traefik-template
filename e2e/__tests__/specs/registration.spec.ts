@@ -11,6 +11,10 @@ beforeEach(async () => {
 //   browser.close()
 // })
 
+afterEach(async () => {
+  await registrationPo.waitUntilHTMLRendered(page, 25)
+})
+
 describe('Test registration', () => {
   it.each`
     userTitle       | error

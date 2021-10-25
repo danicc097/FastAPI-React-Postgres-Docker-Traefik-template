@@ -27,6 +27,7 @@ import { useUnverifiedUsers } from 'src/hooks/admin/useUnverifiedUsers'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import PasswordResetRequestsTable from './PasswordResetRequestsTable'
 import PasswordResetForm from './PasswordResetForm'
+import _ from 'lodash'
 
 const StyledEuiPageContent = styled(EuiPageContent)`
   &&& {
@@ -84,7 +85,7 @@ export default function AdminPage() {
 
       <EuiText size="s">
         <p>
-          <EuiTextColor color="subdued">Manually reset a user&apos;s password.</EuiTextColor>
+          <EuiTextColor color="subdued">{_.unescape(`Manually reset a user's password.`)}</EuiTextColor>
         </p>
       </EuiText>
     </div>

@@ -9,24 +9,28 @@ beforeEach(async () => {
 //   page.close()
 // })
 
+afterEach(async () => {
+  await loginPo.waitUntilHTMLRendered(page, 25)
+})
+
 describe('Test logins', () => {
   it.each`
-    userTitle             | message
-    ${'unregisteredUser'} | ${'Authentication was unsuccessful'}
-    ${'admin'}            | ${''}
-    ${'verified'}         | ${''}
-    ${'unverified'}       | ${'Current user is not verified'}
+    userTitle             | error                                | expectResponse
+    ${'unregisteredUser'} | ${'Authentication was unsuccessful'} | ${false}
+    ${'admin'}            | ${''}                                | ${false}
+    ${'verified'}         | ${''}                                | ${false}
+    ${'unverified'}       | ${'Current user is not verified'}    | ${false}
   `(
     'should display an appropiate error in a callout message box',
-    async ({ userTitle, message }: { userTitle: userType; message: string }) => {
-      await loginPo.login(userTitle)
+    async ({ userTitle, error, expectResponse }: { userTitle: userType; error: string; expectResponse: boolean }) => {
+      await loginPo.login(userTitle, expectResponse)
       const calloutErrors = (await loginPo.getFormCalloutErrors()).toString()
-      expect(calloutErrors).toEqual(expect.stringMatching(message))
+      expect(calloutErrors).toEqual(expect.stringMatching(error))
     },
   )
 
   it('should display 2 form errors given invalid email and password', async () => {
-    await loginPo.login('badUser')
+    await loginPo.login('badUser', false)
     const formErrors = await loginPo.getFormRowErrors()
     expect(formErrors).toHaveLength(2)
   })

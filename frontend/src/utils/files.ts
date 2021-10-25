@@ -1,3 +1,6 @@
+/**
+ * Download a password reset file with new credentials
+ */
 export const createTextFileWithCreds = ({ email, password }: { email: string; password: string }) => {
   const element = document.createElement('a')
   const file = new Blob([`Email: ${email}\nPassword: ${password}`], { type: 'text/plain' })

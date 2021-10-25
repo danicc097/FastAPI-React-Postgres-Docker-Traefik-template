@@ -10,6 +10,7 @@ import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import { useAllUsers } from 'src/hooks/admin/useAllUsers'
 import { AdminActionType } from 'src/redux/action-types'
 import { createTextFileWithCreds } from 'src/utils/files'
+import _ from 'lodash'
 
 export default function PasswordResetForm() {
   const [passwordResetUsersWithLabel, setPasswordResetUsersWithLabel] = useState<any>()
@@ -69,7 +70,7 @@ export default function PasswordResetForm() {
         defaultFocusedButton="confirm"
         data-test-subj="passwordResetForm__confirmModal"
       >
-        <p>You&rsquo;re about to reset the password for {selection}.</p>
+        <p>{_.unescape(`You're about to reset the password for ${selection}.`)}</p>
         <p>Are you sure you want to do this?</p>
       </EuiConfirmModal>
     )
