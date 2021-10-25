@@ -65,30 +65,33 @@ export default abstract class BasePO {
     return Promise.all(errors.map((error) => error.evaluate((node) => node.textContent)))
   }
 
+  /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 75)
+    await this.waitUntilHTMLRendered(page, 125)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
     })
   }
 
+  /** Increase wait time for rendering to avoid random failures */
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 75)
+    await this.waitUntilHTMLRendered(page, 125)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { visible: true, timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
     })
   }
 
+  /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 75)
+    await this.waitUntilHTMLRendered(page, 125)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 })
     await page.type($selector, text)
   }
 
-  /** Wait for element and click */
+  /** Increase wait time for rendering to avoid random failures */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 50)
     // await page.waitForNetworkIdle()
@@ -107,7 +110,7 @@ export default abstract class BasePO {
 
   async navigate(url: string) {
     await page.goto(`${this.FRONTEND_URL}${url}`, { waitUntil: 'domcontentloaded' })
-    await this.waitUntilHTMLRendered(page, 75)
+    await this.waitUntilHTMLRendered(page, 125)
     // await page.waitForNetworkIdle()
   }
 
@@ -127,7 +130,7 @@ export default abstract class BasePO {
 
   /** Ensure a specific user is logged in */
   async isLoggedIn(user: userType | updatableUserType): Promise<boolean> {
-    await this.waitUntilHTMLRendered(page, 15)
+    await this.waitUntilHTMLRendered(page, 50)
     return await page.$(`[title='${users[user].username}']`).then((ele) => !!ele)
   }
 
