@@ -132,7 +132,7 @@ export default abstract class BasePO {
   }
 
   /** Login as a predefined user */
-  async login(user: userType | updatableUserType): Promise<void> {
+  async login(user: userType | updatableUserType, expectResponse: boolean = true): Promise<void> {
     await this.navigate(`/login`)
     await this.waitUntilHTMLRendered(page, 50)
     const isLoggedIn = await this.isLoggedIn(user)
@@ -144,12 +144,13 @@ export default abstract class BasePO {
       await this.waitForSelectorAndType("[data-test-subj='email-input']", users[user].email)
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
       await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
-      // this almost fixes the Not Authenticated permanent error due to first
-      // attempt to fetch token when visiting the page.
-      await page.waitForResponse((response) => {
-        return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
-      })
-      await this.waitUntilHTMLRendered(page, 125) // will redirect to profile immediately
+      // some login tests do not expect a response since they fail on validation
+      if (expectResponse) {
+        await page.waitForResponse((response) => {
+          return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
+        })
+      }
+      await this.waitUntilHTMLRendered(page, 50) // will redirect to profile immediately
     }
   }
   /**
