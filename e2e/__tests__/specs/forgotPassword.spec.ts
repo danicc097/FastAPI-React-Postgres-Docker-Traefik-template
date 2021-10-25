@@ -12,6 +12,10 @@ beforeEach(async () => {
 //   page.close()
 // })
 
+afterEach(async () => {
+  await forgotPasswordPo.waitUntilHTMLRendered(page, 25)
+})
+
 describe('Test forgot password form', () => {
   it.each`
     email                              | message          | error

@@ -55,7 +55,7 @@ services:
 
   myapp_frontend_prod:
     image: ${DOCKER_HUB_FRONTEND}:latest
-    container_name: myapp_frontend_myapp_prod
+    container_name: frontend_myapp_prod
     networks:
       - traefik-net
     # volumes:

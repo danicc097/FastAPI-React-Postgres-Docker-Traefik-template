@@ -8,20 +8,29 @@ beforeEach(async () => {
   // await profilePo.setupPuppeteerLogging()
   await profilePo.go()
   await profilePo.autoLogout()
-  await profilePo.login('profileTestUser')
+  await profilePo.login('profileTestUser', true)
 })
 
 // afterAll(async () => {
 //   page.close()
 // })
 
+// afterEach(async () => {
+//   await profilePo.waitUntilHTMLRendered(page, 25)
+// })
+
 describe('Test profile', () => {
   it('should not let us update with a taken username', async () => {
-    // await page.click("[data-test-subj='user-update-form']")
     await profilePo.openUserUpdateAccordion()
     await profilePo.fillUserUpdateForm({ newUsername: users['admin'].username })
     await profilePo.submitUserUpdateForm()
-    await profilePo.confirmModal()
+    await profilePo.retry(
+      page,
+      async () => {
+        await profilePo.confirmModal()
+      },
+      10,
+    )
     await profilePo.waitForUserUpdateFailureToast()
 
     const calloutErrors = (await profilePo.getFormCalloutErrors()).toString()
@@ -41,7 +50,13 @@ describe('Test profile', () => {
     await profilePo.openUserUpdateAccordion()
     await profilePo.fillUserUpdateForm({ newUsername })
     await profilePo.submitUserUpdateForm()
-    await profilePo.confirmModal()
+    await profilePo.retry(
+      page,
+      async () => {
+        await profilePo.confirmModal()
+      },
+      10,
+    )
     await profilePo.waitForUserUpdateSuccessToast()
 
     users['profileTestUser'].username = newUsername
@@ -51,7 +66,13 @@ describe('Test profile', () => {
     await profilePo.openUserUpdateAccordion()
     await profilePo.fillUserUpdateForm({ newPassword, oldPassword: users['profileTestUser'].password })
     await profilePo.submitUserUpdateForm()
-    await profilePo.confirmModal()
+    await profilePo.retry(
+      page,
+      async () => {
+        await profilePo.confirmModal()
+      },
+      10,
+    )
     await profilePo.waitForUserUpdateSuccessToast()
 
     users['profileTestUser'].password = newPassword

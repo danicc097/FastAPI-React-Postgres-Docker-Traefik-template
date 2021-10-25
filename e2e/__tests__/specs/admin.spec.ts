@@ -6,9 +6,13 @@ import profilePo from '../pages/profile.po'
 //   page.close()
 // })
 
+afterEach(async () => {
+  await adminPo.waitUntilHTMLRendered(page, 25)
+})
+
 describe('Test admin panel', () => {
   beforeEach(async () => {
-    await profilePo.login('admin')
+    await profilePo.login('admin', true)
     await adminPo.go()
   })
 
@@ -29,9 +33,19 @@ describe('Test admin panel', () => {
     await adminPo.clickPasswordResetButton()
 
     const trigger = async () => await adminPo.confirmModal()
-    const newPassword = await adminPo.interceptPasswordReset(trigger, 'verified')
-    await page.waitForNetworkIdle()
-    expect(newPassword).not.toBe('')
+
+    let newPassword
+    while (!newPassword) {
+      newPassword = await adminPo.retry(
+        page,
+        async () => {
+          return await adminPo.interceptPasswordReset(trigger, 'verified')
+        },
+        50,
+      )
+    }
+
+    expect(newPassword).not.toBe(undefined)
     expect(users['verified'].password).toBe(newPassword)
   })
 
@@ -41,7 +55,13 @@ describe('Test admin panel', () => {
     // only passwordResetTestUser[*] are in the table
     const trigger = async () =>
       await adminPo.clickResetRequestsTableAction(users['passwordResetTestUser2'].email, 'reset')
-    const newPassword = await adminPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
+
+    let newPassword
+    while (!newPassword) {
+      try {
+        newPassword = await adminPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
+      } catch (e) {}
+    }
     await page.waitForNetworkIdle()
     expect(newPassword).not.toBe('')
     expect(users['passwordResetTestUser2'].password).toBe(newPassword)

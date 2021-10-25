@@ -249,10 +249,19 @@ stages:
           # E2E tests
           # References for more efficient local dev setup sharing volumes
           # https://jdlm.info/articles/2020/05/24/testing-node-docker-compose-end-to-end.html
+          # - bash: |
+          #     npm install
+          #     npm run test:ci
+          #   workingDirectory: "$(Build.SourcesDirectory)/e2e"
+          #   displayName: Run E2E tests
           - bash: |
-              npm install 
-              npm run test:ci
-            workingDirectory: "$(Build.SourcesDirectory)/e2e"
+              if docker exec puppeteer_ci /bin/sh -c 'npm run test:ci ; exit $?'; then
+                printf '\nE2E tests passed\n'
+                exit 0
+              else
+                printf '\nE2E tests failed\n'
+                exit 1
+              fi
             displayName: Run E2E tests
 
     # not possible to build and then push even with the same agent in MS hosted pipeline
