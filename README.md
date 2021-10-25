@@ -94,4 +94,5 @@ select pg_terminate_backend(pid) from pg_stat_activity where datname=<DATABASE_N
 
 ## E2E testing
 
-- The whole E2E test suite is run without ``TESTING=1`` to mimic production. We can also run ``pytest`` inside the container this way.
+- The whole E2E test suite is run without ``TESTING=1`` to mimic production. We could also run ``pytest`` inside the container in any case.
+
