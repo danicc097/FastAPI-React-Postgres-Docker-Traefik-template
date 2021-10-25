@@ -88,7 +88,7 @@ export default abstract class BasePO {
       async () => {
         await page.waitForSelector($selector, { timeout: 1000 })
       },
-      10,
+      30,
     )
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
@@ -102,7 +102,7 @@ export default abstract class BasePO {
       async () => {
         await page.waitForSelector($selector, { visible: true, timeout: 1000 })
       },
-      10,
+      30,
     )
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
@@ -116,7 +116,7 @@ export default abstract class BasePO {
       async () => {
         await page.waitForSelector($selector, { timeout: 1000 })
       },
-      10,
+      30,
     )
     // await page.waitForNetworkIdle()
     await page.type($selector, text)
@@ -130,7 +130,7 @@ export default abstract class BasePO {
       async () => {
         await page.waitForXPath($xXPath, { timeout: 1000 })
       },
-      10,
+      30,
     )
     // await page.waitForNetworkIdle()
     const elements = await page.$x($xXPath)
@@ -179,7 +179,7 @@ export default abstract class BasePO {
       async () => {
         return await this.isLoggedIn(user)
       },
-      10,
+      30,
     )
     if (!isLoggedIn) {
       await this.autoLogout() // in case we were testing someone else
