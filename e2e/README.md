@@ -29,3 +29,8 @@ npm run test-local:headful -- loginPage
 - <https://github.com/davidjgoss/cucumber-puppeteer-typescript-starter>
 - PO Model: <https://javascript.plainenglish.io/end-to-end-testing-using-jest-and-puppeteer-page-object-model-with-typescript-7fbd099f1b42>
 - <https://ohadstoller.medium.com/how-to-write-e2e-tests-in-page-object-model-using-jest-and-puppeteer-f678e65330af>
+
+## ToDo
+
+- Tab management for different users: https://stackoverflow.com/questions/63013903/multi-user-e2e-testing-with-puppeteer
+- 

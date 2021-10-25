@@ -1,13 +1,13 @@
 // per browser configuration
 
 module.exports = {
-  globalSetup: './globalSetup.js',
-  globalTeardown: './globalTeardown.js',
+  // globalSetup: './globalSetup.js',
+  // globalTeardown: './globalTeardown.js',
   launch: {
     // slowMo: 50, // slow down all puppeteer operations to make debugging easier
     dumpio: false, // whether browser stdout and stderr are sent to process.stdout and process.stderr
     headless: process.env.HEADLESS !== 'false',
-
+    product: 'chrome',
     args: [
       '--disable-infobars',
       '--window-size=2000,1200',
@@ -20,4 +20,5 @@ module.exports = {
     defaultViewport: null,
   },
   browserContext: 'incognito',
+  browserPerWorker: true,
 }

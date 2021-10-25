@@ -12,7 +12,7 @@ afterEach(async () => {
 
 describe('Test admin panel', () => {
   beforeEach(async () => {
-    await profilePo.login('admin')
+    await profilePo.login('admin', true)
     await adminPo.go()
   })
 

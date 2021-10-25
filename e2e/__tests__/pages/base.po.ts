@@ -66,7 +66,7 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 25)
+    await this.waitUntilHTMLRendered(page, 75)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
@@ -74,7 +74,7 @@ export default abstract class BasePO {
   }
 
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 25)
+    await this.waitUntilHTMLRendered(page, 75)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { visible: true, timeout: 30000 }).then(async () => {
       await page.click($selector, { delay: 50 })
@@ -82,7 +82,7 @@ export default abstract class BasePO {
   }
 
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 25)
+    await this.waitUntilHTMLRendered(page, 75)
     // await page.waitForNetworkIdle()
     await page.waitForSelector($selector, { timeout: 30000 })
     await page.type($selector, text)
@@ -132,7 +132,7 @@ export default abstract class BasePO {
   }
 
   /** Login as a predefined user */
-  async login(user: userType | updatableUserType, expectResponse: boolean = true): Promise<void> {
+  async login(user: userType | updatableUserType, expectResponse: boolean = false): Promise<void> {
     await this.navigate(`/login`)
     await this.waitUntilHTMLRendered(page, 50)
     const isLoggedIn = await this.isLoggedIn(user)
@@ -144,12 +144,12 @@ export default abstract class BasePO {
       await this.waitForSelectorAndType("[data-test-subj='email-input']", users[user].email)
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
       await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
-      // some login tests do not expect a response since they fail on validation
-      // if (expectResponse) {
-      //   await page.waitForResponse((response) => {
-      //     return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
-      //   })
-      // }
+
+      if (expectResponse) {
+        await page.waitForResponse((response) => {
+          return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
+        })
+      }
       await this.waitUntilHTMLRendered(page, 50) // will redirect to profile immediately
     }
   }
