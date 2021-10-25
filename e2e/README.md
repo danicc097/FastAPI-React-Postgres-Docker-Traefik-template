@@ -20,6 +20,8 @@ npm run test-local:headful -- loginPage
 
 ## Troubleshooting
 
+IF it's a timeout error, just increase render wait time first. If it fixes it consistetly don't lose more time with it.
+
 - Debug workers not being closed after tests running files individually with ``--detectOpenHandles {<stringMatcher1>, <stringMatcher2>, ...}`` to find the culprit.
 
 - Getting literal ``"Not Found"`` error in forms instead of a detailed error message? Check the backend API endpoint is correct.

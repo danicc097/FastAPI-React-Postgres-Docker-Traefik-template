@@ -92,7 +92,7 @@ export function createFunctionWaitUntilHTMLRendered() {
     let lastHTMLSize = 0
     let checkCounts = 1
     let countStableSizeIterations = 0
-    const minStableSizeIterations = 3
+    const minStableSizeIterations = 4
 
     while (checkCounts++ <= maxChecks) {
       let html = await page.content()
