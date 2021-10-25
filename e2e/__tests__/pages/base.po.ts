@@ -75,14 +75,24 @@ export default abstract class BasePO {
 
   async confirmModal() {
     // await page.waitForNetworkIdle()
-    await this.waitUntilHTMLRendered(page, 150)
-    await this.waitForSelectorAndClick(this.$ConfirmModal)
+    await this.retry(
+      page,
+      async () => {
+        await this.waitForSelectorAndClick(this.$ConfirmModal)
+      },
+      5,
+    )
   }
 
   async cancelModal() {
     // await page.waitForNetworkIdle()
-    await this.waitUntilHTMLRendered(page, 150)
-    await this.waitForSelectorAndClick(this.$CancelModal)
+    await this.retry(
+      page,
+      async () => {
+        await this.waitForSelectorAndClick(this.$CancelModal)
+      },
+      5,
+    )
   }
 
   async getFormRowErrors(): Promise<(string | null)[]> {
