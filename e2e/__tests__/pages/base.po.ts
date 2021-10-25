@@ -149,7 +149,7 @@ export default abstract class BasePO {
       await page.waitForResponse((response) => {
         return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
       })
-      // await this.waitUntilHTMLRendered(page, 125) // necessary
+      await this.waitUntilHTMLRendered(page, 125) // will redirect to profile immediately
     }
   }
   /**
@@ -187,7 +187,7 @@ export default abstract class BasePO {
 
     if (!!logoutButton) {
       await logoutButton.click()
-      await page.waitForNetworkIdle()
+      await this.waitUntilHTMLRendered(page, 125) // will redirect to root
     } else {
       return // already logged out
     }
