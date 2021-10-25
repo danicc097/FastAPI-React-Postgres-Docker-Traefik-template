@@ -145,11 +145,11 @@ export default abstract class BasePO {
       await this.waitForSelectorAndType("[data-test-subj='password-input']", users[user].password)
       await this.waitForVisibleSelectorAndClick("[data-test-subj='login-submit']")
       // some login tests do not expect a response since they fail on validation
-      if (expectResponse) {
-        await page.waitForResponse((response) => {
-          return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
-        })
-      }
+      // if (expectResponse) {
+      //   await page.waitForResponse((response) => {
+      //     return response.request().url().includes('users/me') // && response.status() === 200 we need to test errors!
+      //   })
+      // }
       await this.waitUntilHTMLRendered(page, 50) // will redirect to profile immediately
     }
   }
