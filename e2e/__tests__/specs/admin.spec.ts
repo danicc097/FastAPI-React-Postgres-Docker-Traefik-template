@@ -36,12 +36,15 @@ describe('Test admin panel', () => {
 
     let newPassword
     while (!newPassword) {
-      try {
-        newPassword = await adminPo.interceptPasswordReset(trigger, 'verified')
-      } catch (e) {}
+      newPassword = await adminPo.retry(
+        page,
+        async () => {
+          return await adminPo.interceptPasswordReset(trigger, 'verified')
+        },
+        50,
+      )
     }
 
-    await page.waitForNetworkIdle()
     expect(newPassword).not.toBe(undefined)
     expect(users['verified'].password).toBe(newPassword)
   })

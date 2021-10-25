@@ -51,28 +51,28 @@ export default abstract class BasePO {
   /**
    *Generic retry for a given async function ``fn``
    */
-  async retry(page: Page, fn: () => Promise<any>, retryCount: number) {
+  async retry(page: Page, fn: () => Promise<any>, retryCount: number): Promise<any> {
     while (retryCount > 0) {
       try {
         return await fn()
       } catch (e) {
         await this.waitUntilHTMLRendered(page, 50)
-        await this.retry(page, fn, retryCount - 1)
+        return await this.retry(page, fn, retryCount - 1)
       }
     }
-    throw new Error(`Retry count reached ${retryCount} for ${fn.toString}`)
+    throw new Error(`Retry count reached ${retryCount} for ${fn.toString()}`)
   }
 
   async confirmModal() {
-    await page.waitForNetworkIdle()
-    // await this.waitUntilHTMLRendered(page, 250)
-    await this.waitForVisibleSelectorAndClick(this.$ConfirmModal)
+    // await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 150)
+    await this.waitForSelectorAndClick(this.$ConfirmModal)
   }
 
   async cancelModal() {
-    await page.waitForNetworkIdle()
-    // await this.waitUntilHTMLRendered(page, 250)
-    await this.waitForVisibleSelectorAndClick(this.$CancelModal)
+    // await page.waitForNetworkIdle()
+    await this.waitUntilHTMLRendered(page, 150)
+    await this.waitForSelectorAndClick(this.$CancelModal)
   }
 
   async getFormRowErrors(): Promise<(string | null)[]> {
@@ -86,9 +86,9 @@ export default abstract class BasePO {
     await this.retry(
       page,
       async () => {
-        await page.waitForSelector($selector, { timeout: 3000 })
+        await page.waitForSelector($selector, { timeout: 1000 })
       },
-      50,
+      10,
     )
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
@@ -100,9 +100,9 @@ export default abstract class BasePO {
     await this.retry(
       page,
       async () => {
-        await page.waitForSelector($selector, { visible: true, timeout: 3000 })
+        await page.waitForSelector($selector, { visible: true, timeout: 1000 })
       },
-      50,
+      10,
     )
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
@@ -114,9 +114,9 @@ export default abstract class BasePO {
     await this.retry(
       page,
       async () => {
-        await page.waitForSelector($selector, { timeout: 3000 })
+        await page.waitForSelector($selector, { timeout: 1000 })
       },
-      50,
+      10,
     )
     // await page.waitForNetworkIdle()
     await page.type($selector, text)
@@ -128,9 +128,9 @@ export default abstract class BasePO {
     await this.retry(
       page,
       async () => {
-        await page.waitForXPath($xXPath, { timeout: 3000 })
+        await page.waitForXPath($xXPath, { timeout: 1000 })
       },
-      50,
+      10,
     )
     // await page.waitForNetworkIdle()
     const elements = await page.$x($xXPath)
@@ -174,7 +174,13 @@ export default abstract class BasePO {
   async login(user: userType | updatableUserType, expectSuccess: boolean = false): Promise<void> {
     await this.navigate(`/login`)
     await this.waitUntilHTMLRendered(page, 50)
-    const isLoggedIn = await this.isLoggedIn(user)
+    const isLoggedIn: boolean = await this.retry(
+      page,
+      async () => {
+        return await this.isLoggedIn(user)
+      },
+      10,
+    )
     if (!isLoggedIn) {
       await this.autoLogout() // in case we were testing someone else
       // avatar might take a while to render or something? selector might fail

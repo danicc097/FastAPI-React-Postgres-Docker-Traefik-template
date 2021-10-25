@@ -15,13 +15,12 @@ beforeEach(async () => {
 //   page.close()
 // })
 
-afterEach(async () => {
-  await profilePo.waitUntilHTMLRendered(page, 25)
-})
+// afterEach(async () => {
+//   await profilePo.waitUntilHTMLRendered(page, 25)
+// })
 
 describe('Test profile', () => {
   it('should not let us update with a taken username', async () => {
-    // await page.click("[data-test-subj='user-update-form']")
     await profilePo.openUserUpdateAccordion()
     await profilePo.fillUserUpdateForm({ newUsername: users['admin'].username })
     await profilePo.submitUserUpdateForm()
