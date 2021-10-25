@@ -17,8 +17,8 @@ describe('Test logins', () => {
   it.each`
     userTitle             | error                                | expectResponse
     ${'unregisteredUser'} | ${'Authentication was unsuccessful'} | ${false}
-    ${'admin'}            | ${''}                                | ${true}
-    ${'verified'}         | ${''}                                | ${true}
+    ${'admin'}            | ${''}                                | ${false}
+    ${'verified'}         | ${''}                                | ${false}
     ${'unverified'}       | ${'Current user is not verified'}    | ${false}
   `(
     'should display an appropiate error in a callout message box',
@@ -30,7 +30,7 @@ describe('Test logins', () => {
   )
 
   it('should display 2 form errors given invalid email and password', async () => {
-    await loginPo.login('badUser')
+    await loginPo.login('badUser', false)
     const formErrors = await loginPo.getFormRowErrors()
     expect(formErrors).toHaveLength(2)
   })
