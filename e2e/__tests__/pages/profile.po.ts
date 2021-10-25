@@ -38,11 +38,11 @@ class ProfilePO extends BasePO {
   async submitUserUpdateForm() {
     // await this.waitUntilHTMLRendered(50)
     await this.waitForVisibleSelectorAndClick("[data-test-subj='user-update-submit']")
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
   }
 
   async openUserUpdateAccordion() {
-    await this.waitForVisibleSelectorAndClick(this.$UserUpdateAccordion)
+    await this.waitForSelectorAndClick(this.$UserUpdateAccordion)
   }
 }
 

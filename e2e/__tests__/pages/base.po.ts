@@ -50,6 +50,16 @@ export default abstract class BasePO {
 
   /**
    *Generic retry for a given async function ``fn``
+   * @example
+      ```
+      await this.retry(
+         page,
+         async () => {
+           return await myFunction()
+         },
+         30,
+       )
+       ```
    */
   async retry(page: Page, fn: () => Promise<any>, retryCount: number): Promise<any> {
     while (retryCount > 0) {
@@ -82,56 +92,34 @@ export default abstract class BasePO {
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    // await this.waitUntilHTMLRendered(page, 50)
-    await this.retry(
-      page,
-      async () => {
-        await page.waitForSelector($selector, { timeout: 1000 })
-      },
-      30,
-    )
+    await this.waitUntilHTMLRendered(page, 100)
+    await page.waitForSelector($selector, { timeout: 1000 })
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
-    // await this.waitUntilHTMLRendered(page, 50)
-    await this.retry(
-      page,
-      async () => {
-        await page.waitForSelector($selector, { visible: true, timeout: 1000 })
-      },
-      30,
-    )
+    await this.waitUntilHTMLRendered(page, 100)
+    await page.waitForSelector($selector, { visible: true, timeout: 1000 })
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    // await this.waitUntilHTMLRendered(page, 50)
-    await this.retry(
-      page,
-      async () => {
-        await page.waitForSelector($selector, { timeout: 1000 })
-      },
-      30,
-    )
+    await this.waitUntilHTMLRendered(page, 100)
+    await page.waitForSelector($selector, { timeout: 1000 })
+
     // await page.waitForNetworkIdle()
     await page.type($selector, text)
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
-    // await this.waitUntilHTMLRendered(page, 50)
-    await this.retry(
-      page,
-      async () => {
-        await page.waitForXPath($xXPath, { timeout: 1000 })
-      },
-      30,
-    )
+    await this.waitUntilHTMLRendered(page, 100)
+    await page.waitForXPath($xXPath, { timeout: 1000 })
+
     // await page.waitForNetworkIdle()
     const elements = await page.$x($xXPath)
     await elements[0]?.click()
