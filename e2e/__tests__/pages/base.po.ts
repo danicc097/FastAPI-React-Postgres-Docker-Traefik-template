@@ -56,7 +56,7 @@ export default abstract class BasePO {
       try {
         return await fn()
       } catch (e) {
-        this.waitUntilHTMLRendered(page, 50)
+        await this.waitUntilHTMLRendered(page, 50)
         await this.retry(page, fn, retryCount - 1)
       }
     }
