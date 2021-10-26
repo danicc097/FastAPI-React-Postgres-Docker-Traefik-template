@@ -1,7 +1,5 @@
 package models
 
-// convert all python pydantic models to go structs
-// code below is golang
 type ProfileBase struct {
 	CoreModel
 	FullName    string `json:"full_name,omitempty"`

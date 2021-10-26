@@ -35,7 +35,6 @@ type UserInDB struct {
 	Email         string `json:"email"`
 	Username      string `json:"username"`
 	Password      string `json:"password"`
-	Salt          string `json:"salt"`
 	EmailVerified bool   `json:"email_verified"`
 	IsActive      bool   `json:"is_active"`
 	IsSuperuser   bool   `json:"is_superuser"`
