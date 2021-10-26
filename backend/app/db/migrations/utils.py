@@ -4,6 +4,20 @@ import sqlalchemy as sa
 from alembic import op
 
 
+from sqlalchemy.sql import expression
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.types import DateTime
+
+
+class utcnow(expression.FunctionElement):
+    type = DateTime()
+
+
+@compiles(utcnow, "postgresql")
+def pg_utcnow(element, compiler, **kw):
+    return "TIMEZONE('utc', CURRENT_TIMESTAMP)"
+
+
 def create_updated_at_trigger() -> None:
     """
     ``PL/pgSQL`` trigger. To be created for every table.
@@ -28,20 +42,20 @@ def timestamps(indexed: bool = False) -> Tuple[sa.Column, sa.Column]:
     """
     Returns two columns - ``created_at`` and ``updated_at``
     that can be unpacked into any table -> ``*timestamps()``.\n
-    They default to the current moment in time with ``sa.func.now()``.
+    They default to the current moment in time in UTC with ``utcnow()``.
     """
     return (
         sa.Column(
             "created_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.func.now(),
+            DateTime,
+            server_default=utcnow(),
             nullable=False,
             index=indexed,
         ),
         sa.Column(
             "updated_at",
-            sa.TIMESTAMP(timezone=True),
-            server_default=sa.func.now(),
+            DateTime,
+            server_default=utcnow(),
             nullable=False,
             index=indexed,
         ),
