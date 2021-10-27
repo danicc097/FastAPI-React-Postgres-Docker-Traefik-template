@@ -15,4 +15,5 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069 // indirect
 	golang.org/x/text v0.3.6 // indirect
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

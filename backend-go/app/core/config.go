@@ -11,8 +11,10 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// var validate *validator.Validate // per docs, yet -> SIGSEGV
 var validate = validator.New()
 
 // to be synced with json config files fields
@@ -31,10 +33,9 @@ type Config struct {
 }
 
 var (
-	localConfigFilePath    = filepath.Join(GetRuntimeDirectory(), "config/%s.json")
-	globalConfigFilePath   = "/etc/%s/config/%s.json"
-	unspecifiedEnvironment = ""
-	devEnvironment         = "dev"
+	localConfigPath  = filepath.Join(GetFileRuntimeDirectory(), "config/%s.json")
+	globalConfigPath = "/etc/%s/config/%s.json" // default cfg if no local found
+	devEnvironment   = "dev"
 )
 
 type Options struct {
@@ -60,11 +61,13 @@ func LoadConfigForEnvironment(configuration interface{}, options *Options) error
 	if err := validate.Struct(options); err != nil {
 		return fmt.Errorf("failed to validate options: %v", err)
 	}
-	localConfigFilePath, err := getConfigFilePath(options)
+
+	localConfigPath, err := getConfigFilePath(options)
 	if err != nil {
 		return err
 	}
-	return loadConfig(localConfigFilePath, configuration)
+
+	return loadConfig(localConfigPath, configuration)
 }
 
 func getConfigFilePath(options *Options) (string, error) {
@@ -72,18 +75,19 @@ func getConfigFilePath(options *Options) (string, error) {
 	if options.LocalPathOverride != "" {
 		localFileName = options.LocalPathOverride
 	} else {
-		localFileName = os.Getenv("GOPATH") + getLocalFilePath(options)
+		localFileName = getLocalFilePath(options)
 	}
 
 	if _, err := os.Stat(localFileName); !os.IsNotExist(err) {
 		return localFileName, nil
 	}
 
+	// if no local config present, try global
 	globalFileName := ""
 	if options.GlobalPathOverride != "" {
 		globalFileName = options.GlobalPathOverride
 	} else {
-		globalFileName = fmt.Sprintf(globalConfigFilePath, options.AppName, options.Environment)
+		globalFileName = fmt.Sprintf(globalConfigPath, options.AppName, options.Environment)
 	}
 
 	if _, err := os.Stat(globalFileName); os.IsNotExist(err) {
@@ -93,7 +97,7 @@ func getConfigFilePath(options *Options) (string, error) {
 }
 
 func getLocalFilePath(options *Options) string {
-	return fmt.Sprintf(localConfigFilePath, options.Environment)
+	return fmt.Sprintf(localConfigPath, options.Environment)
 }
 
 func loadConfig(filePath string, configOptions interface{}) error {
@@ -105,11 +109,11 @@ func loadConfig(filePath string, configOptions interface{}) error {
 	decoder := json.NewDecoder(file)
 
 	if err := decoder.Decode(configOptions); err != nil {
-		return fmt.Errorf("failed to parse configuration file: %v", err)
+		return fmt.Errorf("failed to parse config file: %v", err)
 	}
 
 	if err := validate.Struct(configOptions); err != nil {
-		return fmt.Errorf("failed to validate configuration file: %v", err)
+		return fmt.Errorf("failed to validate config file: %v", err)
 	}
 
 	return nil
@@ -126,7 +130,8 @@ func GetCurrentWorkingDirectory() string {
 	return dir
 }
 
-func GetRuntimeDirectory() string {
+// Returns the directory of the file this function lives in.
+func GetFileRuntimeDirectory() string {
 	_, b, _, _ := runtime.Caller(0)
 	dir := path.Join(path.Dir(b))
 	return dir
@@ -149,17 +154,21 @@ func setupLogger() {
 
 	filename := fmt.Sprintf("%s/logs/%s.log", GetCurrentWorkingDirectory(), GetEnvironmentName())
 	os.MkdirAll(filepath.Dir(filename), 0755)
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0755)
-	if err != nil {
-		logrus.Error("Error opening log file %v: %v", filename, err)
-	}
-	mw := io.MultiWriter(os.Stdout, f) // output to stdout and file
+	mw := io.MultiWriter(os.Stdout, &lumberjack.Logger{
+		Filename:   filename,
+		MaxSize:    30, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28,   //days
+		Compress:   true, // disabled by default
+	})
+	// output to both stdout and rotated log file
 	logrus.SetOutput(mw)
 }
 
 func ConfigureApp() {
 
 	setupLogger()
+	logrus.Infof("Loading config from %s", GetFileRuntimeDirectory())
 
 	options := Options{
 		AppName:     "myapp",
@@ -175,5 +184,4 @@ func ConfigureApp() {
 	logrus.Infof("Running myapp in environment: %s", GetEnvironmentName())
 	logrus.Info("Current directory: ", os.Getenv("PWD"))
 	logrus.Info("Executable directory: ", GetExecutableDirectory())
-	logrus.Info("Runtime directory of file: ", GetRuntimeDirectory())
 }

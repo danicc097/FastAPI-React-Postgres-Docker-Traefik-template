@@ -4,6 +4,7 @@ import (
 	"backend/app/models"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -50,11 +51,11 @@ func CreateToken(userid uint64) (string, error) {
 	if err != nil {
 		panic(err)
 	}
-	// ACCESS_TOKEN_EXPIRE_MINUTES
-	atClaims := jwt.MapClaims{}
-	atClaims["authorized"] = true
-	atClaims["user_id"] = userid
-	atClaims["exp"] = accessTokenExpireMinutes
+	atClaims := jwt.MapClaims{
+		"authorized": true,
+		"user_id":    userid,
+		"exp":        time.Now().Add(time.Minute * time.Duration(accessTokenExpireMinutes)).Unix(),
+	}
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(os.Getenv("ACCESS_SECRET")))
 	if err != nil {

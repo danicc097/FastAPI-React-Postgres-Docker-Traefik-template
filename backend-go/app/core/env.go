@@ -1,9 +1,10 @@
 package core
 
 import (
-	"errors"
 	"os"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 func IsE2E() bool {
@@ -28,12 +29,13 @@ func IsCICD() bool {
 	return err == nil
 }
 
-var ErrEnvVarEmpty = errors.New("getenv: environment variable empty")
+var errEnvVarEmpty = errors.New("getenv: environment variable empty")
 
 func getenvStr(key string) (string, error) {
 	v := os.Getenv(key)
 	if v == "" {
-		return v, ErrEnvVarEmpty
+		return v, errors.Wrap(errEnvVarEmpty, key)
+
 	}
 	return v, nil
 }

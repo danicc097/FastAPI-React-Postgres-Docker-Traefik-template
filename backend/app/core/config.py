@@ -10,6 +10,7 @@ from loguru import logger
 from starlette.config import Config
 from starlette.datastructures import Secret
 
+# for logger folder name
 APP_ENV = os.environ.get("APP_ENV") or ""
 
 
