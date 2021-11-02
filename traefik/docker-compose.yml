@@ -92,11 +92,10 @@ services:
     container_name: whoami
     networks:
       traefik-net:
-    # labels:
-    # - "traefik.enable=true"
-
-    # - "traefik.http.routers.whoami-traefik.rule=Host(`whoami.app.localhost`)"
-    # - "traefik.http.routers.whoami-traefik.tls=true"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami-traefik.rule=Host(`whoami.app.localhost`)"
+      - "traefik.http.routers.whoami-traefik.tls=true"
     restart: unless-stopped
 
 # we have to repeat the same network parameters as in the other compose...

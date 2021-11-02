@@ -8,10 +8,33 @@ cd backend && virtualenv .venv
 pipenv install --dev
 ```
 
+Create ``.env`` from template
+
 # Frontend dev setup
 
 ```bash
 cd frontend && yarn
+# fix permission errors for container access
+mkdir logs
+sudo chmod a+rw logs/
+```
+
+Create ``.env.development`` and ``.env.production`` from template. Ensure ports are matched in root folder's ``.env`` for compose file's correct env injection.
+
+# Traefik setup
+
+Create certificates with mkcert. For ``linux`` desktop:
+
+```bash
+mkdir traefik/certificates
+cd traefik/certificates
+sudo apt install libnss3-tools
+wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64 -O mkcert
+chmod +x mkcert
+sudo mv mkcert /usr/bin/
+source ~/.bashrc
+mkcert --cert-file localhost.pem --key-file localhost-key.pem  "dev.localhost" "*.dev.localhost" "prod.localhost" "*.prod.localhost" "testing.localhost" "*.testing.localhost" "wiki.localhost"
+mkcert --install
 ```
 
 # VSCode optional setup
@@ -83,11 +106,14 @@ ENV PERSISTENT_ENV_VAR $ENV_VAR
 - Ensure you run whole classes or modules first and see if they pass, to make sure it's not a test state problem. Running ``-k`` with test functions might cause some tests to fail if they're badly written and require state created by previous tests in the scope. **All tests should pass by themselves**.
 
 - As of now, only a single ``httpx`` client can be used to make requests in tests at a time, else since there is more than one connection to the database, it prevents running migrations at the end of the test. Presumably due to using more than one ``AsyncClient`` between each migration (defined by the migration fixture scope)
+
 ```python
   E       sqlalchemy.exc.OperationalError: (psycopg2.errors.ObjectInUse) database "postgres_test" is being accessed by other users
   E       DETAIL:  There are 2 other sessions using the database.
 ```
+
 Fixed by executing the following in a different engine (important) before dropping the testing database in the main migrations function:
+
 ```sql
 select pg_terminate_backend(pid) from pg_stat_activity where datname=<DATABASE_NAME>;
 ```
@@ -95,4 +121,3 @@ select pg_terminate_backend(pid) from pg_stat_activity where datname=<DATABASE_N
 ## E2E testing
 
 - The whole E2E test suite is run without ``TESTING=1`` to mimic production. We could also run ``pytest`` inside the container in any case.
-
