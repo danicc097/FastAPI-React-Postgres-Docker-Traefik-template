@@ -1,25 +1,37 @@
 
 [![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
 
+# Root dir setup
+
+Create ``.env`` from template.
+
 # Backend dev setup
 
 ```bash
 cd backend && virtualenv .venv
 pipenv install --dev
+mkdir logs
+# ensure container user id is the same
+# now _only_ the container user will be able to write to logs
+sudo chown 1500:1500 logs/
 ```
 
-Create ``.env`` from template
+Create ``.env`` from template.
 
 # Frontend dev setup
 
 ```bash
 cd frontend && yarn
-# fix permission errors for container access
-mkdir logs
-sudo chmod a+rw logs/
+
 ```
 
 Create ``.env.development`` and ``.env.production`` from template. Ensure ports are matched in root folder's ``.env`` for compose file's correct env injection.
+
+# E2E dev setup
+
+```bash
+cd e2e && npm install
+```
 
 # Traefik setup
 
