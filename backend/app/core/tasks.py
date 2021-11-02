@@ -4,8 +4,9 @@ from typing import Callable
 from fastapi import FastAPI
 from sqlalchemy.orm.session import close_all_sessions
 
-from app.api.loguru_gunicorn import setup_logger_from_settings
+
 from app.core.config import is_cicd
+from app.core.loguru_setup import setup_logger_from_settings
 from app.db.tasks import close_db_connection, connect_to_db
 
 
