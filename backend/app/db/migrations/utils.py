@@ -2,10 +2,8 @@ from typing import Tuple
 
 import sqlalchemy as sa
 from alembic import op
-
-
-from sqlalchemy.sql import expression
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql import expression
 from sqlalchemy.types import DateTime
 
 

@@ -1,24 +1,25 @@
+import timeit
 from functools import wraps
 from typing import Any, Callable
-import timeit
+
 from loguru import logger
 
 
-def func_timer(method: Callable):
+def func_timer(fn: Callable):
     """
     Log execution time of a function.
     """
 
-    @wraps(method)
+    @wraps(fn)
     def __func_timer(*args, **kwargs):
 
         start_time = timeit.default_timer()
-        result = method(*args, **kwargs)
+        result = fn(*args, **kwargs)
         elapsed = timeit.default_timer() - start_time
 
         logger.info(
             "Timing",
-            method=method.__name__,
+            fn=fn.__name__,
             seconds=elapsed,
         )
 

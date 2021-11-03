@@ -10,7 +10,7 @@
   - [E2E dev setup](#e2e-dev-setup)
   - [Traefik setup](#traefik-setup)
   - [VSCode optional setup](#vscode-optional-setup)
-    - [Fix postgres VSCode exntension on Ubuntu 20.04](#fix-postgres-vscode-exntension-on-ubuntu-2004)
+    - [Fix postgres VSCode extension on Ubuntu 20.04](#fix-postgres-vscode-extension-on-ubuntu-2004)
   - [Azure pipelines](#azure-pipelines)
     - [Some quirks](#some-quirks)
   - [Docker](#docker)
@@ -71,7 +71,7 @@ mkcert --install
 
 ## VSCode optional setup
 
-### Fix postgres VSCode exntension on Ubuntu 20.04
+### Fix postgres VSCode extension on Ubuntu 20.04
 
 ```bash
 wget http://mirrors.kernel.org/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
