@@ -1,11 +1,31 @@
+# FastAPI-React-Postgres-Docker-Traefik-template
 
 [![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
 
-# Root dir setup
+#### Table of contents  <!-- omit in toc -->
+- [FastAPI-React-Postgres-Docker-Traefik-template](#fastapi-react-postgres-docker-traefik-template)
+  - [Root dir setup](#root-dir-setup)
+  - [Backend dev setup](#backend-dev-setup)
+  - [Frontend dev setup](#frontend-dev-setup)
+  - [E2E dev setup](#e2e-dev-setup)
+  - [Traefik setup](#traefik-setup)
+  - [VSCode optional setup](#vscode-optional-setup)
+    - [Fix postgres VSCode exntension on Ubuntu 20.04](#fix-postgres-vscode-exntension-on-ubuntu-2004)
+  - [Azure pipelines](#azure-pipelines)
+    - [Some quirks](#some-quirks)
+  - [Docker](#docker)
+    - [Building image from compose file](#building-image-from-compose-file)
+  - [Troubleshooting](#troubleshooting)
+    - [Traefik](#traefik)
+    - [Environment files](#environment-files)
+    - [Backend tests suddenly fail](#backend-tests-suddenly-fail)
+    - [E2E testing](#e2e-testing)
+
+## Root dir setup
 
 Create ``.env`` from template.
 
-# Backend dev setup
+## Backend dev setup
 
 ```bash
 cd backend && virtualenv .venv
@@ -18,7 +38,7 @@ sudo chown 1500:1500 logs/
 
 Create ``.env`` from template.
 
-# Frontend dev setup
+## Frontend dev setup
 
 ```bash
 cd frontend && yarn
@@ -27,15 +47,15 @@ cd frontend && yarn
 
 Create ``.env.development`` and ``.env.production`` from template. Ensure ports are matched in root folder's ``.env`` for compose file's correct env injection.
 
-# E2E dev setup
+## E2E dev setup
 
 ```bash
 cd e2e && npm install
 ```
 
-# Traefik setup
+## Traefik setup
 
-Create certificates with mkcert. For ``linux`` desktop:
+Create certificates with ``mkcert``. For ``linux`` desktop:
 
 ```bash
 mkdir traefik/certificates
@@ -49,9 +69,9 @@ mkcert --cert-file localhost.pem --key-file localhost-key.pem  "dev.localhost" "
 mkcert --install
 ```
 
-# VSCode optional setup
+## VSCode optional setup
 
-## Fix postgres VSCode exntension on Ubuntu 20.04
+### Fix postgres VSCode exntension on Ubuntu 20.04
 
 ```bash
 wget http://mirrors.kernel.org/ubuntu/pool/main/libf/libffi/libffi6_3.2.1-8_amd64.deb
@@ -60,15 +80,13 @@ rm ./libffi6_3.2.1-8_amd64.deb
 
 ```
 
-# Azure pipelines
+## Azure pipelines
 
-## Some quirks
+### Some quirks
 
 - Variables named "\*secret\*" in ``.env*`` files are ignored, and ``SECRET_KEY=something`` in ``variables:`` key won't be parsed either for whatever reason and will yield ``SECRET_KEY=``. They have to be set in Azure Devops and mapped in pipeline tasks with the ``env:`` key.
 
-# Docker
-
-## Persistent image env vars
+## Docker
 
 ### Building image from compose file
 
@@ -94,13 +112,13 @@ ARG ENV_VAR
 ENV PERSISTENT_ENV_VAR $ENV_VAR
 ```
 
-# Troubleshooting
+## Troubleshooting
 
-## Traefik
+### Traefik
 
 - Ensure different routers ``traefik.http.routers.<my-router>`` are used for different environments. Else we get a 404 when the service container is actually running
 
-## Environment files
+### Environment files
 
 - ``.env`` in the root folder is read automatically by compose files and are available as ``${ENV_VAR}``. Note for CI there's no root ``.env.ci`` to be checked out by azure. They're defined inside ``variables`` instead.
   Env vars inside the root env are only useful for stuff read via ``os.environ``, but we must have a .env{.ci, .e2e} for backend (``app.core.config``) regardless of environment. Setting os.environ is not enough.
@@ -109,7 +127,7 @@ ENV PERSISTENT_ENV_VAR $ENV_VAR
 
   Regarding priority when using CRA: [Check this](https://create-react-app.dev/docs/adding-custom-environment-variables#adding-development-environment-variables-in-env)
 
-## Backend tests suddenly fail
+### Backend tests suddenly fail
 
 - Ensure the correct models are passed to json payloads for **create** operations. These are usually named ``<ModelName>Create`` or similar since we do not set the ``id``, ``created_at`` and similar fields ourselves. Those fields are contained in ``<ModelName>Public``, ``<ModelName>`` or however we define them and are one-sided, exclusively returned by the API.
 
@@ -130,6 +148,6 @@ Fixed by executing the following in a different engine (important) before droppi
 select pg_terminate_backend(pid) from pg_stat_activity where datname=<DATABASE_NAME>;
 ```
 
-## E2E testing
+### E2E testing
 
 - The whole E2E test suite is run without ``TESTING=1`` to mimic production. We could also run ``pytest`` inside the container in any case.

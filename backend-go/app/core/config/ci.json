@@ -1,3 +1,13 @@
 {
-  "TestValue": "staging_value"
+  "authentication": {
+    "accessTokenExpireMinutes": 9440,
+    "uniqueKey": "supersecret"
+  },
+  "database": {
+    "db": "postgres",
+    "password": "postgres",
+    "port": 5432,
+    "server": "myapp_db_ci",
+    "user": "postgres"
+  }
 }
