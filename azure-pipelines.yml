@@ -73,76 +73,77 @@ stages:
               # the recommended way to map to a secret env variable
               REACT_APP_REMOTE_SERVER_URL: $(REACT_APP_REMOTE_SERVER_URL)
 
-  # #  Don't build staging images directly inside compose.ci in testing stage so that we
-  # #  can ensure images will work as expected when we build them with prod data
-  # - stage: push_staging
-  #   condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-  #   # do not push to registry on PR checks
-  #   displayName: Build and push staging images to Registry
-  #   dependsOn: check_env_variables
-  #   jobs:
-  #     - job: build_push_backend
-  #       cancelTimeoutInMinutes: 30
-  #       displayName: Build and push backend
-  #       ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
-  #         pool:
-  #           name: Default
-  #           demands:
-  #             - agent.name -equals mydockeragent
-  #       ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
-  #         pool:
-  #           name: Azure Pipelines
-  #           vmImage: ubuntu-20.04
-  #       steps:
-  #         - task: Docker@2
-  #           displayName: Build an image
-  #           inputs:
-  #             containerRegistry: "Docker Hub"
-  #             repository: $(DOCKER_HUB_BACKEND)
-  #             command: build
-  #             dockerfile: "$(Build.SourcesDirectory)/backend/Dockerfile" # dont use prod Dockerfile (we need dev deps)
-  #             tags: |
-  #               staging
-  #         - task: Docker@2
-  #           displayName: Push an image
-  #           inputs:
-  #             containerRegistry: "Docker Hub"
-  #             repository: $(DOCKER_HUB_BACKEND)
-  #             command: push
-  #             tags: |
-  #               staging
-  #     - job: build_push_frontend
-  #       cancelTimeoutInMinutes: 30
-  #       displayName: Build and push frontend
-  #       ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
-  #         pool:
-  #           name: Default
-  #           demands:
-  #             - agent.name -equals mydockeragent
-  #       ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
-  #         pool:
-  #           name: Azure Pipelines
-  #           vmImage: ubuntu-20.04
-  #       steps:
-  #         - task: Docker@2
-  #           displayName: Build an image
-  #           inputs:
-  #             containerRegistry: "Docker Hub"
-  #             repository: $(DOCKER_HUB_FRONTEND)
-  #             command: build
-  #             arguments: "--build-arg REACT_APP_BUILD_NUMBER=$(tag) --build-arg
-  #               REACT_APP_REMOTE_SERVER_URL=$(REMOTE_SERVER_URL_STAGING)"
-  #             dockerfile: "$(Build.SourcesDirectory)/frontend/Dockerfile.prod"
-  #             tags: |
-  #               staging
-  #         - task: Docker@2
-  #           displayName: Push an image
-  #           inputs:
-  #             containerRegistry: "Docker Hub"
-  #             repository: $(DOCKER_HUB_FRONTEND)
-  #             command: push
-  #             tags: |
-  #               staging
+  #  Don't build staging images directly inside compose.ci in testing stage so that we
+  #  can ensure images will work as expected when we build them with prod data
+  - stage: push_staging
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+    # do not push to registry on PR checks
+    displayName: Build and push staging images to Registry
+    dependsOn: check_env_variables
+    jobs:
+      - job: build_push_backend
+        cancelTimeoutInMinutes: 30
+        displayName: Build and push backend
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - task: Docker@2
+            displayName: Build an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_BACKEND)
+              command: build
+              dockerfile: "$(Build.SourcesDirectory)/backend/Dockerfile" # dont use prod Dockerfile (we need dev deps)
+              tags: |
+                staging
+          - task: Docker@2
+            displayName: Push an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_BACKEND)
+              command: push
+              tags: |
+                staging
+      - job: build_push_frontend
+        cancelTimeoutInMinutes: 30
+        displayName: Build and push frontend
+        ${{ if eq(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Default
+            demands:
+              - agent.name -equals mydockeragent
+        ${{ if ne(parameters['SelfHostedAgent'], 'true' ) }}:
+          pool:
+            name: Azure Pipelines
+            vmImage: ubuntu-20.04
+        steps:
+          - task: Docker@2
+            displayName: Build an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_FRONTEND)
+              command: build
+              arguments: "--build-arg REACT_APP_BUILD_NUMBER=$(tag) --build-arg
+                REACT_APP_REMOTE_SERVER_URL=$(REMOTE_SERVER_URL_STAGING)"
+              dockerfile: "$(Build.SourcesDirectory)/frontend/Dockerfile.prod"
+              tags: |
+                staging
+          - task: Docker@2
+            displayName: Push an image
+            inputs:
+              containerRegistry: "Docker Hub"
+              repository: $(DOCKER_HUB_FRONTEND)
+              command: push
+              tags: |
+                staging
+
   - stage: test
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     displayName: Compose up and test
