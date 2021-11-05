@@ -4,11 +4,12 @@
 
 #### Table of contents  <!-- omit in toc -->
 - [FastAPI-React-Postgres-Docker-Traefik-template](#fastapi-react-postgres-docker-traefik-template)
-  - [Root dir setup](#root-dir-setup)
-  - [Backend dev setup](#backend-dev-setup)
-  - [Frontend dev setup](#frontend-dev-setup)
-  - [E2E dev setup](#e2e-dev-setup)
-  - [Traefik setup](#traefik-setup)
+  - [Dev setup](#dev-setup)
+    - [Root dir setup](#root-dir-setup)
+    - [Backend dev setup](#backend-dev-setup)
+    - [Frontend dev setup](#frontend-dev-setup)
+    - [E2E dev setup](#e2e-dev-setup)
+    - [Traefik setup](#traefik-setup)
   - [VSCode optional setup](#vscode-optional-setup)
     - [Fix postgres VSCode extension on Ubuntu 20.04](#fix-postgres-vscode-extension-on-ubuntu-2004)
   - [Azure pipelines](#azure-pipelines)
@@ -21,11 +22,12 @@
     - [Backend tests suddenly fail](#backend-tests-suddenly-fail)
     - [E2E testing](#e2e-testing)
 
-## Root dir setup
+## Dev setup
+### Root dir setup
 
 Create ``.env`` from template.
 
-## Backend dev setup
+### Backend dev setup
 
 ```bash
 cd backend && virtualenv .venv
@@ -38,7 +40,7 @@ sudo chown 1500:1500 logs/
 
 Create ``.env`` from template.
 
-## Frontend dev setup
+### Frontend dev setup
 
 ```bash
 cd frontend && yarn
@@ -47,13 +49,13 @@ cd frontend && yarn
 
 Create ``.env.development`` and ``.env.production`` from template. Ensure ports are matched in root folder's ``.env`` for compose file's correct env injection.
 
-## E2E dev setup
+### E2E dev setup
 
 ```bash
 cd e2e && npm install
 ```
 
-## Traefik setup
+### Traefik setup
 
 Create certificates with ``mkcert``. For ``linux`` desktop:
 
