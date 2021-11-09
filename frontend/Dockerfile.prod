@@ -11,6 +11,7 @@ ENV CI true
 # install app dependencies
 COPY . /frontend
 
+COPY .yarn/ /frontend/.yarn/
 COPY package.json /frontend
 COPY yarn.lock /frontend
 COPY .yarnrc.yml /frontend
