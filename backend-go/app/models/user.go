@@ -4,9 +4,9 @@ type UserBase struct {
 	CoreModel
 	Email         string `validate:"required,email"`
 	Username      string `json:"username"`
-	EmailVerified bool   `json:"email_verified"`
-	IsActive      bool   `json:"is_active"`
-	IsSuperuser   bool   `json:"is_superuser"`
+	EmailVerified bool   `json:"emailVerified"`
+	IsActive      bool   `json:"isActive"`
+	IsSuperuser   bool   `json:"isSuperuser"`
 }
 
 type UserCreate struct {
@@ -24,7 +24,7 @@ type UserPasswordRegistration struct {
 type UserUpdate struct {
 	CoreModel
 	Password    string `json:"password,omitempty"`
-	OldPassword string `json:"old_password,omitempty"`
+	OldPassword string `json:"oldPassword,omitempty"`
 	Email       string `json:"email,omitempty"`
 	Username    string `json:"username,omitempty"`
 }
@@ -35,9 +35,9 @@ type UserInDB struct {
 	Email         string `json:"email"`
 	Username      string `json:"username"`
 	Password      string `json:"password"`
-	EmailVerified bool   `json:"email_verified"`
-	IsActive      bool   `json:"is_active"`
-	IsSuperuser   bool   `json:"is_superuser"`
+	EmailVerified bool   `json:"emailVerified"`
+	IsActive      bool   `json:"isActive"`
+	IsSuperuser   bool   `json:"isSuperuser"`
 }
 
 type UserPublic struct {
@@ -45,9 +45,9 @@ type UserPublic struct {
 	DateTimeModelMixin
 	Email         string        `json:"email"`
 	Username      string        `json:"username"`
-	EmailVerified bool          `json:"email_verified"`
-	IsActive      bool          `json:"is_active"`
-	IsSuperuser   bool          `json:"is_superuser"`
-	AccessToken   string        `json:"access_token,omitempty"`
+	EmailVerified bool          `json:"emailVerified"`
+	IsActive      bool          `json:"isActive"`
+	IsSuperuser   bool          `json:"isSuperuser"`
+	AccessToken   string        `json:"accessToken,omitempty"`
 	Profile       ProfilePublic `json:"profile,omitempty"`
 }

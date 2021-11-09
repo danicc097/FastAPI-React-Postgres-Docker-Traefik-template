@@ -2,14 +2,14 @@ package models
 
 type ProfileBase struct {
 	CoreModel
-	FullName    string `json:"full_name,omitempty"`
-	PhoneNumber string `json:"phone_number,omitempty"`
+	FullName    string `json:"fullName,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
 	Bio         string `json:"bio,omitempty"`
 	Image       string `json:"image,omitempty"`
 }
 
 type ProfileCreate struct {
-	UserID int `json:"user_id"`
+	UserID int `json:"userId"`
 	ProfileBase
 }
 

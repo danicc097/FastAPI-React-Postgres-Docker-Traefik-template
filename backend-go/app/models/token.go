@@ -4,7 +4,7 @@ type JWTMeta struct {
 	CoreModel
 	Issuer     string `json:"issuer"`
 	Audience   string `json:"audience"`
-	IssuedAt   int64  `json:"issued_at"`
+	IssuedAt   int64  `json:"issuedAt"`
 	Expiration int64  `json:"expiration"`
 }
 
@@ -21,6 +21,6 @@ type JWTPayload struct {
 
 type AccessToken struct {
 	CoreModel
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
+	AccessToken string `json:"accessToken"`
+	TokenType   string `json:"tokenType"`
 }
