@@ -20,6 +20,7 @@ COPY .yarn/releases/yarn-3.0.2.cjs /frontend/.yarn/releases/
 RUN yarn set version berry
 RUN yarn set version 3.0.2
 RUN yarn install --immutable
+
 RUN yarn test
 
 ENV REACT_APP_BUILD_NUMBER=$REACT_APP_BUILD_NUMBER

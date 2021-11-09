@@ -73,8 +73,10 @@ stages:
               # the recommended way to map to a secret env variable
               REACT_APP_REMOTE_SERVER_URL: $(REACT_APP_REMOTE_SERVER_URL)
 
+
   # #  Don't build staging images directly inside compose.ci in testing stage so that we
   # #  can ensure images will work as expected when we build them with prod data
+
   - stage: push_staging
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     # do not push to registry on PR checks
@@ -143,7 +145,7 @@ stages:
               command: push
               tags: |
                 staging
-                
+
   - stage: test
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
     displayName: Compose up and test
