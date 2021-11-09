@@ -4,6 +4,7 @@
 #################### important #######################
 # set secret env vars for prod,
 # e.g. REACT_APP_REMOTE_SERVER_URL in azure devops
+# containerRegistry is the verbatim name given to the Azure DevOps "Service Connection"
 
 # TODOs
 # - cache node modules and venv

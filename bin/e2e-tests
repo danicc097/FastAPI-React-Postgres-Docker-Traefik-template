@@ -12,8 +12,8 @@ until [ "$(docker exec backend_myapp_"$1" /bin/bash -c 'echo ready')" = "ready" 
   sleep 5
 done
 
-until [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-frontend.testing.localhost")" == "200" ] &&
-  [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-backend.testing.localhost/docs")" == "200" ]; do
+until [ "$(curl -s -k -o /dev/null -w "%{http_code}" "https://myapp-frontend.testing.localhost")" == "200" ] &&
+  [ "$(curl -s -k -o /dev/null -w "%{http_code}" "https://myapp-backend.testing.localhost/docs")" == "200" ]; do
   printf 'Waiting for services to start...\n'
   sleep 5
 done
