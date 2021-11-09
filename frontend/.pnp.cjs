@@ -43,6 +43,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@fortawesome/free-solid-svg-icons", "npm:5.15.4"],
             ["@fortawesome/react-fontawesome", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:0.1.16"],
             ["@reduxjs/toolkit", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:1.6.2"],
+            ["@testing-library/dom", "npm:8.11.0"],
             ["@testing-library/jest-dom", "npm:5.15.0"],
             ["@testing-library/react", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:12.1.2"],
             ["@testing-library/user-event", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:12.8.3"],
@@ -5353,7 +5354,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@testing-library/user-event", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:12.8.3"],
             ["@babel/runtime", "npm:7.16.0"],
-            ["@testing-library/dom", null],
+            ["@testing-library/dom", "npm:8.11.0"],
             ["@types/testing-library__dom", null]
           ],
           "packagePeers": [
@@ -16242,6 +16243,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@fortawesome/free-solid-svg-icons", "npm:5.15.4"],
             ["@fortawesome/react-fontawesome", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:0.1.16"],
             ["@reduxjs/toolkit", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:1.6.2"],
+            ["@testing-library/dom", "npm:8.11.0"],
             ["@testing-library/jest-dom", "npm:5.15.0"],
             ["@testing-library/react", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:12.1.2"],
             ["@testing-library/user-event", "virtual:6a4aba4ace2edc45149e897281e931c46d31780d7534b1b418ff537ebe929b347687ab65737a716aa75388879d911f9d8db4411be69bdaf5150f69b16c6dd6a8#npm:12.8.3"],
