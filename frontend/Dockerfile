@@ -11,11 +11,8 @@ COPY .yarn/ /frontend/.yarn/
 COPY package.json /frontend
 COPY yarn.lock /frontend
 COPY .yarnrc.yml /frontend
-COPY .yarn/releases/yarn-3.0.2.cjs /frontend/.yarn/releases/
 
-RUN yarn set version berry
-RUN yarn set version 3.0.2
-RUN yarn install
+RUN yarn
 
 # add app last to prevent reinstalling them when rebuilding
 COPY . /frontend
