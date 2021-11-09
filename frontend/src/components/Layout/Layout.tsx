@@ -86,7 +86,7 @@ export default function Layout({ children }: LayoutPropTypes) {
           <StyledMain>{children}</StyledMain>
           <StyledFooter>
             <span className="footer-info">
-              <p>© 2021</p>
+              <p>Copyright © 2021 ______</p>
               <p>Build version: {process.env.REACT_APP_BUILD_NUMBER ?? 'DEVELOPMENT'}</p>
             </span>
             {/* we can use hooks in children */}
