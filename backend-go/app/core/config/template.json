@@ -1,0 +1,13 @@
+{
+  "authentication": {
+    "accessTokenExpireMinutes": 0,
+    "uniqueKey": ""
+  },
+  "database": {
+    "db": "",
+    "password": "",
+    "port": 0,
+    "server": "",
+    "user": ""
+  }
+}

@@ -82,7 +82,7 @@ class TestUserRoutes:
         client: AsyncClient,
     ) -> None:
         res = await client.get(app.url_path_for("users:get-current-user"))
-        assert res.status_code == HTTP_401_UNAUTHORIZED
+        assert res.status_code == HTTP_401_UNAUTHORIZED  # authentication scope
 
 
 class TestUserRegistration:

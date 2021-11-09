@@ -103,7 +103,7 @@ export default abstract class BasePO {
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForSelector($selector, { timeout: 1000 })
+    await page.waitForSelector($selector, { timeout: 5000 })
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
   }
@@ -111,7 +111,7 @@ export default abstract class BasePO {
   /** Increase wait time for rendering to avoid random failures */
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForSelector($selector, { visible: true, timeout: 1000 })
+    await page.waitForSelector($selector, { visible: true, timeout: 5000 })
     // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
   }
@@ -119,7 +119,7 @@ export default abstract class BasePO {
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForSelector($selector, { timeout: 1000 })
+    await page.waitForSelector($selector, { timeout: 5000 })
 
     // await page.waitForNetworkIdle()
     await page.type($selector, text)
@@ -128,7 +128,7 @@ export default abstract class BasePO {
   /** Increase wait time for rendering to avoid random failures */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForXPath($xXPath, { timeout: 1000 })
+    await page.waitForXPath($xXPath, { timeout: 5000 })
 
     // await page.waitForNetworkIdle()
     const elements = await page.$x($xXPath)
