@@ -26,7 +26,7 @@ RUN yarn test
 ENV REACT_APP_BUILD_NUMBER=$REACT_APP_BUILD_NUMBER
 ENV REACT_APP_REMOTE_SERVER_URL=$REACT_APP_REMOTE_SERVER_URL
 
-RUN npm run build
+RUN yarn build
 
 # production environment
 # nginx is merely used as a web server (better alt than node) to serve static files, with traefik in front as RP
