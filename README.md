@@ -122,12 +122,10 @@ ENV PERSISTENT_ENV_VAR $ENV_VAR
 
 ### Environment files
 
-- ``.env`` in the root folder is read automatically by compose files and are available as ``${ENV_VAR}``. Note for CI there's no root ``.env.ci`` to be checked out by azure. They're defined inside ``variables`` instead.
+- ``.env`` in the root folder is read automatically by compose files and are available as ``${ENV_VAR}``. Note for CI there's no root ``.env.ci`` to be checked out by azure. They're defined inside ``variables`` instead in ``azure-pipelines.yml``.
   Env vars inside the root env are only useful for stuff read via ``os.environ``, but we must have a .env{.ci, .e2e} for backend (``app.core.config``) regardless of environment. Setting os.environ is not enough.
   Apart from that, frontend ``.env.*`` files defined by CRA (see link below) are required.
-  E.g. ``FRONTEND_PORT_E2E`` in ``.env`` and ``frontend/.env.development`` must match so that Traefik exposes the correct port.
-
-  Regarding priority when using CRA: [Check this](https://create-react-app.dev/docs/adding-custom-environment-variables#adding-development-environment-variables-in-env)
+  E.g. ``FRONTEND_PORT_E2E`` in ``.env`` must match ``PORT`` in ``frontend/.env.development`` so that Traefik exposes the correct port for E2E tests after we ``yarn start``, which uses ``PORT`` from the environment. Regarding priority of environment files when using CRA: [Check this](https://create-react-app.dev/docs/adding-custom-environment-variables#adding-development-environment-variables-in-env)
 
 ### Backend tests suddenly fail
 

@@ -6,7 +6,6 @@ FROM python:3.9.5-slim-buster
 WORKDIR /backend
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
-# ENV PORT=$PORT
 
 COPY ./Pipfile /backend/Pipfile
 COPY ./Pipfile.lock /backend/Pipfile.lock
