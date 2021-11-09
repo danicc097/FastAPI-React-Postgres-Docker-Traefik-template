@@ -1,5 +1,5 @@
 module.exports = {
-  testTimeout: 40000,
+  testTimeout: 60000,
   testMatch: ['**/?(*.)+(spec|test).[t]s'],
   globals: {
     // requires env definition in Dockerfile

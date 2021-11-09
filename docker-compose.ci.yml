@@ -8,7 +8,7 @@ services:
       traefik-net:
     ports:
       - ${SERVER_PORT_CI}:${SERVER_PORT_CI}
-    command: uvicorn app.api.server:app --reload --workers 1 --host 0.0.0.0 --port ${SERVER_PORT_CI}
+    command: uvicorn app.api.server:app --workers 1 --host 0.0.0.0 --port ${SERVER_PORT_CI}
     # ? for some reason, we need to explicitly set CICD to be able to
     # ? use os.environ.get("CICD"), else it returns None when app.core.config is imported
     # set rest of env vars in azure pipeline variables instead.

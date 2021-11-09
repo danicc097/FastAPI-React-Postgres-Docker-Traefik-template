@@ -16,6 +16,7 @@ from app.services import auth_service
 # ? By injecting the oauth2_scheme as a dependency, FastAPI will inspect the request
 # ? for an Authorization header, check if the value is Bearer plus some token,
 # ? and return the token as a str. Else, it returns a HTTP_401_UNAUTHORIZED
+# Background on JWT: https://softwareengineering.stackexchange.com/a/338356
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{API_PREFIX}/users/login/token/")
 
