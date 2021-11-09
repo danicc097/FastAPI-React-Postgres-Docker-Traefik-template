@@ -31,7 +31,7 @@ RUN apt-get update \
 
 COPY . /backend
 
-RUN useradd -m rootless
-RUN mkdir /backend/logs
-RUN chown -R rootless:rootless /backend/logs
+RUN useradd -m rootless -u 1500
+RUN chown -R rootless:rootless /backend
+RUN chmod 755 /backend
 USER rootless

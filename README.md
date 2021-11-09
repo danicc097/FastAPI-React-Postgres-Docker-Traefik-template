@@ -6,6 +6,9 @@
 ```bash
 cd backend && virtualenv .venv
 pipenv install --dev
+# ensure container user id is the same
+# now _only_ the container user will be able to write to logs
+sudo chown 1500:1500 logs/
 ```
 
 # Frontend dev setup

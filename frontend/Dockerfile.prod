@@ -33,11 +33,12 @@ COPY .yarn/releases/yarn-3.0.2.cjs /frontend/.yarn/releases/
 RUN yarn set version berry
 RUN yarn set version 3.0.2
 RUN yarn install --immutable
-# this is not installed with npm install (even though is in regular packages)
-RUN npm install -g react-scripts@4.0.3
+
 RUN yarn test
+
 ENV REACT_APP_BUILD_NUMBER=$REACT_APP_BUILD_NUMBER
 ENV REACT_APP_REMOTE_SERVER_URL=$REACT_APP_REMOTE_SERVER_URL
+
 RUN npm run build
 
 # production environment
