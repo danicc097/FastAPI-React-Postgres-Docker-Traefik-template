@@ -59,7 +59,7 @@ class TestAdminRoutes:
 
     async def test_unregistered_user_cant_access_admin(self, app: FastAPI, client: AsyncClient) -> None:
         res = await client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_401_UNAUTHORIZED
+        assert res.status_code == HTTP_401_UNAUTHORIZED  # authentication scope (unfortunate http code name)
 
     async def test_regular_user_cant_access_admin(
         self,
@@ -68,7 +68,7 @@ class TestAdminRoutes:
         test_user: UserPublic,
     ) -> None:
         res = await authorized_client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_403_FORBIDDEN
+        assert res.status_code == HTTP_403_FORBIDDEN  # authorization scope
 
     async def test_admin_can_access_admin(
         self,

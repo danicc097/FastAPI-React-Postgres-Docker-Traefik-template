@@ -67,7 +67,7 @@ class TestProfileView:
         self, app: FastAPI, client: AsyncClient, test_user2: UserPublic
     ) -> None:
         res = await client.get(app.url_path_for("profiles:get-profile-by-username", username=test_user2.username))  # type: ignore
-        assert res.status_code == HTTP_401_UNAUTHORIZED
+        assert res.status_code == HTTP_401_UNAUTHORIZED  # authentication scope
 
     async def test_no_profile_is_returned_when_username_matches_no_user(
         self, app: FastAPI, authorized_client: AsyncClient
