@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#
+# Create backend data in the given environment.
+#
+
+set -e
+
+source "${BASH_SOURCE%/*}/.helpers.sh"
+
+ENV=$(get_env_suffix "$1")
+
+docker exec -it backend_myapp_"$ENV" alembic downgrade base # drop everything
+docker exec -it backend_myapp_"$ENV" alembic upgrade head
+docker exec -it backend_myapp_"$ENV" python3 -m initial_data."$ENV" # only way to run as part of the package
