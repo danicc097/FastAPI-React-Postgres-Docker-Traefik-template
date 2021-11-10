@@ -2,7 +2,8 @@
 
 [![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
 
-#### Table of contents  <!-- omit in toc -->
+## Table of contents  <!-- omit in toc -->
+
 - [FastAPI-React-Postgres-Docker-Traefik-template](#fastapi-react-postgres-docker-traefik-template)
   - [Dev setup](#dev-setup)
     - [Root dir setup](#root-dir-setup)
@@ -23,6 +24,7 @@
     - [E2E testing](#e2e-testing)
 
 ## Dev setup
+
 ### Root dir setup
 
 Create ``.env`` from template.
@@ -35,7 +37,7 @@ pipenv install --dev
 mkdir logs
 # ensure container user id is the same
 # now _only_ the container user will be able to write to logs
-sudo chown 1500:1500 logs/
+sudo chown --recursive 1500:1500 logs/
 ```
 
 Create ``.env`` from template.
