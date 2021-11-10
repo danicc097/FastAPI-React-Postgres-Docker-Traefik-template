@@ -46,7 +46,7 @@ Create ``.env`` from template.
 
 ```bash
 cd frontend && yarn
-
+sudo npm -g install openapi-typescript # precommit hook
 ```
 
 Create ``.env.development`` and ``.env.production`` from template. Ensure ports are matched in root folder's ``.env`` for compose file's correct env injection.

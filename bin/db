@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+source "${BASH_SOURCE%/*}/.helpers.sh"
+
+env=$(get_env_suffix "$2")
+dumps_folder="myapp_postgres_dumps_$env"
+case $1 in
+dump)
+  echo "Dumping database to $dumps_folder"
+  mkdir -p ~/"$dumps_folder"
+
+  docker exec -t postgres_db_myapp_"$env" pg_dump --data-only -T alembic_version -U postgres | gzip >~/"$dumps_folder"/dump_"$(date +%d-%m-%Y"_"%H_%M_%S)".gz
+  ;;
+
+restore)
+  echo "Restoring database from $dumps_folder"
+  last_bkp_file=$(find ~/"$dumps_folder"/ -name '*.gz' | grep dump_ | sort -r | head -n 1)
+
+  if [ -z "$last_bkp_file" ]; then
+    echo "No dump_* file found in $dumps_folder"
+    exit 1
+  fi
+
+  echo "Restoring database from $last_bkp_file"
+  # must get rid of everything, including alembic_version which won't be restored and needs to be updated
+  docker exec -it backend_myapp_"$env" /bin/bash -c "alembic downgrade base"
+  docker exec -it backend_myapp_"$env" /bin/bash -c "alembic upgrade head"
+  gunzip -c "$last_bkp_file" | docker exec -i postgres_db_myapp_"$env" psql -U postgres
+
+  ;;
+
+*)
+  err "Expected action dump|restore"
+  exit 1
+  ;;
+esac
