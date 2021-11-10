@@ -29,12 +29,12 @@ resources:
 #! regardless, if our code has to read a .env.* file, a file must be there with duplicated values
 #! else we get <Config '{key}' is missing, and has no default.>
 variables:
-  # System.Debug: true # see debug logs for every pipeline
-  tag: "$(Build.BuildNumber)" # incremental build id as image tag
+  # for docker-compose instead of .env file read
   FRONTEND_PORT_CI: 80
-  FRONTEND_URL: https://myapp-frontend.testing.localhost
   SERVER_PORT_CI: 8002
   DB_PORT_CI: 5633
+
+  # backend
   UNIQUE_KEY: supersecret
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
@@ -42,9 +42,17 @@ variables:
   POSTGRES_PORT: 5432
   POSTGRES_DB: postgres
   ACCESS_TOKEN_EXPIRE_MINUTES: 9450
+
+  # frontend
+  FRONTEND_URL: https://myapp-frontend.testing.localhost
   REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
+
+
+  # System.Debug: true # see debug logs for every pipeline
+  tag: "$(Build.BuildNumber)" # incremental build id as image tag
   DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
   DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
+
   TRAEFIK_CERTIFICATES_DIR: $(Build.SourcesDirectory)/traefik/certificates/
 
 stages:
