@@ -4,6 +4,7 @@ import { AppDispatch } from './store'
 import initialState, { initialStateType } from './initialState'
 import { UiActions } from './ui'
 import { AuthActionType, UserProfileActionType } from './action-types'
+import { loadingState } from './utils/slices'
 
 // recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function userProfileReducer(
@@ -12,10 +13,7 @@ export default function userProfileReducer(
 ): initialStateType['userProfile'] {
   switch (action.type) {
     case UserProfileActionType.REQUEST_USER_UPDATE:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case UserProfileActionType.REQUEST_USER_UPDATE_FAILURE:
       return {
         ...state,

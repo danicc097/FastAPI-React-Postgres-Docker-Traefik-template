@@ -5,6 +5,7 @@ import initialState, { initialStateType } from './initialState'
 import { UiActions } from './ui'
 import { AuthActionType } from './action-types'
 import { schema } from 'src/types/schema_override'
+import { loadingState } from './utils/slices'
 
 // recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function authReducer(
@@ -13,10 +14,7 @@ export default function authReducer(
 ): initialStateType['auth'] {
   switch (action.type) {
     case AuthActionType.REQUEST_LOGIN:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AuthActionType.REQUEST_LOGIN_FAILURE:
       return {
         ...state,
@@ -35,10 +33,7 @@ export default function authReducer(
         ...initialState.auth,
       }
     case AuthActionType.FETCHING_USER_FROM_TOKEN:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS:
       return {
         ...state,
@@ -57,10 +52,7 @@ export default function authReducer(
         user: { id: null },
       }
     case AuthActionType.REQUEST_USER_SIGN_UP:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AuthActionType.REQUEST_USER_SIGN_UP_SUCCESS:
       return {
         ...state,
@@ -75,10 +67,7 @@ export default function authReducer(
         error: action.error,
       }
     case AuthActionType.REQUEST_PASSWORD_RESET:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AuthActionType.REQUEST_PASSWORD_RESET_SUCCESS:
       return {
         ...state,

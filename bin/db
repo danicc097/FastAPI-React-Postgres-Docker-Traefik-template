@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#
+# Backup or restore a database in the given environment.
+# Example: db restore dev
+#
+
 set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"

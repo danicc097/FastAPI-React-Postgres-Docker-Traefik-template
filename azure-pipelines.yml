@@ -82,12 +82,11 @@ stages:
               REACT_APP_REMOTE_SERVER_URL: $(REACT_APP_REMOTE_SERVER_URL)
 
 
-  # #  Don't build staging images directly inside compose.ci in testing stage so that we
-  # #  can ensure images will work as expected when we build them with prod data
-
+  # Don't build staging images directly inside compose.ci in testing stage so that we
+  # can ensure images will work as expected when we build them in push_production stage
+  # after merging
   - stage: push_staging
     condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
-    # do not push to registry on PR checks
     displayName: Build and push staging images to Registry
     dependsOn: check_env_variables
     jobs:

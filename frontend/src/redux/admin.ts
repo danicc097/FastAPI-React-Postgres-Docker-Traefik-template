@@ -8,6 +8,7 @@ import initialState, { initialStateType } from './initialState'
 import { UiActions } from './ui'
 import { schema } from 'src/types/schema_override'
 import { AdminActionType, AuthActionType } from './action-types'
+import { errorState, loadingState } from './utils/slices'
 
 /*
 isRemoval: whether it's a removal or addition of unverified users
@@ -67,10 +68,7 @@ export default function adminReducer(
 ): initialStateType['admin'] {
   switch (action.type) {
     case AdminActionType.FETCH_ALL_USERS:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AdminActionType.FETCH_ALL_USERS_SUCCESS:
       return {
         ...state,
@@ -86,40 +84,22 @@ export default function adminReducer(
         },
       }
     case AdminActionType.FETCH_ALL_USERS_FAILURE:
-      return {
-        ...state,
-        isLoading: false,
-        error: action.error,
-      }
+      return errorState(state, action)
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS:
       return updateStateOfUnverifiedUsers(state, action.data, false)
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE:
-      return {
-        ...state,
-        isLoading: false,
-        error: action.error,
-      }
+      return errorState(state, action)
     case AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE:
       return updateStateOfUnverifiedUsers(state, action.data, true)
 
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS:
-      return {
-        ...state,
-        isLoading: true,
-      }
+      return loadingState(state)
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS:
       return updateStateOfPasswordResetRequests(state, action.data, false)
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE:
-      return {
-        ...state,
-        isLoading: false,
-        error: action.error,
-      }
+      return errorState(state, action)
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
 

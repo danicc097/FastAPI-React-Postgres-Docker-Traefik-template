@@ -6,8 +6,7 @@ import authReducer from './auth'
 import uiReducer from './ui'
 import userProfileReducer from './userProfile'
 
-// use the complete state to develop. Actual state will be defined in store
-// based on user roles, etc.
+// don't mind `admin` slice included, since it's empty in its initial state
 const rootReducer = combineReducers({
   auth: authReducer,
   ui: uiReducer,

@@ -27,6 +27,7 @@ export default function uiReducer(
       return state
   }
 }
+
 type UiActionsType = {
   addToast: (toast: Toast) => any
   removeToast: (toast: Toast) => any
