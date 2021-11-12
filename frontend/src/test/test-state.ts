@@ -10,7 +10,7 @@ export const testInitialState: initialStateType = {
     user: {
       email: 'admin@myapp.com',
       username: 'admin',
-      email_verified: true,
+      is_verified: true,
       is_active: true,
       is_superuser: true,
       created_at: '2021-09-30T16:38:33.860453+00:00',

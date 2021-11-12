@@ -133,7 +133,7 @@ export default function Navbar() {
       sections={[
         {
           items: [
-            user.email_verified ? <CollapsibleNav key={0} user={user} /> : null,
+            user.is_verified ? <CollapsibleNav key={0} user={user} /> : null,
             ,
             <LogoSection href="/" key={0}>
               <EuiIcon type="training" color="#1E90FF" size="l" /> My App

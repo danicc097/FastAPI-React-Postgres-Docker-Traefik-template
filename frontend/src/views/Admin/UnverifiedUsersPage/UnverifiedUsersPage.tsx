@@ -110,7 +110,7 @@ export default function UnverifiedUsersPage() {
   }
 
   const selection = {
-    selectable: (user) => !user.email_verified,
+    selectable: (user) => !user.is_verified,
     selectableMessage: (selectable) => (!selectable ? 'User is already verified' : undefined),
     onSelectionChange: onSelectionChange,
     initialSelected: [selectedItems],

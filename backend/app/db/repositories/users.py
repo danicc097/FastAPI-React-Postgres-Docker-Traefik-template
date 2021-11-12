@@ -19,13 +19,13 @@ from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
 from app.services import auth_service
 
 GET_USER_BY_EMAIL_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE email = :email;
 """
 
 GET_USER_BY_USERNAME_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE username = :username;
 """
@@ -33,23 +33,23 @@ GET_USER_BY_USERNAME_QUERY = """
 REGISTER_NEW_USER_QUERY = """
     INSERT INTO users (username, email, password, salt)
     VALUES (:username, :email, :password, :salt)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 REGISTER_ADMIN_QUERY = """
-    INSERT INTO users (username, email, password, salt, is_superuser, email_verified)
+    INSERT INTO users (username, email, password, salt, is_superuser, is_verified)
     VALUES (:username, :email, :password, :salt, TRUE, TRUE)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 REGISTER_VERIFIED_USER_QUERY = """
-    INSERT INTO users (username, email, password, salt, email_verified)
+    INSERT INTO users (username, email, password, salt, is_verified)
     VALUES (:username, :email, :password, :salt, TRUE)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 GET_USER_BY_ID_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE id = :id;
 """
@@ -61,25 +61,25 @@ UPDATE_USER_BY_ID_QUERY = """
         username     = :username,
         email        = :email
     WHERE id = :id
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 LIST_ALL_USERS_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users;
 """
 
 LIST_ALL_NON_VERIFIED_USERS_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
-    WHERE email_verified = 'false';
+    WHERE is_verified = 'false';
 """
 
 VERIFY_USER_BY_EMAIL_QUERY = """
     UPDATE users
-    SET email_verified        = 'true'
+    SET is_verified        = 'true'
     WHERE email = :email
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 RESET_USER_PASSWORD_QUERY = """
@@ -87,7 +87,7 @@ RESET_USER_PASSWORD_QUERY = """
     SET password     = :password,
         salt         = :salt
     WHERE email = :email
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 

@@ -15,7 +15,7 @@ export const useAuthenticatedUser = () => {
   const userLoaded = useAppSelector((state) => state.auth.userLoaded)
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
   const isAdmin = useAppSelector((state) => state.auth.user.is_superuser)
-  const isVerifiedUser = useAppSelector((state) => state.auth.user.email_verified)
+  const isVerifiedUser = useAppSelector((state) => state.auth.user.is_verified)
 
   const user = useAppSelector((state) => state.auth.user, shallowEqual)
 

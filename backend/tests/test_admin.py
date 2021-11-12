@@ -117,8 +117,8 @@ class TestAdminUserModification:
         )
         assert res.status_code == HTTP_200_OK
         verified_users = [UserPublic(**user) for user in res.json()]
-        assert verified_users[0].email_verified
-        assert verified_users[1].email_verified
+        assert verified_users[0].is_verified
+        assert verified_users[1].is_verified
 
         # requests should be empty
         res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))

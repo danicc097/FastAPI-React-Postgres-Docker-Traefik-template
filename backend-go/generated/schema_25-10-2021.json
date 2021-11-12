@@ -301,7 +301,7 @@
             "title": "Email",
             "type": "string"
           },
-          "email_verified": {
+          "is_verified": {
             "default": false,
             "title": "Email Verified",
             "type": "boolean"

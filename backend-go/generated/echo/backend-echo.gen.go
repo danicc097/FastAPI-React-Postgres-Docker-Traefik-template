@@ -135,7 +135,7 @@ type UserPublic struct {
 	AccessToken   *AccessToken         `json:"access_token,omitempty"`
 	CreatedAt     *time.Time           `json:"created_at,omitempty"`
 	Email         *openapi_types.Email `json:"email,omitempty"`
-	EmailVerified *bool                `json:"email_verified,omitempty"`
+	EmailVerified *bool                `json:"is_verified,omitempty"`
 	Id            int                  `json:"id"`
 	IsActive      *bool                `json:"is_active,omitempty"`
 	IsSuperuser   *bool                `json:"is_superuser,omitempty"`
