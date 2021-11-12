@@ -12,6 +12,9 @@ import { AdminActionType } from 'src/redux/action-types'
 import { createTextFileWithCreds } from 'src/utils/files'
 import _ from 'lodash'
 
+/**
+ * Explicitly reset a user's password by email
+ */
 export default function PasswordResetForm() {
   const [passwordResetUsersWithLabel, setPasswordResetUsersWithLabel] = useState<any>()
   const [selection, setSelection] = useState<any>('...')

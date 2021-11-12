@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 import { combineReducers } from 'redux'
-import App from './components/App/App'
+import App from 'src/App'
 import { useAuthenticatedUser } from './hooks/auth/useAuthenticatedUser'
 import authReducer from './redux/auth'
 // import '@fortawesome/fontawesome-free/js/all.js'; // terrible

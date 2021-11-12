@@ -90,7 +90,7 @@ UserUpdateActions.requestUserUpdate =
               color: 'success',
               iconType: 'checkInCircleFilled',
               toastLifeTimeMs: 115000,
-              text: 'You will be logged out and redirected to the login page in a few seconds.',
+              text: 'You will now need to log in again.',
             }),
           )
           return dispatch({

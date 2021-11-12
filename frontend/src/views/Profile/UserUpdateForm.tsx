@@ -86,9 +86,17 @@ export default function UserUpdateAccordion() {
 
     setErrors({})
 
+    // do not send blank form
+    if (!Object.keys(form).some((key) => form[key] !== '')) {
+      return
+    }
+
     // validate inputs before submitting
     Object.keys(form).forEach((label: keyof typeof form) => form[label] && validateInput(label, form[label]))
 
+    console.log(`form`, form)
+
+    // ensure passwords match
     // ensure all password fields are not empty if at least one isn't
     if (
       (!!form.password || !!form.passwordConfirm || !!form.old_password) &&

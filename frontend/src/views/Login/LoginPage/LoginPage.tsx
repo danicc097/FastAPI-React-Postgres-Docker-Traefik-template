@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   EuiFlexGroup,
   EuiFlexItem,
@@ -10,24 +11,23 @@ import {
   EuiTitle,
 } from '@elastic/eui'
 import styled from 'styled-components'
-import RegistrationForm from '../RegistrationForm/RegistrationForm'
-import React from 'react'
-import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from '../StyledComponents/StyledComponents'
+import LoginForm from '../LoginForm/LoginForm'
+import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from 'src/components/StyledComponents/StyledComponents'
 
-export default function RegistrationPage() {
+export default function LoginPage() {
   return (
     <StyledEuiPage>
       <EuiPageBody component="section">
         <EuiFlexGroup direction="column" alignItems="center">
           <EuiFlexItem grow={1}>
             <StyledEuiPageHeader>
-              <LandingTitle>Sign Up</LandingTitle>
+              <LandingTitle>Login</LandingTitle>
             </StyledEuiPageHeader>
           </EuiFlexItem>
           <EuiFlexItem grow={10}>
             <EuiPageContent horizontalPosition="center">
               <EuiPageContentBody>
-                <RegistrationForm />
+                <LoginForm />
               </EuiPageContentBody>
             </EuiPageContent>
           </EuiFlexItem>

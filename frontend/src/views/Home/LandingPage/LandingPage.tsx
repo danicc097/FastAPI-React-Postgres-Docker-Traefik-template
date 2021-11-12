@@ -7,11 +7,11 @@ import share from 'src/assets/img/books-illustration-1.svg'
 import discover from 'src/assets/img/books-illustration-2.svg'
 import learn from 'src/assets/img/books-illustration-3.svg'
 import styled from 'styled-components'
-import { useCarousel } from '../../hooks/ui/useCarousel'
-import CarouselTitle from '../CarouselTitle/CarouselTitle'
-import Carousel from '../Carousel/Carousel'
+import { useCarousel } from '../../../hooks/ui/useCarousel'
+import CarouselTitle from 'src/components/CarouselTitle/CarouselTitle'
+import Carousel from 'src/components/Carousel/Carousel'
 import React from 'react'
-import { LandingTitle, StyledEuiPage } from '../StyledComponents/StyledComponents'
+import { LandingTitle, StyledEuiPage } from 'src/components/StyledComponents/StyledComponents'
 
 const StyledEuiPageContent = styled(EuiPageContent)`
   &&& {

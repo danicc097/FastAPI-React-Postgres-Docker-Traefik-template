@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { screen, within, waitFor, fireEvent, getByTestId, getByRole, cleanup } from '@testing-library/react'
-import RegistrationForm from 'src/components/RegistrationForm/RegistrationForm'
+import RegistrationForm from './RegistrationForm'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 // this is an overridden render from @testing-library/react

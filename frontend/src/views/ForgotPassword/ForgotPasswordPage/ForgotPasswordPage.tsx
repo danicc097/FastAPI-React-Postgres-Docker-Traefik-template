@@ -12,7 +12,7 @@ import {
 } from '@elastic/eui'
 import styled from 'styled-components'
 import ForgotPasswordForm from '../ForgotPasswordForm/ForgotPasswordForm'
-import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from '../StyledComponents/StyledComponents'
+import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from 'src/components/StyledComponents/StyledComponents'
 
 export default function LoginPage() {
   return (

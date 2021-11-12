@@ -1,7 +1,7 @@
 import React, { ElementType } from 'react'
 import { EuiLoadingSpinner } from '@elastic/eui'
 import { useProtectedRoute } from 'src/hooks/auth/useProtectedRoute'
-import LoginPage from '../LoginPage/LoginPage'
+import LoginPage from '../../views/Login/LoginPage/LoginPage'
 import PermissionsNeeded from '../PermissionsNeeded/PermissionsNeeded'
 
 type ProtectedRoutePropTypes = {

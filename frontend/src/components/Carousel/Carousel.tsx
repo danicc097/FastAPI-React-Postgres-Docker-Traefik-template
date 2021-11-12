@@ -2,7 +2,7 @@ import React from 'react'
 import { EuiPanel } from '@elastic/eui'
 import { motion, AnimatePresence } from 'framer-motion'
 import styled from 'styled-components'
-import { CarouselItems } from '../LandingPage/LandingPage'
+import { CarouselItems } from '../../views/Home/LandingPage/LandingPage'
 
 const CarouselWrapper = styled.div`
   &&& {

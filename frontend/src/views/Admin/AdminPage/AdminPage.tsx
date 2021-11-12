@@ -1,34 +1,26 @@
 import {
   EuiAccordion,
-  EuiButton,
-  EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
   EuiIcon,
-  EuiPage,
   EuiPageBody,
   EuiPageContent,
-  EuiPageContentBody,
   EuiText,
-  EuiTextArea,
   EuiTextColor,
   EuiTitle,
-  formatDate,
-  EuiSpacer,
   EuiHorizontalRule,
 } from '@elastic/eui'
 import React from 'react'
 
-import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import styled from 'styled-components'
-import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from '../StyledComponents/StyledComponents'
-import UnverifiedUsersTable from './UnverifiedUsersTable'
 import { useUnverifiedUsers } from 'src/hooks/admin/useUnverifiedUsers'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
-import PasswordResetRequestsTable from './PasswordResetRequestsTable'
-import PasswordResetForm from './PasswordResetForm'
 import _ from 'lodash'
 import { useNavigate } from 'react-router-dom'
+import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from 'src/components/StyledComponents/StyledComponents'
+import UnverifiedUsersTable from '../UnverifiedUsersTable'
+import PasswordResetForm from '../PasswordResetForm'
+import PasswordResetRequestsTable from '../PasswordResetRequestsTable'
 
 const StyledEuiPageContent = styled(EuiPageContent)`
   &&& {
