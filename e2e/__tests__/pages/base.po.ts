@@ -74,7 +74,6 @@ export default abstract class BasePO {
   }
 
   async confirmModal() {
-    // await page.waitForNetworkIdle()
     await this.retry(
       page,
       async () => {
@@ -85,7 +84,6 @@ export default abstract class BasePO {
   }
 
   async cancelModal() {
-    // await page.waitForNetworkIdle()
     await this.retry(
       page,
       async () => {
@@ -104,7 +102,6 @@ export default abstract class BasePO {
   async waitForSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)
     await page.waitForSelector($selector, { timeout: 5000 })
-    // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
   }
 
@@ -112,7 +109,6 @@ export default abstract class BasePO {
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)
     await page.waitForSelector($selector, { visible: true, timeout: 5000 })
-    // await page.waitForNetworkIdle()
     await page.click($selector, { delay: 50 })
   }
 
@@ -121,7 +117,6 @@ export default abstract class BasePO {
     await this.waitUntilHTMLRendered(page, 100)
     await page.waitForSelector($selector, { timeout: 5000 })
 
-    // await page.waitForNetworkIdle()
     await page.type($selector, text)
   }
 
@@ -130,7 +125,6 @@ export default abstract class BasePO {
     await this.waitUntilHTMLRendered(page, 100)
     await page.waitForXPath($xXPath, { timeout: 5000 })
 
-    // await page.waitForNetworkIdle()
     const elements = await page.$x($xXPath)
     await elements[0]?.click()
   }
@@ -145,7 +139,6 @@ export default abstract class BasePO {
   async navigate(url: string) {
     await page.goto(`${this.FRONTEND_URL}${url}`, { waitUntil: 'domcontentloaded' })
     await this.waitUntilHTMLRendered(page, 50)
-    // await page.waitForNetworkIdle()
   }
 
   async getElementTextBySelector($selector: string): Promise<string> {

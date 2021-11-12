@@ -29,6 +29,7 @@ export default function ProtectedRoute({
   }
 
   const element = <Component {...props} />
+
   if (adminRoute) {
     return <PermissionsNeeded element={element} isAllowed={isAdmin} adminRoute={true}></PermissionsNeeded>
   } else if (verifiedUserRoute) {

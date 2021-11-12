@@ -1,45 +1,45 @@
 import { users } from '../data/users'
-import adminPo from '../pages/admin.po'
+import { PasswordResetPO, PasswordResetRequestsPO, UnverifiedUsersPO } from '../pages/admin.po'
 import profilePo from '../pages/profile.po'
 
-// afterAll(async () => {
-//   page.close()
+const passwordResetPo = new PasswordResetPO()
+const passwordResetRequestsPo = new PasswordResetRequestsPO()
+const unverifiedUsersPo = new UnverifiedUsersPO()
+
+// // TODO
+// afterEach(async () => {
+//   await profilePo.waitUntilHTMLRendered(page, 25)
 // })
 
-afterEach(async () => {
-  await adminPo.waitUntilHTMLRendered(page, 25)
-})
-
-describe('Test admin panel', () => {
+describe('Test admin functionality', () => {
   beforeEach(async () => {
     await profilePo.login('admin', true)
-    await adminPo.go()
   })
 
   test('verifying a user', async () => {
     // await page.click("[data-test-subj='user-update-form']")
-    await adminPo.openUnverifiedUsersAccordion()
-    await adminPo.selectFromUnverifiedUsersTable(users['toBeVerified'].email)
-    await adminPo.waitUntilHTMLRendered(page, 100) // button will be rendered
-    await adminPo.clickVerifyUsersButton()
+    await unverifiedUsersPo.go()
+    await unverifiedUsersPo.selectFromUnverifiedUsersTable(users['toBeVerified'].email)
+    await unverifiedUsersPo.waitUntilHTMLRendered(page, 100) // button will be rendered
+    await unverifiedUsersPo.clickVerifyUsersButton()
   })
 
   test('resetting a user`s password manually', async () => {
     // await page.click("[data-test-subj='user-update-form']")
-    await adminPo.openPasswordResetAccordion()
-    await adminPo.selectFromPasswordResetTable(users['verified'].email)
+    await passwordResetPo.go()
+    await passwordResetPo.selectFromPasswordResetTable(users['verified'].email)
     // button will be enabled
-    await adminPo.waitUntilHTMLRendered(page, 100)
-    await adminPo.clickPasswordResetButton()
+    await passwordResetPo.waitUntilHTMLRendered(page, 100)
+    await passwordResetPo.clickPasswordResetButton()
 
-    const trigger = async () => await adminPo.confirmModal()
+    const trigger = async () => await passwordResetPo.confirmModal()
 
     let newPassword
     while (!newPassword) {
-      newPassword = await adminPo.retry(
+      newPassword = await passwordResetPo.retry(
         page,
         async () => {
-          return await adminPo.interceptPasswordReset(trigger, 'verified')
+          return await passwordResetPo.interceptPasswordReset(trigger, 'verified')
         },
         50,
       )
@@ -50,38 +50,41 @@ describe('Test admin panel', () => {
   })
 
   test('accepting and declining a user password reset request', async () => {
-    await adminPo.openPasswordResetRequestsAccordion()
+    await passwordResetRequestsPo.go()
 
     // only passwordResetTestUser[*] are in the table
     const trigger = async () =>
-      await adminPo.clickResetRequestsTableAction(users['passwordResetTestUser2'].email, 'reset')
+      await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser2'].email, 'reset')
 
     let newPassword
     while (!newPassword) {
       try {
-        newPassword = await adminPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
+        newPassword = await passwordResetRequestsPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
       } catch (e) {}
     }
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
     expect(newPassword).not.toBe('')
     expect(users['passwordResetTestUser2'].password).toBe(newPassword)
 
-    await adminPo.clickResetRequestsTableAction(users['passwordResetTestUser'].email, 'delete')
+    await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser'].email, 'delete')
   })
 })
 
-describe('Test verification and access to admin panel', () => {
+describe('Test verification and access to admin panel for user', () => {
   test('accessing our profile now that we are verified', async () => {
-    await page.waitForNetworkIdle()
+    // await page.waitForNetworkIdle()
     await profilePo.login('toBeVerified')
     const calloutErrors = (await profilePo.getFormCalloutErrors()).toString()
     expect(calloutErrors).not.toEqual(expect.stringMatching(/Current user is not verified/i))
   })
 
-  it('should not let us see admin panel if we are not a superuser', async () => {
-    await adminPo.go()
-    await adminPo.getElementTextBySelector('body').then((text) => {
-      expect(text).toEqual(expect.stringMatching(/You are not authorized/i))
-    })
+  it('should not let us see admin functionality if we are not a superuser', async () => {
+    const pages = [passwordResetPo, passwordResetRequestsPo, unverifiedUsersPo]
+    for (const page of pages) {
+      await page.go()
+      await page.getElementTextBySelector('body').then((text) => {
+        expect(text).toEqual(expect.stringMatching(/You are not authorized/i))
+      })
+    }
   })
 })

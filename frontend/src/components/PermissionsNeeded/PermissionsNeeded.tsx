@@ -1,4 +1,5 @@
 import { EuiEmptyPrompt } from '@elastic/eui'
+import _ from 'lodash'
 import React from 'react'
 
 type PermissionsNeededPropTypes = {
@@ -24,8 +25,7 @@ export default function PermissionsNeeded({
             <p>You are not authorized to access this content.</p>
           ) : (
             <>
-              <p>You are not authorized to access this content.</p>
-              <p>An administrator must verify your account first.</p>
+              <p>{_.escape(`You don't have the required permissions to access this content.`)}</p>
             </>
           )
         }
