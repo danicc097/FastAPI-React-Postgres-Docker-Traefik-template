@@ -35,7 +35,7 @@ def create_users_table() -> None:
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("username", sa.Text, unique=True, nullable=False, index=True),
         sa.Column("email", sa.Text, unique=True, nullable=False, index=True),
-        sa.Column("role", sa.String(255), unique=True, nullable=False, index=True, server_default="user"),
+        sa.Column("role", sa.String(255), nullable=False, index=True, server_default="user"),
         sa.Column("is_verified", sa.Boolean, nullable=False, server_default="False"),
         sa.Column("salt", sa.Text, nullable=False),
         sa.Column("password", sa.Text, nullable=False),

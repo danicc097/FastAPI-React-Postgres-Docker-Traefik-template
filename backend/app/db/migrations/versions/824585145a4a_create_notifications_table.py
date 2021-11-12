@@ -5,16 +5,16 @@ Revises: 72123f20bcb6
 Create Date: 2021-11-12 22:55:26.663684
 
 """
-from alembic import op
-import sqlalchemy as sa
-import sys
 import pathlib
+import sys
 
-from app.db.migrations.utils import timestamps
+import sqlalchemy as sa
+from alembic import op
 
 # we're appending the app directory to our path here so that we can import config easily
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[4]))  # change depth to root accordingly
 
+from app.db.migrations.utils import timestamps  # noqa: E402
 
 # revision identifiers, used by Alembic
 revision = "824585145a4a"
