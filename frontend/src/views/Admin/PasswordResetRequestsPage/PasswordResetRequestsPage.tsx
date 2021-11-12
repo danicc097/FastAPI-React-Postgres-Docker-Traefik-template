@@ -1,33 +1,27 @@
 import {
   Direction,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiIcon,
   EuiInMemoryTable,
-  EuiInMemoryTableProps,
-  EuiTableSortingType,
   EuiText,
+  EuiTextColor,
+  EuiTitle,
   formatDate,
 } from '@elastic/eui'
-import React, { useState, Fragment, useRef } from 'react'
-
-import { EuiBasicTable, EuiLink, EuiHealth, EuiButton, EuiFlexGroup, EuiFlexItem, EuiSpacer } from '@elastic/eui'
-import { useUnverifiedUsers } from 'src/hooks/admin/useUnverifiedUsers'
-import styled from 'styled-components'
-import { schema } from 'src/types/schema_override'
+import React, { Fragment, useState } from 'react'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import { AdminActionType } from 'src/redux/action-types'
 import { createTextFileWithCreds } from 'src/utils/files'
-import { EuiTableActionsColumnType } from '@elastic/eui/src/components/basic_table/table_types'
+import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 
-type PasswordResetRequestsTableProps = {
-  passwordResetRequests: Array<schema['PasswordResetRequest']> & Partial<{ label: string }>
-}
-
-export default function PasswordResetRequestsTable({ passwordResetRequests }: PasswordResetRequestsTableProps) {
+export default function PasswordResetRequestsPage() {
   //   const [pageIndex, setPageIndex] = useState(0)
   //   const [pageSize, setPageSize] = useState(5)
   const [sortField, setSortField] = useState('') // broken when specifying any field first
   const [sortDirection, setSortDirection] = useState<Direction>('asc')
 
-  const { deletePasswordResetRequest, resetPasswordForUser } = usePasswordResetUsers()
+  const { deletePasswordResetRequest, resetPasswordForUser, passwordResetRequests } = usePasswordResetUsers()
 
   const onTableChange = ({ page = {}, sort = {} }) => {
     const { field: sortField, direction: sortDirection }: any = sort
@@ -121,7 +115,29 @@ export default function PasswordResetRequestsTable({ passwordResetRequests }: Pa
     allowNeutralSort: true,
   }
 
-  return (
+  const title = (
+    <div>
+      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
+        <EuiFlexItem grow={false}>
+          <EuiIcon type="lockOpen" size="m" />
+        </EuiFlexItem>
+
+        <EuiFlexItem>
+          <EuiTitle size="xs">
+            <h3 style={{ color: 'dodgerblue' }}>Manage password reset requests</h3>
+          </EuiTitle>
+        </EuiFlexItem>
+      </EuiFlexGroup>
+
+      <EuiText size="s">
+        <p>
+          <EuiTextColor color="subdued">Approve or deny existing user password reset requests.</EuiTextColor>
+        </p>
+      </EuiText>
+    </div>
+  )
+
+  const element = (
     <Fragment>
       <EuiInMemoryTable
         rowProps={() => ({
@@ -138,4 +154,6 @@ export default function PasswordResetRequestsTable({ passwordResetRequests }: Pa
       />
     </Fragment>
   )
+
+  return <AdminPageTemplate title={title} element={element} />
 }

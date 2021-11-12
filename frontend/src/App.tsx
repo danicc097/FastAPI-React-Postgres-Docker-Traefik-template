@@ -10,7 +10,10 @@ import 'src/assets/css/fonts.css'
 import 'src/assets/css/overrides.css'
 import ForgotPasswordPage from 'src/views/ForgotPassword/ForgotPasswordPage/ForgotPasswordPage'
 import LandingPage from './views/Home/LandingPage/LandingPage'
-import AdminPage from './views/Admin/AdminPage/AdminPage'
+import AdminPage from './views/Admin/AdminPageTemplate/AdminPageTemplate'
+import UnverifiedUsersPage from './views/Admin/UnverifiedUsersPage/UnverifiedUsersPage'
+import PasswordResetPage from './views/Admin/PasswordResetPage/PasswordResetPage'
+import PasswordResetRequestsPage from './views/Admin/PasswordResetRequestsPage/PasswordResetRequestsPage'
 
 export default function App() {
   return (
@@ -21,7 +24,18 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/profile" element={<ProtectedRoute component={ProfilePage} verifiedUserRoute={true} />} />
-          <Route path="/admin" element={<ProtectedRoute component={AdminPage} adminRoute={true} />} />
+          <Route
+            path="/admin/unverified-users"
+            element={<ProtectedRoute component={UnverifiedUsersPage} adminRoute={true} />}
+          />
+          <Route
+            path="/admin/password-reset"
+            element={<ProtectedRoute component={PasswordResetPage} adminRoute={true} />}
+          />
+          <Route
+            path="/admin/password-reset-requests"
+            element={<ProtectedRoute component={PasswordResetRequestsPage} adminRoute={true} />}
+          />
           <Route path="/registration" element={<RegistrationPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

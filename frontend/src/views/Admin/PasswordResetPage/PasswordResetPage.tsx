@@ -1,21 +1,29 @@
-import { Direction, EuiConfirmModal, EuiForm, EuiFormRow, EuiSelectable, EuiSelectableOption } from '@elastic/eui'
-import React, { useState, Fragment, useRef, useEffect } from 'react'
-
-import { EuiBasicTable, EuiLink, EuiHealth, EuiButton, EuiFlexGroup, EuiFlexItem, EuiSpacer } from '@elastic/eui'
-import styled from 'styled-components'
-import { initialStateType } from 'src/redux/initialState'
-import { useAppSelector } from 'src/redux/hooks'
-import { shallowEqual } from 'react-redux'
-import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
+import {
+  EuiButton,
+  EuiConfirmModal,
+  EuiFlexGroup,
+  EuiFlexItem,
+  EuiForm,
+  EuiFormRow,
+  EuiIcon,
+  EuiSelectable,
+  EuiSelectableOption,
+  EuiText,
+  EuiTextColor,
+  EuiTitle,
+} from '@elastic/eui'
+import _ from 'lodash'
+import React, { Fragment, useEffect, useState } from 'react'
 import { useAllUsers } from 'src/hooks/admin/useAllUsers'
+import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import { AdminActionType } from 'src/redux/action-types'
 import { createTextFileWithCreds } from 'src/utils/files'
-import _ from 'lodash'
+import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 
 /**
  * Explicitly reset a user's password by email
  */
-export default function PasswordResetForm() {
+export default function PasswordResetPage() {
   const [passwordResetUsersWithLabel, setPasswordResetUsersWithLabel] = useState<any>()
   const [selection, setSelection] = useState<any>('...')
   const { resetPasswordForUser } = usePasswordResetUsers()
@@ -79,7 +87,29 @@ export default function PasswordResetForm() {
     )
   }
 
-  return (
+  const title = (
+    <div>
+      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
+        <EuiFlexItem grow={false}>
+          <EuiIcon type="eraser" size="m" />
+        </EuiFlexItem>
+
+        <EuiFlexItem>
+          <EuiTitle size="xs">
+            <h3 style={{ color: 'dodgerblue' }}>Reset user password</h3>
+          </EuiTitle>
+        </EuiFlexItem>
+      </EuiFlexGroup>
+
+      <EuiText size="s">
+        <p>
+          <EuiTextColor color="subdued">{_.unescape(`Manually reset a user's password.`)}</EuiTextColor>
+        </p>
+      </EuiText>
+    </div>
+  )
+
+  const element = (
     <>
       <EuiForm component="form" onSubmit={onResetPasswordSubmit}>
         <EuiFlexGroup direction="column">
@@ -121,4 +151,5 @@ export default function PasswordResetForm() {
       {modal}
     </>
   )
+  return <AdminPageTemplate title={title} element={element} />
 }

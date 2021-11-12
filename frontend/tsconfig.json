@@ -23,5 +23,5 @@
     "noEmitOnError": true,
     "types": ["node", "webpack-env", "jest", "react", "react-dom", "styled-components", "react-redux"]
   },
-  "include": ["src", "src/views/Admin/AdminPage", "views/Home/LandingPage"]
+  "include": ["src", "src/views/Admin/AdminPageTemplate", "views/Home/LandingPage"]
 }

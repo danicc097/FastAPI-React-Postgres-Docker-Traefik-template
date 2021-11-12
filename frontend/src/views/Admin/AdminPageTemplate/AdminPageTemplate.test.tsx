@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import AdminPage from './AdminPage'
+import AdminPage from './AdminPageTemplate'
 import '@testing-library/jest-dom'
 import { BrowserRouter } from 'react-router-dom'
 // this is an overridden render from @testing-library/react
@@ -12,7 +12,7 @@ import { testInitialState } from 'src/test/test-state'
 test('Renders content', async () => {
   renderWithStore(
     <BrowserRouter>
-      <AdminPage />
+      <AdminPage title={null} element={null} />
     </BrowserRouter>,
     { initialState: testInitialState },
   )

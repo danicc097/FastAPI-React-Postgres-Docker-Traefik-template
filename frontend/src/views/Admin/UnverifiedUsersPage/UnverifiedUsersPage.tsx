@@ -1,9 +1,12 @@
 import {
   Direction,
+  EuiIcon,
   EuiInMemoryTable,
   EuiInMemoryTableProps,
   EuiTableSortingType,
   EuiText,
+  EuiTextColor,
+  EuiTitle,
   formatDate,
 } from '@elastic/eui'
 import React, { useState, Fragment, useRef } from 'react'
@@ -12,18 +15,15 @@ import { EuiBasicTable, EuiLink, EuiHealth, EuiButton, EuiFlexGroup, EuiFlexItem
 import { useUnverifiedUsers } from 'src/hooks/admin/useUnverifiedUsers'
 import styled from 'styled-components'
 import { schema } from 'src/types/schema_override'
+import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 
-type UnverifiedUsersTableProps = {
-  unverifiedUsers: Array<schema['UserPublic']>
-}
-
-export default function UnverifiedUsersTable({ unverifiedUsers }: UnverifiedUsersTableProps) {
+export default function UnverifiedUsersPage() {
   //   const [pageIndex, setPageIndex] = useState(0)
   //   const [pageSize, setPageSize] = useState(5)
   const [sortField, setSortField] = useState('') // broken when specifying any field first
   const [selectedItems, setSelectedItems] = useState<typeof unverifiedUsers>([])
   const [sortDirection, setSortDirection] = useState<Direction>('asc')
-  const { verifyUsers, fetchAllNonVerifiedUsers, removeVerifiedUsersFromStore } = useUnverifiedUsers()
+  const { verifyUsers, fetchAllNonVerifiedUsers, removeVerifiedUsersFromStore, unverifiedUsers } = useUnverifiedUsers()
 
   const onTableChange = ({ page = {}, sort = {} }) => {
     const { field: sortField, direction: sortDirection }: any = sort
@@ -116,7 +116,29 @@ export default function UnverifiedUsersTable({ unverifiedUsers }: UnverifiedUser
     initialSelected: [selectedItems],
   }
 
-  return (
+  const title = (
+    <div>
+      <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>
+        <EuiFlexItem grow={false}>
+          <EuiIcon type="lockOpen" size="m" />
+        </EuiFlexItem>
+
+        <EuiFlexItem>
+          <EuiTitle size="xs">
+            <h3 style={{ color: 'dodgerblue' }}>Manage user verification</h3>
+          </EuiTitle>
+        </EuiFlexItem>
+      </EuiFlexGroup>
+
+      <EuiText size="s">
+        <p>
+          <EuiTextColor color="subdued">Approve or deny new user account registrations.</EuiTextColor>
+        </p>
+      </EuiText>
+    </div>
+  )
+
+  const element = (
     <Fragment>
       {verifyButton}
       <EuiSpacer size="s" />
@@ -132,4 +154,6 @@ export default function UnverifiedUsersTable({ unverifiedUsers }: UnverifiedUser
       />
     </Fragment>
   )
+
+  return <AdminPageTemplate title={title} element={element} />
 }
