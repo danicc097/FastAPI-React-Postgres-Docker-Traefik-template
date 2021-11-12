@@ -61,17 +61,15 @@ def app(apply_migrations) -> FastAPI:
     return get_application()
 
 
-# Grab a reference to our database when needed
 @pytest.fixture
 def db(app: FastAPI) -> Database:
     """
-    Current app's ``Database`` object.
-    NOTE: use app.state._db instead in a test else it will be None.
+    Current app's ``Database`` object to be used in other fixtures.
+    NOTE: use app.state._db in a test instead, else it will be ``None``.
     """
     return app.state._db
 
 
-# Make requests in our tests
 # TODO FIX: seems to override clients when we use create_authorized_client
 # multiple times in the same test function
 # NOTES on how to fix:

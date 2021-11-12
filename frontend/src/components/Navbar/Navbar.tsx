@@ -25,6 +25,7 @@ import styled from 'styled-components'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import UserAvatar from '../UserAvatar/UserAvatar'
 import CollapsibleNav from './CollapsibleNav'
+import Notifications from './Notifications'
 
 const LogoSection = styled(EuiHeaderLink)`
   &&& {
@@ -132,7 +133,8 @@ export default function Navbar() {
       sections={[
         {
           items: [
-            <CollapsibleNav key={0} user={user} />,
+            user.email_verified ? <CollapsibleNav key={0} user={user} /> : null,
+            ,
             <LogoSection href="/" key={0}>
               <EuiIcon type="training" color="#1E90FF" size="l" /> My App
             </LogoSection>,
@@ -152,6 +154,7 @@ export default function Navbar() {
         },
         {
           items: [
+            <Notifications key={0} />,
             <EuiPopover
               id="avatar-menu"
               key={0}

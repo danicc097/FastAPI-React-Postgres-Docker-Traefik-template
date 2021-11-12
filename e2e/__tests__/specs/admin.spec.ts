@@ -6,7 +6,6 @@ const passwordResetPo = new PasswordResetPO()
 const passwordResetRequestsPo = new PasswordResetRequestsPO()
 const unverifiedUsersPo = new UnverifiedUsersPO()
 
-// // TODO
 // afterEach(async () => {
 //   await profilePo.waitUntilHTMLRendered(page, 25)
 // })
