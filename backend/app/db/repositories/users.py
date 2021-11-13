@@ -18,6 +18,7 @@ from app.db.repositories.global_notifications import (
 )
 from app.db.repositories.profiles import ProfilesRepository
 from app.db.repositories.pwd_reset_req import UserPwdReqRepository
+from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
 from app.models.user import (
     RoleUpdate,
@@ -373,16 +374,26 @@ class UsersRepository(BaseRepository):
                 pass
         return new_password
 
-    async def update_last_notification_at(self, *, user_id: int) -> None:
+    async def fetch_has_new_notifications(self, *, user_id: int) -> None:
         user = await self.get_user_by_id(user_id=user_id, to_public=False)
         if not user:
             raise UserNotFoundError
         async with self.db.transaction():
+
+            await self.global_notif_repo.has_new_notifications(last_notification_at=user.last_notification_at)
+
+    async def fetch_notifications(
+        self, *, user_id: int, last_notification_at: datetime, now: datetime
+    ) -> List[GlobalNotification]:
+        async with self.db.transaction():
+            notifications = await self.global_notif_repo.fetch_notification_feed(
+                last_notification_at=last_notification_at
+            )
             await self.db.execute(
                 query=UPDATE_LAST_NOTIFICATION_AT_QUERY,
-                values={"id": user_id, "last_notification_at": datetime.utcnow()},
+                values={"id": user_id, "last_notification_at": now},
             )
-            await self.global_notif_repo.check_for_new_notifications(last_notification_at=user.last_notification_at)
+            return notifications
 
     async def update_user_role(self, *, role_update: RoleUpdate) -> None:
         user = await self.get_user_by_email(email=role_update.email, to_public=False)

@@ -180,20 +180,34 @@ async def request_password_reset(
 )
 async def get_notification_feed_for_user(
     # add some validation and metadata with Query
-    page_chunk_size: int = Query(
-        GlobalNotificationsRepository.page_chunk_size,
-        ge=1,
-        le=50,
-        description="Number of notifications to retrieve",
-    ),
-    last_notification_at: datetime = Query(
-        datetime.utcnow(),
-        description="Used to determine the timestamp at which to begin querying for notification feed items.",
-    ),
+    # page_chunk_size: int = Query(
+    #     GlobalNotificationsRepository.page_chunk_size,
+    #     ge=1,
+    #     le=50,
+    #     description="Number of notifications to retrieve",
+    # ),
+    # last_notification_at: datetime = Query(
+    #     datetime.utcnow(),
+    #     description="Used to determine the timestamp at which to begin querying for notification feed items.",
+    # ),
+    user: UserPublic = Depends(get_current_active_user),
+    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+) -> List[GlobalNotification]:
+    return await users_repo.fetch_notifications(
+        user_id=user.id,
+        last_notification_at=user.last_notification_at,
+        now=datetime.utcnow(),
+    )
+
+
+@router.get(
+    "/notifications-check/",
+    response_model=bool,
+    name="users:check-user-has-unread-notifications",
+    dependencies=[Depends(get_current_active_user)],
+)
+async def check_has_new_notifications(
     user: UserPublic = Depends(get_current_active_user),
     global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
-) -> List[GlobalNotification]:
-    return await global_notif_repo.fetch_notification_feed(
-        last_notification_at=user.last_notification_at,
-        page_chunk_size=page_chunk_size,
-    )
+) -> bool:
+    return await global_notif_repo.has_new_notifications(last_notification_at=user.last_notification_at)

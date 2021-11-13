@@ -272,8 +272,10 @@ class TestAdminGlobalNotifications:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
+        authorized_client: AsyncClient,
         superuser_client: AsyncClient,
         test_admin_user: UserInDB,
+        test_user: UserPublic,
     ) -> None:
         notification = GlobalNotificationCreate(
             sender=test_admin_user.username,
@@ -290,34 +292,57 @@ class TestAdminGlobalNotifications:
         )
 
         assert res.status_code == HTTP_200_OK
-        logger.info(res.json())
+        logger.info(f"test_admin_can_create_notifications {res.json()=}")
 
-    async def test_user_receives_has_new_notification_alert(
-        self,
-        app: FastAPI,
-        authorized_client: AsyncClient,
-        test_user: UserInDB,
-    ) -> None:
+        # async def test_user_receives_has_new_notification_alert(
+        #     self,
+        #     app: FastAPI,
+        #     authorized_client: AsyncClient,
+        #     test_user: UserPublic,
+        # ) -> None:
+        # this will fail if the user is created after the notification is sent
+        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
+        assert res.status_code == HTTP_200_OK
+        assert res.json() is True
+
+        # async def test_user_can_fetch_notifications(
+        #     self,
+        #     app: FastAPI,
+        #     authorized_client: AsyncClient,
+        #     test_user: UserPublic,
+        # ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
+        logger.info(f"test_user_can_fetch_notifications {res.json()=}")
         assert len(res.json()) == 1
 
-    async def test_user_does_not_get_has_new_notification_alert_for_old_notifications(
-        self, app: FastAPI, authorized_client: AsyncClient, test_user
-    ) -> None:
+        # async def test_user_does_not_receive_has_new_notification_alert_for_old_notifications(
+        #     self, app: FastAPI, authorized_client: AsyncClient, test_user
+        # ) -> None:
+        # this will fail if the user is created after the notification is sent
+        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
+        assert res.status_code == HTTP_200_OK
+        assert res.json() is False
+
+        # async def test_user_gets_no_new_notifications_if_all_read(
+        #     self,
+        #     app: FastAPI,
+        #     authorized_client: AsyncClient,
+        #     test_user: UserPublic,
+        # ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 
-    async def test_user_can_get_all_notifications_from_datetime(
-        self, app: FastAPI, authorized_client: AsyncClient, test_user
-    ) -> None:
+        # async def test_user_can_get_all_notifications_from_datetime(
+        #     self, app: FastAPI, authorized_client: AsyncClient, test_user
+        # ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(
             app.url_path_for("users:get-feed"),
             json={"from_datetime": datetime.utcnow() - timedelta(days=365)},
         )
         assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == 0
+        assert len(res.json()) == 1

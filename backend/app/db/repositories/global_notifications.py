@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Mapping, Optional, Set, Union, cast
 
-import loguru
+from loguru import logger
 from databases import Database
 from pydantic import EmailStr
 from starlette.status import (
@@ -12,8 +12,11 @@ from starlette.status import (
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
+from app.models.global_notifications import (
+    GlobalNotification,
+    GlobalNotificationCreate,
+)
 from app.models.profile import ProfileCreate
-from app.models.global_notifications import GlobalNotification, GlobalNotificationCreate
 
 CREATE_NOTIFICATION_QUERY = """
 INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
@@ -97,6 +100,7 @@ LIMIT :page_chunk_size;
 """
 
 # check with EXISTS if there are new notifications from :last_notification_at
+# and return a boolean
 CHECK_NEW_NOTIFICATIONS_QUERY = """
 SELECT
   EXISTS(
@@ -151,10 +155,31 @@ class GlobalNotificationsRepository(BaseRepository):
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotification]:
         pass
 
-    async def check_for_new_notifications(self, *, last_notification_at: datetime) -> bool:
-        pass
+    async def has_new_notifications(self, *, last_notification_at: datetime) -> bool:
+        return await self.db.fetch_val(
+            CHECK_NEW_NOTIFICATIONS_QUERY, values={"last_notification_at": last_notification_at}
+        )
 
     async def fetch_notification_feed(
         self, *, last_notification_at: datetime, page_chunk_size: int = page_chunk_size
     ) -> List[GlobalNotification]:
-        pass
+        logger.critical(f"{last_notification_at=} \n {page_chunk_size=}")
+        logger.critical(
+            await self.db.fetch_all(
+                FETCH_NOTIFICATION_FEED_QUERY,
+                values={
+                    "last_notification_at": last_notification_at - timedelta(days=1),
+                    "page_chunk_size": page_chunk_size,
+                },
+            )
+        )
+        return [
+            GlobalNotification(**notification)
+            for notification in await self.db.fetch_all(
+                FETCH_NOTIFICATION_FEED_QUERY,
+                values={
+                    "last_notification_at": last_notification_at,
+                    "page_chunk_size": page_chunk_size,
+                },
+            )
+        ]
