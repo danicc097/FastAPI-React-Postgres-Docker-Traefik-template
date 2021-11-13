@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Mapping, Optional, Set, Union, cast
 
 import loguru
@@ -14,26 +15,24 @@ from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate
 from app.models.user_notifications import UserNotification, UserNotificationCreate
 
-CREATE_NOTIFICATION = """
-    INSERT INTO user_notifications (sender, receiver_role, title, body, label, link)
-    VALUES (:sender, :receiver_role, :title, :body, :label, :link)
-    RETURNING
-    *;
+CREATE_NOTIFICATION_QUERY = """
+INSERT INTO user_notifications (sender, receiver_role, title, body, label, link)
+VALUES (:sender, :receiver_role, :title, :body, :label, :link)
+RETURNING *;
 """
 
-DELETE_NOTIFICATION = """
-    DELETE FROM user_notifications
-    WHERE id = :id
-    RETURNING *;
+DELETE_NOTIFICATION_QUERY = """
+DELETE FROM user_notifications
+WHERE id = :id
+RETURNING *;
 """
 
-# TODO :page_chunk_size as LIMIT and :starting_date
 # The OFFSET clause is going to cause your SQL query plan to read all the results
 # anyway and then discard most of it until reaching the offset count.
 # When paging through additional results, it’s less and less efficient
 # with each additional page you fetch that way.
 # We navigate around this pitfall by using the LIMIT and WHERE clauses to implement pagination.
-FETCH_NOTIFICATIONS_FEED = """
+FETCH_NOTIFICATION_FEED_QUERY = """
 SELECT
   id,
   sender,
@@ -65,11 +64,11 @@ FROM ((
     FROM
       user_notifications
     WHERE
-      updated_at < '2020-11-14T14:33:40.759002'
+      updated_at < :last_notification_at
       AND updated_at != created_at
     ORDER BY
       updated_at DESC
-    LIMIT 50)
+    LIMIT :page_chunk_size)
 UNION (
   -- All rows.
   SELECT
@@ -88,14 +87,28 @@ UNION (
   FROM
     user_notifications
   WHERE
-    created_at < '2020-11-14T14:33:40.759002'
+    created_at < :last_notification_at
   ORDER BY
     created_at DESC
-  LIMIT 50)) AS notifications_feed
+  LIMIT :page_chunk_size)) AS notifications_feed
 ORDER BY
   event_timestamp DESC
-LIMIT 50;
+LIMIT :page_chunk_size;
 """
+
+# check with EXISTS if there are new notifications from :last_notification_at
+CHECK_NEW_NOTIFICATIONS_QUERY = """
+SELECT
+  EXISTS(
+    SELECT
+      1
+    FROM
+      user_notifications
+    WHERE
+      updated_at > :last_notification_at
+  ) AS has_new_notifications;
+"""
+
 
 ###############################################################
 
@@ -106,9 +119,9 @@ class UserNotificationsRepoException(Exception):  # do NOT use BaseException
         self.msg = msg
 
 
-# class UserAlreadyRequestedError(UserNotificationsRepoException):
-#     def __init__(self, msg="A request to reset your password already exists.", *args, **kwargs):
-#         super().__init__(msg, *args, **kwargs)
+class InvalidUserNotificationError(UserNotificationsRepoException):
+    def __init__(self, msg="A request to reset your password already exists.", *args, **kwargs):
+        super().__init__(msg, *args, **kwargs)
 
 
 # class RequestDoesNotExistError(UserNotificationsRepoException):
@@ -120,12 +133,28 @@ class UserNotificationsRepoException(Exception):  # do NOT use BaseException
 
 
 class UserNotificationsRepository(BaseRepository):
+    page_chunk_size = 10
+
     def __init__(self, db: Database) -> None:
         super().__init__(db)
         # self.users_repo = UsersRepository(db) # circular dep can be avoided so far
 
-    async def create_notification(self, *, notification: UserNotificationCreate) -> Optional[UserNotification]:
-        pass
+    async def create_notification(self, *, notification: UserNotificationCreate) -> UserNotification:
+        new_notification = await self.db.fetch_one(
+            CREATE_NOTIFICATION_QUERY,
+            values=notification.dict(exclude_unset=True),
+        )
+        if not new_notification:
+            raise UserNotificationsRepoException
+        return UserNotification(**new_notification)
 
     async def delete_notification_by_id(self, *, id: int) -> Optional[UserNotification]:
+        pass
+
+    async def check_for_new_notifications(self, *, last_notification_at: datetime) -> bool:
+        pass
+
+    async def fetch_notification_feed(
+        self, *, last_notification_at: datetime, page_chunk_size: int = page_chunk_size
+    ) -> List[UserNotification]:
         pass

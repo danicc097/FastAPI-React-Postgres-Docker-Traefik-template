@@ -5,6 +5,7 @@ from pydantic import EmailStr, constr, validator
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
 from app.models.profile import ProfilePublic
 from app.models.token import AccessToken
+from enum import Enum
 
 
 class UserBase(CoreModel):
@@ -67,10 +68,16 @@ class RoleUpdate(CoreModel):
 
     @validator("role")
     def role_must_be_in_roles(cls, role):
-        roles = ["user", "manager", "admin"]
+        roles = Roles._member_names_
         if role not in roles:
             raise ValueError(f"role {role} is not in {roles}")
         return role
+
+
+class Roles(Enum):
+    user = "user"
+    manager = "manager"
+    admin = "admin"
 
 
 class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):

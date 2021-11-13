@@ -38,7 +38,7 @@ from app.core.config import (
     UNIQUE_KEY,
 )
 from app.db.repositories.users import UsersRepository
-from app.models.notifications import UserNotificationCreate
+from app.models.user_notifications import UserNotificationCreate
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
@@ -262,7 +262,7 @@ class TestAdminUserModification:
             json={"role_update": role_update.dict()},
         )
         assert res.status_code == HTTP_200_OK
-        updated_user = user_repo.get_user_by_email(email=test_user.email)
+        updated_user = await user_repo.get_user_by_email(email=test_user.email)
         assert cast(UserPublic, updated_user).role == "manager"
 
 
@@ -289,33 +289,34 @@ class TestAdminUserNotifications:
         )
 
         assert res.status_code == HTTP_200_OK
+        print(res.json())
 
-    async def test_user_gets_new_notifications(
+    async def test_user_gets_new_notification_feed(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
         test_user: UserInDB,
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await create_authorized_client(user=test_user).post(app.url_path_for("users:notifications"))
+        res = await authorized_client.post(app.url_path_for("users:notifications"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 1
 
-    async def test_user_does_not_get_old_notifications(
-        self, app: FastAPI, create_authorized_client: Callable, test_user
+    async def test_user_does_not_get_feed_for_old_notifications(
+        self, app: FastAPI, authorized_client: AsyncClient, test_user
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await create_authorized_client(user=test_user).post(app.url_path_for("users:notifications"))
+        res = await authorized_client.post(app.url_path_for("users:notifications"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 
-    async def test_user_can_get_all_notifications_from_timestamp(
-        self, app: FastAPI, create_authorized_client: Callable, test_user
+    async def test_user_can_get_all_notifications_from_datetime(
+        self, app: FastAPI, authorized_client: AsyncClient, test_user
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await create_authorized_client(user=test_user).post(
+        res = await authorized_client.post(
             app.url_path_for("users:notifications"),
-            json={"from_timestamp": datetime.now().timestamp() - timedelta(days=365).total_seconds()},
+            json={"from_datetime": datetime.utcnow() - timedelta(days=365)},
         )
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0

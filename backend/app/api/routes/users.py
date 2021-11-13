@@ -1,8 +1,9 @@
+from datetime import datetime, timedelta
 import logging
 from logging.config import dictConfig
-from typing import Optional, cast
+from typing import List, Optional, cast
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from starlette.status import (
@@ -28,19 +29,17 @@ from app.db.repositories.pwd_reset_req import (
     UserPwdReqRepository,
 )
 from app.db.repositories.users import (
-    EmailAlreadyExistsError,
-    InvalidUpdateError,
-    UserCreationError,
-    UsernameAlreadyExistsError,
-    UsersRepoException,
     UsersRepository,
 )
+from app.db.repositories.user_notifications import UserNotificationsRepository
+
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
 from app.models.token import AccessToken
 from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
+from app.models.user_notifications import UserNotification
 from app.services import auth_service
 
 router = APIRouter()
@@ -172,3 +171,29 @@ async def request_password_reset(
     except Exception as e:
         exception_handler(e)
     return pwd_reset_req
+
+
+@router.get(
+    "/notifications/",
+    response_model=List[UserNotification],
+    name="users:get-feed",
+    dependencies=[Depends(get_current_active_user)],
+)
+async def get_notification_feed_for_user(
+    # add some validation and metadata with Query
+    page_chunk_size: int = Query(
+        UserNotificationsRepository.page_chunk_size,
+        ge=1,
+        le=50,
+        description="Number of notifications to retrieve",
+    ),
+    last_notification_at: datetime = Query(
+        datetime.utcnow(),
+        description="Used to determine the timestamp at which to begin querying for notification feed items.",
+    ),
+    user_notif_repo: UserNotificationsRepository = Depends(get_repository(UserNotificationsRepository)),
+) -> List[UserNotification]:
+    return await user_notif_repo.fetch_notification_feed(
+        last_notification_at=last_notification_at,
+        page_chunk_size=page_chunk_size,
+    )

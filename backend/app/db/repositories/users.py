@@ -1,3 +1,4 @@
+from datetime import datetime
 import secrets
 import string
 from typing import List, Mapping, Optional, Set, Union, cast
@@ -14,8 +15,9 @@ from starlette.status import (
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.db.repositories.pwd_reset_req import UserPwdReqRepository
+from app.db.repositories.user_notifications import UserNotificationsRepository
 from app.models.profile import ProfileCreate
-from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
+from app.models.user import RoleUpdate, UserCreate, UserInDB, UserPublic, UserUpdate
 from app.services import auth_service
 
 GET_USER_BY_EMAIL_QUERY = """
@@ -90,6 +92,20 @@ RESET_USER_PASSWORD_QUERY = """
     RETURNING *;
 """
 
+UPDATE_LAST_NOTIFICATION_AT_QUERY = """
+    UPDATE users
+    SET last_notification_at = :last_notification_at
+    WHERE id = :id
+    RETURNING *;
+"""
+
+UPDATE_USER_ROLE_QUERY = """
+    UPDATE users
+    SET role = :role
+    WHERE id = :id
+    RETURNING *;
+"""
+
 
 ###############################################################################
 
@@ -143,7 +159,9 @@ class UsersRepository(BaseRepository):
         # will also create_profile_for_user below
         self.profiles_repo = ProfilesRepository(db)
         self.user_pwd_req_repo = UserPwdReqRepository(db)
+        self.user_notif_repo = UserNotificationsRepository(db)
 
+    # ? Exceptions are to be raised outside
     async def get_user_by_email(
         self, *, email: EmailStr, to_public: bool = True
     ) -> Optional[Union[UserPublic, UserInDB]]:
@@ -158,6 +176,7 @@ class UsersRepository(BaseRepository):
             return await self.populate_user(user=user)
         return user
 
+    # ? Exceptions are to be raised outside
     async def get_user_by_username(
         self, *, username: str, to_public: bool = True
     ) -> Optional[Union[UserPublic, UserInDB]]:
@@ -169,6 +188,7 @@ class UsersRepository(BaseRepository):
             return await self.populate_user(user=user)
         return user
 
+    # ? Exceptions are to be raised outside
     async def get_user_by_id(self, *, user_id: int, to_public: bool = True) -> Optional[Union[UserPublic, UserInDB]]:
         user_record = await self.db.fetch_one(query=GET_USER_BY_ID_QUERY, values={"id": user_id})
         if not user_record:
@@ -344,3 +364,24 @@ class UsersRepository(BaseRepository):
             except Exception as e:
                 pass
         return new_password
+
+    async def update_last_notification_at(self, *, user_id: int) -> None:
+        user = await self.get_user_by_id(user_id=user_id, to_public=False)
+        if not user:
+            raise UserNotFoundError
+        async with self.db.transaction():
+            await self.db.execute(
+                query=UPDATE_LAST_NOTIFICATION_AT_QUERY,
+                values={"id": user_id, "last_notification_at": datetime.utcnow()},
+            )
+            await self.user_notif_repo.check_for_new_notifications(last_notification_at=user.last_notification_at)
+
+    async def update_user_role(self, *, role_update: RoleUpdate) -> None:
+        user = await self.get_user_by_email(email=role_update.email, to_public=False)
+        if not user:
+            raise UserNotFoundError
+        async with self.db.transaction():
+            await self.db.execute(
+                query=UPDATE_USER_ROLE_QUERY,
+                values={"id": user.id, "role": role_update.role},
+            )
