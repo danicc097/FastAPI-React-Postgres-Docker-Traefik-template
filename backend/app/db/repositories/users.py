@@ -19,13 +19,13 @@ from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
 from app.services import auth_service
 
 GET_USER_BY_EMAIL_QUERY = """
-    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE email = :email;
 """
 
 GET_USER_BY_USERNAME_QUERY = """
-    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE username = :username;
 """
@@ -33,23 +33,23 @@ GET_USER_BY_USERNAME_QUERY = """
 REGISTER_NEW_USER_QUERY = """
     INSERT INTO users (username, email, password, salt)
     VALUES (:username, :email, :password, :salt)
-    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 REGISTER_ADMIN_QUERY = """
     INSERT INTO users (username, email, password, salt, is_superuser, is_verified)
     VALUES (:username, :email, :password, :salt, TRUE, TRUE)
-    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 REGISTER_VERIFIED_USER_QUERY = """
     INSERT INTO users (username, email, password, salt, is_verified)
     VALUES (:username, :email, :password, :salt, TRUE)
-    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 GET_USER_BY_ID_QUERY = """
-    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE id = :id;
 """
@@ -61,16 +61,16 @@ UPDATE_USER_BY_ID_QUERY = """
         username     = :username,
         email        = :email
     WHERE id = :id
-    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 LIST_ALL_USERS_QUERY = """
-    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users;
 """
 
 LIST_ALL_NON_VERIFIED_USERS_QUERY = """
-    SELECT id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE is_verified = 'false';
 """
@@ -79,7 +79,7 @@ VERIFY_USER_BY_EMAIL_QUERY = """
     UPDATE users
     SET is_verified        = 'true'
     WHERE email = :email
-    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 RESET_USER_PASSWORD_QUERY = """
@@ -87,7 +87,7 @@ RESET_USER_PASSWORD_QUERY = """
     SET password     = :password,
         salt         = :salt
     WHERE email = :email
-    RETURNING id, username, email, is_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 
@@ -247,7 +247,6 @@ class UsersRepository(BaseRepository):
                 update={**user_password_update, "id": user_id}, exclude={"old_password"}
             )
 
-        # TODO single query for all updates
         if user_update.email:
             if await self.get_user_by_email(email=user_update.email):
                 raise EmailAlreadyExistsError

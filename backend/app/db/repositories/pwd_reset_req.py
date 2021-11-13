@@ -17,17 +17,17 @@ from app.models.pwd_reset_req import PasswordResetRequest
 CREATE_PASSWORD_RESET_REQUEST = """
     INSERT INTO pwd_reset_req (email, message)
     VALUES (:email, :message)
-    RETURNING id, email, message, created_at, updated_at;
+    RETURNING *;
 """
 
 DELETE_PASSWORD_RESET_REQUEST = """
     DELETE FROM pwd_reset_req
     WHERE id = :id
-    RETURNING id, email, message, created_at, updated_at;
+    RETURNING *;
 """
 
 LIST_ALL_PASSWORD_REQUEST_USERS_QUERY = """
-    SELECT id, email, message, created_at, updated_at
+    SELECT *
     FROM pwd_reset_req
 """
 

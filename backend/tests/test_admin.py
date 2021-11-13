@@ -8,7 +8,8 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 """
 
 
-from typing import Callable, Dict, List, Optional, Type, Union
+from datetime import datetime, timedelta
+from typing import Callable, Dict, List, Optional, Type, Union, cast
 
 import jwt
 import pytest
@@ -37,29 +38,36 @@ from app.core.config import (
     UNIQUE_KEY,
 )
 from app.db.repositories.users import UsersRepository
+from app.models.notifications import UserNotificationCreate
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
 from app.models.token import JWTCreds, JWTMeta, JWTPayload
-from app.models.user import UserCreate, UserInDB, UserPublic
+from app.models.user import RoleUpdate, UserCreate, UserInDB, UserPublic
 from app.services import auth_service
 from tests.conftest import TEST_USERS
 
 pytestmark = pytest.mark.asyncio
 
 
+ADMIN_ROUTES_GET = [
+    "admin:list-users",
+    "admin:list-unverified-users",
+    "admin:list-password-request-users",
+]
+
+
 class TestAdminRoutes:
     async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
-        res = await client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code != HTTP_404_NOT_FOUND
-
-        res = await client.post(app.url_path_for("admin:verify-users-by-email"))
-        assert res.status_code != HTTP_404_NOT_FOUND
+        for route in ADMIN_ROUTES_GET:
+            res = await client.get(app.url_path_for(route))
+            assert res.status_code != HTTP_404_NOT_FOUND
 
     async def test_unregistered_user_cant_access_admin(self, app: FastAPI, client: AsyncClient) -> None:
-        res = await client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_401_UNAUTHORIZED  # authentication scope (unfortunate http code name)
+        for route in ADMIN_ROUTES_GET:
+            res = await client.get(app.url_path_for(route))
+            assert res.status_code == HTTP_401_UNAUTHORIZED  # authentication scope (unfortunate http code name)
 
     async def test_regular_user_cant_access_admin(
         self,
@@ -67,8 +75,9 @@ class TestAdminRoutes:
         authorized_client: AsyncClient,
         test_user: UserPublic,
     ) -> None:
-        res = await authorized_client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_403_FORBIDDEN  # authorization scope
+        for route in ADMIN_ROUTES_GET:
+            res = await authorized_client.get(app.url_path_for(route))
+            assert res.status_code == HTTP_403_FORBIDDEN  # authorization scope
 
     async def test_admin_can_access_admin(
         self,
@@ -76,9 +85,9 @@ class TestAdminRoutes:
         superuser_client: AsyncClient,
         test_admin_user: UserInDB,
     ) -> None:
-        res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))
-
-        assert res.status_code != HTTP_403_FORBIDDEN
+        for route in ADMIN_ROUTES_GET:
+            res = await superuser_client.get(app.url_path_for(route))
+            assert res.status_code != HTTP_403_FORBIDDEN
 
 
 class TestAdminUserlistAccess:
@@ -161,8 +170,6 @@ class TestAdminUserModification:
         # reset their passwords
         for test_user in (test_user6, test_user7):
             # superuser_client: AsyncClient = create_authorized_client(user=test_admin_user)  # type: ignore
-            print("str(superuser_client)")
-            print(str(superuser_client))
             res = await superuser_client.post(
                 app.url_path_for("admin:reset-user-password-by-email"),
                 json={"email": test_user.email},
@@ -176,8 +183,6 @@ class TestAdminUserModification:
             # until create_authorized_client is fixed
             test_user_client: AsyncClient = create_authorized_client(user=test_user)  # type: ignore
             test_user_client.headers["content-type"] = "application/x-www-form-urlencoded"
-            print("str(test_user_client)")
-            print(str(test_user_client))
             login_data = {
                 "username": test_user.email,
                 "password": new_pwd,  # insert user's plaintext password
@@ -233,5 +238,84 @@ class TestAdminUserModification:
 
         # requests should be empty
         res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))
+        assert res.status_code == HTTP_200_OK
+        assert len(res.json()) == 0
+
+    async def test_admin_can_change_a_user_role(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        superuser_client: AsyncClient,
+        test_user: UserPublic,
+        db: Database,
+    ) -> None:
+        user_repo = UsersRepository(db)
+        role_update = RoleUpdate(
+            role="manager",
+            email=test_user.email,
+        )
+
+        # actually any client can request it since the user won't know its own password
+        # but there's no email server so this is as secure as we get
+        res = await superuser_client.post(
+            app.url_path_for("admin:change-user-role"),
+            json={"role_update": role_update.dict()},
+        )
+        assert res.status_code == HTTP_200_OK
+        updated_user = user_repo.get_user_by_email(email=test_user.email)
+        assert cast(UserPublic, updated_user).role == "manager"
+
+
+class TestAdminUserNotifications:
+    async def test_admin_can_create_notifications(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        superuser_client: AsyncClient,
+        test_admin_user: UserInDB,
+    ) -> None:
+        notification = UserNotificationCreate(
+            sender=test_admin_user.username,
+            receiver_role="user",
+            title="Test notification",
+            body="This is a test notification",
+            label="Test",
+            link="https://www.google.com",
+        )
+
+        res = await superuser_client.post(
+            app.url_path_for("admin:create-notification"),
+            json={"notification": notification.dict()},
+        )
+
+        assert res.status_code == HTTP_200_OK
+
+    async def test_user_gets_new_notifications(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        test_user: UserInDB,
+    ) -> None:
+        # this will fail if the user is created after the notification is sent
+        res = await create_authorized_client(user=test_user).post(app.url_path_for("users:notifications"))
+        assert res.status_code == HTTP_200_OK
+        assert len(res.json()) == 1
+
+    async def test_user_does_not_get_old_notifications(
+        self, app: FastAPI, create_authorized_client: Callable, test_user
+    ) -> None:
+        # this will fail if the user is created after the notification is sent
+        res = await create_authorized_client(user=test_user).post(app.url_path_for("users:notifications"))
+        assert res.status_code == HTTP_200_OK
+        assert len(res.json()) == 0
+
+    async def test_user_can_get_all_notifications_from_timestamp(
+        self, app: FastAPI, create_authorized_client: Callable, test_user
+    ) -> None:
+        # this will fail if the user is created after the notification is sent
+        res = await create_authorized_client(user=test_user).post(
+            app.url_path_for("users:notifications"),
+            json={"from_timestamp": datetime.now().timestamp() - timedelta(days=365).total_seconds()},
+        )
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0

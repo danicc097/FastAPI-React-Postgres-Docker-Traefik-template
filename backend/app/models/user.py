@@ -1,7 +1,7 @@
+from datetime import datetime
 from typing import Optional
 
-from pydantic import EmailStr, constr
-
+from pydantic import EmailStr, constr, validator
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
 from app.models.profile import ProfilePublic
 from app.models.token import AccessToken
@@ -13,11 +13,17 @@ class UserBase(CoreModel):
     so they never leave the backend
     """
 
-    email: Optional[EmailStr]
-    username: Optional[str]
+    email: EmailStr
+    username: str
     is_verified: bool = False
     is_active: bool = True
     is_superuser: bool = False
+    role: str = "user"
+    last_notification_at: datetime = datetime.utcnow()
+
+    @validator("last_notification_at", pre=True)
+    def default_datetime(cls, value: datetime) -> datetime:
+        return value or datetime.utcnow()
 
 
 # ? until constr fixed
@@ -52,6 +58,19 @@ class UserUpdate(CoreModel):
     old_password: Optional[constr(min_length=7, max_length=50)]
     email: Optional[EmailStr]
     username: Optional[constr(min_length=3, max_length=50, regex="^[a-zA-Z0-9_-]+$")]
+
+
+class RoleUpdate(CoreModel):
+
+    email: EmailStr
+    role: str
+
+    @validator("role")
+    def role_must_be_in_roles(cls, role):
+        roles = ["user", "manager", "admin"]
+        if role not in roles:
+            raise ValueError(f"role {role} is not in {roles}")
+        return role
 
 
 class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):

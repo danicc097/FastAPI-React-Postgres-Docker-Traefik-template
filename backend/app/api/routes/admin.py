@@ -15,11 +15,13 @@ from app.db.repositories.pwd_reset_req import (
     RequestDoesNotExistError,
     UserPwdReqRepository,
 )
+from app.db.repositories.user_notifications import UserNotificationsRepository
 from app.db.repositories.users import (
     InvalidUpdateError,
     UserNotFoundError,
     UsersRepository,
 )
+from app.models.user_notifications import UserNotification
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
@@ -143,3 +145,20 @@ async def delete_password_reset_request(
         await user_pwd_req_repo.delete_password_reset_request(id=id)
     except RequestDoesNotExistError as e:
         exception_handler(e)
+
+
+@router.post(
+    "/create-notification/",
+    response_model=List[UserNotification],
+    name="admin:create-notification",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_user_is_admin)],
+)
+async def create_notification(
+    notification: UserNotification = Body(..., embed=True),
+    user_notif_repo: UserNotificationsRepository = Depends(get_repository(UserNotificationsRepository)),
+) -> List[UserNotification]:
+    """
+    Create a new notification for selected user roles to receive.
+    """
+    return await user_notif_repo.create_notification(notification=notification)

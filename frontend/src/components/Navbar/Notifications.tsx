@@ -39,7 +39,6 @@ export default function Notifications() {
     prefix: 'newsFeedFlyoutTitle',
   })
   const newsFeedPopoverId = useGeneratedHtmlId({ prefix: 'newsFeedPopover' })
-
   const alerts = [
     {
       title: 'Control access to features',

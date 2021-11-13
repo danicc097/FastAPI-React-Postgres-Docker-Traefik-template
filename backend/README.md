@@ -20,7 +20,7 @@ If tests start taking more than 2 minutes to run, consider using ``pytest-xdist`
 DB_NAME = f"{POSTGRES_DB}_test_{pytest_worker}"
 ```
 
-Tests must be run with the appropiate ``dist`` flag depending on tests themselves and how they modify global state, if they do. See https://github.com/pytest-dev/pytest-xdist
+Tests must be run with the appropiate ``dist`` flag depending on tests themselves and how they modify global state, if they do. See <https://github.com/pytest-dev/pytest-xdist>
 benchmark those to figure out which one yields the fastest results depending on ``-n NUM_WORKERS``. A good place to start is ``-n MACHINE_CORE_COUNT``.
 
 VM Cores: 4
