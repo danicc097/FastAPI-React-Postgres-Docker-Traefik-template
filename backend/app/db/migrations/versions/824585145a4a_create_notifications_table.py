@@ -29,7 +29,7 @@ def upgrade() -> None:
     """
 
     op.create_table(
-        "user_notifications",
+        "global_notifications",
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("sender", sa.Text, sa.ForeignKey("users.username", ondelete="CASCADE")),
         sa.Column("receiver_role", sa.String(255), index=True, nullable=False),
@@ -44,4 +44,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("user_notifications")
+    op.drop_table("global_notifications")

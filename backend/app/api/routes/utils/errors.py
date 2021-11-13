@@ -7,9 +7,9 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
-import app.db.repositories.user_notifications as user_notif_repo
 
 BASE_EXCEPTION = HTTPException(
     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
@@ -84,11 +84,11 @@ def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
         return BASE_EXCEPTION
 
 
-def user_notifications_repo_exception_to_response(e: Exception) -> HTTPException:
+def global_notifications_repo_exception_to_response(e: Exception) -> HTTPException:
     """
-    Map ``UserNotificationsRepoException`` to HTTP exceptions.
+    Map ``GlobalNotificationsRepoException`` to HTTP exceptions.
     """
-    if isinstance(e, user_notif_repo.InvalidUserNotificationError):
+    if isinstance(e, global_notif_repo.InvalidGlobalNotificationError):
         return HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail="Invalid notification.",

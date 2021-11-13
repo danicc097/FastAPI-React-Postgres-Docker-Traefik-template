@@ -1,5 +1,5 @@
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 from logging.config import dictConfig
 from typing import List, Optional, cast
 
@@ -24,22 +24,21 @@ from app.api.dependencies.users import (
     verify_user_is_admin,
 )
 from app.api.routes.utils.errors import exception_handler
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.pwd_reset_req import (
     UserAlreadyRequestedError,
     UserPwdReqRepository,
 )
-from app.db.repositories.users import (
-    UsersRepository,
-)
-from app.db.repositories.user_notifications import UserNotificationsRepository
-
+from app.db.repositories.users import UsersRepository
+from app.models.global_notifications import GlobalNotification
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
 from app.models.token import AccessToken
 from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
-from app.models.user_notifications import UserNotification
 from app.services import auth_service
 
 router = APIRouter()
@@ -173,16 +172,16 @@ async def request_password_reset(
     return pwd_reset_req
 
 
-@router.get(
+@router.post(
     "/notifications/",
-    response_model=List[UserNotification],
+    response_model=List[GlobalNotification],
     name="users:get-feed",
     dependencies=[Depends(get_current_active_user)],
 )
 async def get_notification_feed_for_user(
     # add some validation and metadata with Query
     page_chunk_size: int = Query(
-        UserNotificationsRepository.page_chunk_size,
+        GlobalNotificationsRepository.page_chunk_size,
         ge=1,
         le=50,
         description="Number of notifications to retrieve",
@@ -191,9 +190,10 @@ async def get_notification_feed_for_user(
         datetime.utcnow(),
         description="Used to determine the timestamp at which to begin querying for notification feed items.",
     ),
-    user_notif_repo: UserNotificationsRepository = Depends(get_repository(UserNotificationsRepository)),
-) -> List[UserNotification]:
-    return await user_notif_repo.fetch_notification_feed(
-        last_notification_at=last_notification_at,
+    user: UserPublic = Depends(get_current_active_user),
+    global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
+) -> List[GlobalNotification]:
+    return await global_notif_repo.fetch_notification_feed(
+        last_notification_at=user.last_notification_at,
         page_chunk_size=page_chunk_size,
     )

@@ -1,6 +1,6 @@
-from datetime import datetime
 import secrets
 import string
+from datetime import datetime
 from typing import List, Mapping, Optional, Set, Union, cast
 
 import loguru
@@ -13,11 +13,19 @@ from starlette.status import (
 )
 
 from app.db.repositories.base import BaseRepository
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.profiles import ProfilesRepository
 from app.db.repositories.pwd_reset_req import UserPwdReqRepository
-from app.db.repositories.user_notifications import UserNotificationsRepository
 from app.models.profile import ProfileCreate
-from app.models.user import RoleUpdate, UserCreate, UserInDB, UserPublic, UserUpdate
+from app.models.user import (
+    RoleUpdate,
+    UserCreate,
+    UserInDB,
+    UserPublic,
+    UserUpdate,
+)
 from app.services import auth_service
 
 GET_USER_BY_EMAIL_QUERY = """
@@ -159,7 +167,7 @@ class UsersRepository(BaseRepository):
         # will also create_profile_for_user below
         self.profiles_repo = ProfilesRepository(db)
         self.user_pwd_req_repo = UserPwdReqRepository(db)
-        self.user_notif_repo = UserNotificationsRepository(db)
+        self.global_notif_repo = GlobalNotificationsRepository(db)
 
     # ? Exceptions are to be raised outside
     async def get_user_by_email(
@@ -374,7 +382,7 @@ class UsersRepository(BaseRepository):
                 query=UPDATE_LAST_NOTIFICATION_AT_QUERY,
                 values={"id": user_id, "last_notification_at": datetime.utcnow()},
             )
-            await self.user_notif_repo.check_for_new_notifications(last_notification_at=user.last_notification_at)
+            await self.global_notif_repo.check_for_new_notifications(last_notification_at=user.last_notification_at)
 
     async def update_user_role(self, *, role_update: RoleUpdate) -> None:
         user = await self.get_user_by_email(email=role_update.email, to_public=False)

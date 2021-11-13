@@ -8,6 +8,7 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 """
 
 
+import json
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Type, Union, cast
 
@@ -38,13 +39,13 @@ from app.core.config import (
     UNIQUE_KEY,
 )
 from app.db.repositories.users import UsersRepository
-from app.models.user_notifications import UserNotificationCreate
+from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
 from app.models.token import JWTCreds, JWTMeta, JWTPayload
-from app.models.user import RoleUpdate, UserCreate, UserInDB, UserPublic
+from app.models.user import Roles, RoleUpdate, UserCreate, UserInDB, UserPublic
 from app.services import auth_service
 from tests.conftest import TEST_USERS
 
@@ -251,7 +252,7 @@ class TestAdminUserModification:
     ) -> None:
         user_repo = UsersRepository(db)
         role_update = RoleUpdate(
-            role="manager",
+            role=Roles.manager.value,
             email=test_user.email,
         )
 
@@ -262,11 +263,11 @@ class TestAdminUserModification:
             json={"role_update": role_update.dict()},
         )
         assert res.status_code == HTTP_200_OK
-        updated_user = await user_repo.get_user_by_email(email=test_user.email)
+        updated_user = await user_repo.get_user_by_email(email=role_update.email)
         assert cast(UserPublic, updated_user).role == "manager"
 
 
-class TestAdminUserNotifications:
+class TestAdminGlobalNotifications:
     async def test_admin_can_create_notifications(
         self,
         app: FastAPI,
@@ -274,9 +275,9 @@ class TestAdminUserNotifications:
         superuser_client: AsyncClient,
         test_admin_user: UserInDB,
     ) -> None:
-        notification = UserNotificationCreate(
+        notification = GlobalNotificationCreate(
             sender=test_admin_user.username,
-            receiver_role="user",
+            receiver_role=Roles.user.value,
             title="Test notification",
             body="This is a test notification",
             label="Test",
@@ -289,24 +290,24 @@ class TestAdminUserNotifications:
         )
 
         assert res.status_code == HTTP_200_OK
-        print(res.json())
+        logger.info(res.json())
 
-    async def test_user_gets_new_notification_feed(
+    async def test_user_receives_has_new_notification_alert(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
         test_user: UserInDB,
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:notifications"))
+        res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 1
 
-    async def test_user_does_not_get_feed_for_old_notifications(
+    async def test_user_does_not_get_has_new_notification_alert_for_old_notifications(
         self, app: FastAPI, authorized_client: AsyncClient, test_user
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:notifications"))
+        res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 
@@ -315,7 +316,7 @@ class TestAdminUserNotifications:
     ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(
-            app.url_path_for("users:notifications"),
+            app.url_path_for("users:get-feed"),
             json={"from_datetime": datetime.utcnow() - timedelta(days=365)},
         )
         assert res.status_code == HTTP_200_OK

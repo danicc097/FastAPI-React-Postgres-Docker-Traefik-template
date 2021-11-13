@@ -8,7 +8,7 @@ from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
 # mypy: ignore-errors
 
 
-class UserNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
+class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
     """
     Admins and authorized roles can send notifications to users based on role.
     """
@@ -21,7 +21,7 @@ class UserNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
     link: Optional[str] = ""
 
 
-class UserNotificationCreate(CoreModel):
+class GlobalNotificationCreate(CoreModel):
 
     sender: str
     receiver_role: str

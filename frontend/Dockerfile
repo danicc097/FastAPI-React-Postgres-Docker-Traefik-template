@@ -17,5 +17,5 @@ RUN yarn
 # add app last to prevent reinstalling them when rebuilding
 COPY . /frontend
 
-ENV TSC_WATCHFILE "UseFsEventsWithFallbackDynamicPolling" 
+ENV TSC_WATCHFILE "UseFsEventsWithFallbackDynamicPolling"
 CMD ["yarn", "start"]

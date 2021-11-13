@@ -1,11 +1,19 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from pydantic import EmailStr, constr, validator
+from pydantic.main import BaseModel
+
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
 from app.models.profile import ProfilePublic
 from app.models.token import AccessToken
-from enum import Enum
+
+
+class Roles(str, Enum):
+    user = "user"
+    manager = "manager"
+    admin = "admin"
 
 
 class UserBase(CoreModel):
@@ -14,12 +22,12 @@ class UserBase(CoreModel):
     so they never leave the backend
     """
 
-    email: EmailStr
-    username: str
+    email: Optional[EmailStr]
+    username: Optional[str]
     is_verified: bool = False
     is_active: bool = True
     is_superuser: bool = False
-    role: str = "user"
+    role: Roles = Roles.user
     last_notification_at: datetime = datetime.utcnow()
 
     @validator("last_notification_at", pre=True)
@@ -64,20 +72,14 @@ class UserUpdate(CoreModel):
 class RoleUpdate(CoreModel):
 
     email: EmailStr
-    role: str
+    role: Roles
 
-    @validator("role")
-    def role_must_be_in_roles(cls, role):
-        roles = Roles._member_names_
-        if role not in roles:
-            raise ValueError(f"role {role} is not in {roles}")
-        return role
-
-
-class Roles(Enum):
-    user = "user"
-    manager = "manager"
-    admin = "admin"
+    # @validator("role")
+    # def role_must_be_in_roles(cls, role):
+    #     roles = Roles._member_names_
+    #     if role not in roles:
+    #         raise ValueError(f"role {role} is not in {roles}")
+    #     return role
 
 
 class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):

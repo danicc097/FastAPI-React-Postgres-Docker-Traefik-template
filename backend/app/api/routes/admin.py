@@ -11,22 +11,33 @@ from starlette import status
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.users import verify_user_is_admin
 from app.api.routes.utils.errors import exception_handler
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.pwd_reset_req import (
     RequestDoesNotExistError,
     UserPwdReqRepository,
 )
-from app.db.repositories.user_notifications import UserNotificationsRepository
 from app.db.repositories.users import (
     InvalidUpdateError,
     UserNotFoundError,
     UsersRepository,
 )
-from app.models.user_notifications import UserNotification, UserNotificationCreate
+from app.models.global_notifications import (
+    GlobalNotification,
+    GlobalNotificationCreate,
+)
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
-from app.models.user import RoleUpdate, UserCreate, UserInDB, UserPublic, UserUpdate
+from app.models.user import (
+    RoleUpdate,
+    UserCreate,
+    UserInDB,
+    UserPublic,
+    UserUpdate,
+)
 
 router = APIRouter()
 
@@ -73,7 +84,7 @@ async def list_unverified_users(
 async def verify_user_by_email(
     user_emails: List[str] = Body(..., embed=True),  # consumer requires sending a data/payload/...: {user_emails: ...}
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> List[UserPublic]:
+) -> Optional[List[UserPublic]]:
     """
     Verify registered users via an array of emails.
     """
@@ -82,6 +93,7 @@ async def verify_user_by_email(
         return await users_repo.verify_users(user_emails=user_emails)
     except Exception as e:
         exception_handler(e)
+    return None
 
 
 @router.get(
@@ -93,7 +105,7 @@ async def verify_user_by_email(
 )
 async def list_password_request_users(
     user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
-) -> List[PasswordResetRequest]:
+) -> Optional[List[PasswordResetRequest]]:
     """
     Return a list of users that have requested a password reset.
     """
@@ -101,6 +113,7 @@ async def list_password_request_users(
         return await user_pwd_req_repo.list_all_password_request_users()
     except Exception as e:
         exception_handler(e)
+    return None
 
 
 @router.post(
@@ -160,17 +173,17 @@ async def delete_password_reset_request(
     dependencies=[Depends(verify_user_is_admin)],
 )
 async def create_notification(
-    notification: UserNotificationCreate = Body(..., embed=True),
-    user_notif_repo: UserNotificationsRepository = Depends(get_repository(UserNotificationsRepository)),
-) -> UserNotification:
+    notification: GlobalNotificationCreate = Body(..., embed=True),
+    global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
+) -> Optional[GlobalNotification]:
     """
     Create a new notification for selected user roles to receive.
     """
     try:
-        new_notification = await user_notif_repo.create_notification(notification=notification)
+        return await global_notif_repo.create_notification(notification=notification)
     except Exception as e:
         exception_handler(e)
-    return new_notification
+    return None
 
 
 @router.post(
@@ -188,7 +201,7 @@ async def change_user_role(
     Change role of user
     """
     try:
-        user = await users_repo.update_user_role(role_update=role_update)
+        return await users_repo.update_user_role(role_update=role_update)
     except Exception as e:
         exception_handler(e)
-    return user
+    return None
