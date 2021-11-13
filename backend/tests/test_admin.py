@@ -38,7 +38,9 @@ from app.core.config import (
     JWT_TOKEN_PREFIX,
     UNIQUE_KEY,
 )
-from app.db.repositories.global_notifications import GlobalNotificationsRepository
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.users import UsersRepository
 from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import (
@@ -269,6 +271,8 @@ class TestAdminUserModification:
 
 
 class TestAdminGlobalNotifications:
+    n_notifications_start = 20
+
     async def test_admin_can_create_notifications(
         self,
         app: FastAPI,
@@ -279,27 +283,30 @@ class TestAdminGlobalNotifications:
         test_user: UserPublic,
         db: Database,
     ) -> None:
-        notification = GlobalNotificationCreate(
-            sender=test_admin_user.username,
-            receiver_role=Roles.user.value,
-            title="Test notification",
-            body="This is a test notification",
-            label="Test",
-            link="https://www.google.com",
-        )
-
-        res = await superuser_client.post(
-            app.url_path_for("admin:create-notification"),
-            json={"notification": notification.dict()},
-        )
-
-        assert res.status_code == HTTP_200_OK
-        logger.info(f"test_admin_can_create_notifications {res.json()=}")
-
-        # check that the notification was created
         global_notification_repo = GlobalNotificationsRepository(db)
+
+        # required to test proper pagination
+        assert self.n_notifications_start > global_notification_repo.page_chunk_size
+
+        for i in range(1, self.n_notifications_start + 1):
+            notification = GlobalNotificationCreate(
+                sender=test_admin_user.username,
+                receiver_role=Roles.user.value,
+                title=f"Test notification {i}",
+                body=f"This is test notification {i}",
+                label=f"Test label {i}",
+                link="https://www.google.com",
+            )
+
+            res = await superuser_client.post(
+                app.url_path_for("admin:create-notification"),
+                json={"notification": notification.dict()},
+            )
+
+            assert res.status_code == HTTP_200_OK
+
         number_of_notifications = await global_notification_repo.fetch_total_global_notifications()
-        logger.critical(f"test_admin_can_create_notifications {number_of_notifications=}")
+        assert number_of_notifications == self.n_notifications_start
 
     async def test_user_receives_has_new_notification_alert(
         self,
@@ -312,19 +319,20 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert res.json() is True
 
-    async def test_user_can_fetch_notifications(
+    async def test_user_can_fetch_chunk_of_notifications(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
         test_user: UserPublic,
+        db: Database,
     ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
-        logger.info(f"test_user_can_fetch_notifications {res.json()=}")
-        assert len(res.json()) == 1
+        global_notification_repo = GlobalNotificationsRepository(db)
+        assert len(res.json()) == global_notification_repo.page_chunk_size
 
-    async def test_user_does_not_receive_has_new_notification_alert_for_old_notifications(
+    async def test_user_does_not_receive_a_has_new_notification_alert_for_old_notifications(
         self, app: FastAPI, authorized_client: AsyncClient, test_user
     ) -> None:
         # this will fail if the user is created after the notification is sent

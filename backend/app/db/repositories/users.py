@@ -134,7 +134,6 @@ class EmailAlreadyExistsError(UsersRepoException):
 class UsernameAlreadyExistsError(UsersRepoException):
     def __init__(self, msg="Username already exists.", username="", *args, **kwargs):
         super().__init__(msg, *args, **kwargs)
-        self.username = username
 
 
 class UserCreationError(UsersRepoException):
@@ -216,10 +215,10 @@ class UsersRepository(BaseRepository):
         verified: bool = False,
     ) -> Optional[Union[UserPublic, UserInDB]]:
         if await self.get_user_by_email(email=new_user.email):
-            raise EmailAlreadyExistsError(email=new_user.email)
+            raise EmailAlreadyExistsError(f"User with email {new_user.email} already exists.")
 
         if await self.get_user_by_username(username=new_user.username):
-            raise UsernameAlreadyExistsError(username=new_user.username)
+            raise UsernameAlreadyExistsError(f"User with username {new_user.username} already exists.")
 
         # do not pass actual password to models
         user_password_update = self.auth_service.create_salt_and_hashed_password(plaintext_password=new_user.password)
@@ -278,10 +277,11 @@ class UsersRepository(BaseRepository):
 
         if user_update.email:
             if await self.get_user_by_email(email=user_update.email):
-                raise EmailAlreadyExistsError
+                raise EmailAlreadyExistsError(f"User with email {user_update.email} already exists.")
+
         if user_update.username:
             if await self.get_user_by_username(username=user_update.username):
-                raise UsernameAlreadyExistsError(username=user_update.username)
+                raise UsernameAlreadyExistsError(f"User with username {user_update.username} already exists.")
 
         updated_user = await self.db.fetch_one(
             query=UPDATE_USER_BY_ID_QUERY,
@@ -386,7 +386,7 @@ class UsersRepository(BaseRepository):
         self, *, user_id: int, last_notification_at: datetime, now: datetime
     ) -> List[GlobalNotification]:
         async with self.db.transaction():
-            notifications = await self.global_notif_repo.fetch_notification_feed(
+            notifications = await self.global_notif_repo.fetch_notification_feed_by_last_read(
                 last_notification_at=last_notification_at
             )
             await self.db.execute(

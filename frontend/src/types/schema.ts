@@ -23,6 +23,9 @@ export interface paths {
   "/api/users/notifications/": {
     post: operations["users_get_feed_api_users_notifications__post"];
   };
+  "/api/users/notifications-check/": {
+    get: operations["users_check_user_has_unread_notifications_api_users_notifications_check__get"];
+  };
   "/api/profiles/{username}/": {
     get: operations["profiles_get_profile_by_username_api_profiles__username___get"];
   };
@@ -300,14 +303,6 @@ export interface operations {
     };
   };
   users_get_feed_api_users_notifications__post: {
-    parameters: {
-      query: {
-        /** Number of notifications to retrieve */
-        page_chunk_size?: number;
-        /** Used to determine the timestamp at which to begin querying for notification feed items. */
-        last_notification_at?: string;
-      };
-    };
     responses: {
       /** Successful Response */
       200: {
@@ -315,10 +310,14 @@ export interface operations {
           "application/json": components["schemas"]["GlobalNotification"][];
         };
       };
-      /** Validation Error */
-      422: {
+    };
+  };
+  users_check_user_has_unread_notifications_api_users_notifications_check__get: {
+    responses: {
+      /** Successful Response */
+      200: {
         content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": boolean;
         };
       };
     };

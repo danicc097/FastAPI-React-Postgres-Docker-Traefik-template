@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from typing import List, Mapping, Optional, Set, Union, cast
 
-from loguru import logger
 from databases import Database
+from loguru import logger
 from pydantic import EmailStr
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
@@ -35,46 +35,11 @@ RETURNING *;
 # When paging through additional results, it’s less and less efficient
 # with each additional page you fetch that way.
 # We navigate around this pitfall by using the LIMIT and WHERE clauses to implement pagination.
-FETCH_NOTIFICATION_FEED_QUERY = """
-SELECT
-  id,
-  sender,
-  receiver_role,
-  title,
-  body,
-  label,
-  link,
-  created_at,
-  updated_at,
-  event_type,
-  event_timestamp,
-  ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
-FROM ((
-    -- Rows where the cleaning job has been updated at some point.
+
+
+def get_notifications_query(date_condition: str = "> :last_notification_at") -> str:
+    return f"""
     SELECT
-      id,
-      sender,
-      receiver_role,
-      title,
-      body,
-      label,
-      link,
-      created_at,
-      updated_at,
-      updated_at AS event_timestamp,
-      -- define a new column ``event_type`` and set its value
-      'is_update' AS event_type
-    FROM
-      global_notifications
-    WHERE
-      updated_at > :last_notification_at
-      AND updated_at != created_at
-    ORDER BY
-      updated_at DESC
-    LIMIT :page_chunk_size)
-UNION (
-  -- All rows.
-  SELECT
     id,
     sender,
     receiver_role,
@@ -84,23 +49,60 @@ UNION (
     link,
     created_at,
     updated_at,
-    created_at AS event_timestamp,
-    -- define a new column ``event_type`` and set its value
-    'is_create' AS event_type
-  FROM
-    global_notifications
-  WHERE
-    created_at > :last_notification_at
-  ORDER BY
-    created_at DESC
-  LIMIT :page_chunk_size)) AS notifications_feed
-ORDER BY
-  event_timestamp DESC
-LIMIT :page_chunk_size;
-"""
+    event_type,
+    event_timestamp,
+    ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
+    FROM ((
+        -- Rows where the notification has been updated at some point.
+        SELECT
+        id,
+        sender,
+        receiver_role,
+        title,
+        body,
+        label,
+        link,
+        created_at,
+        updated_at,
+        updated_at AS event_timestamp,
+        -- define a new column ``event_type`` and set its value
+        'is_update' AS event_type
+        FROM
+        global_notifications
+        WHERE
+        updated_at {date_condition}
+        AND updated_at != created_at
+        ORDER BY
+        updated_at DESC
+        LIMIT :page_chunk_size)
+    UNION (
+    -- All rows.
+    SELECT
+        id,
+        sender,
+        receiver_role,
+        title,
+        body,
+        label,
+        link,
+        created_at,
+        updated_at,
+        created_at AS event_timestamp,
+        -- define a new column ``event_type`` and set its value
+        'is_create' AS event_type
+    FROM
+        global_notifications
+    WHERE
+        created_at {date_condition}
+    ORDER BY
+        created_at DESC
+    LIMIT :page_chunk_size)) AS notifications_feed
+    ORDER BY
+    event_timestamp DESC
+    LIMIT :page_chunk_size;
+    """
 
-# check with EXISTS if there are new notifications from :last_notification_at
-# and return a boolean
+
 CHECK_NEW_NOTIFICATIONS_QUERY = """
 SELECT
   EXISTS(
@@ -130,7 +132,7 @@ class GlobalNotificationsRepoException(Exception):  # do NOT use BaseException
 
 
 class InvalidGlobalNotificationError(GlobalNotificationsRepoException):
-    def __init__(self, msg="A request to reset your password already exists.", *args, **kwargs):
+    def __init__(self, msg="Invalid notification format.", *args, **kwargs):
         super().__init__(msg, *args, **kwargs)
 
 
@@ -155,7 +157,7 @@ class GlobalNotificationsRepository(BaseRepository):
             values=notification.dict(exclude_unset=True),
         )
         if not new_notification:
-            raise GlobalNotificationsRepoException
+            raise InvalidGlobalNotificationError
         return GlobalNotification(**new_notification)
 
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotification]:
@@ -166,23 +168,29 @@ class GlobalNotificationsRepository(BaseRepository):
             CHECK_NEW_NOTIFICATIONS_QUERY, values={"last_notification_at": last_notification_at}
         )
 
-    async def fetch_notification_feed(
+    async def fetch_notification_feed_by_last_read(
         self, *, last_notification_at: datetime, page_chunk_size: int = page_chunk_size
     ) -> List[GlobalNotification]:
-        logger.critical(f"{last_notification_at=} \n {page_chunk_size=}")
-        logger.critical(
-            await self.db.fetch_all(
-                FETCH_NOTIFICATION_FEED_QUERY,
-                values={
-                    "last_notification_at": last_notification_at - timedelta(days=1),
-                    "page_chunk_size": page_chunk_size,
-                },
-            )
-        )
         return [
             GlobalNotification(**notification)
             for notification in await self.db.fetch_all(
-                FETCH_NOTIFICATION_FEED_QUERY,
+                get_notifications_query(),
+                values={
+                    "last_notification_at": last_notification_at,
+                    "page_chunk_size": page_chunk_size,
+                },
+            )
+        ]
+
+    # TODO check cleanings implementation and simply replace condition
+    # last_notification_at is not used in this case
+    async def fetch_notification_feed_by_date(
+        self, *, last_notification_at: datetime, page_chunk_size: int = page_chunk_size
+    ) -> List[GlobalNotification]:
+        return [
+            GlobalNotification(**notification)
+            for notification in await self.db.fetch_all(
+                get_notifications_query(),
                 values={
                     "last_notification_at": last_notification_at,
                     "page_chunk_size": page_chunk_size,
