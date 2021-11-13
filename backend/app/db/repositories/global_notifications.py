@@ -67,7 +67,7 @@ FROM ((
     FROM
       global_notifications
     WHERE
-      updated_at < :last_notification_at
+      updated_at > :last_notification_at
       AND updated_at != created_at
     ORDER BY
       updated_at DESC
@@ -90,7 +90,7 @@ UNION (
   FROM
     global_notifications
   WHERE
-    created_at < :last_notification_at
+    created_at > :last_notification_at
   ORDER BY
     created_at DESC
   LIMIT :page_chunk_size)) AS notifications_feed
@@ -113,6 +113,12 @@ SELECT
   ) AS has_new_notifications;
 """
 
+FETCH_ALL_NOTIFICATIONS_NUMBER_QUERY = """
+SELECT
+  COUNT(*)
+FROM
+  global_notifications
+"""
 
 ###############################################################
 
@@ -183,3 +189,8 @@ class GlobalNotificationsRepository(BaseRepository):
                 },
             )
         ]
+
+    async def fetch_total_global_notifications(self) -> int:
+        return await self.db.fetch_val(
+            FETCH_ALL_NOTIFICATIONS_NUMBER_QUERY,
+        )

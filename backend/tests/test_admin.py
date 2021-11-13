@@ -38,6 +38,7 @@ from app.core.config import (
     JWT_TOKEN_PREFIX,
     UNIQUE_KEY,
 )
+from app.db.repositories.global_notifications import GlobalNotificationsRepository
 from app.db.repositories.users import UsersRepository
 from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import (
@@ -276,6 +277,7 @@ class TestAdminGlobalNotifications:
         superuser_client: AsyncClient,
         test_admin_user: UserInDB,
         test_user: UserPublic,
+        db: Database,
     ) -> None:
         notification = GlobalNotificationCreate(
             sender=test_admin_user.username,
@@ -294,55 +296,49 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         logger.info(f"test_admin_can_create_notifications {res.json()=}")
 
-        # async def test_user_receives_has_new_notification_alert(
-        #     self,
-        #     app: FastAPI,
-        #     authorized_client: AsyncClient,
-        #     test_user: UserPublic,
-        # ) -> None:
+        # check that the notification was created
+        global_notification_repo = GlobalNotificationsRepository(db)
+        number_of_notifications = await global_notification_repo.fetch_total_global_notifications()
+        logger.critical(f"test_admin_can_create_notifications {number_of_notifications=}")
+
+    async def test_user_receives_has_new_notification_alert(
+        self,
+        app: FastAPI,
+        authorized_client: AsyncClient,
+        test_user: UserPublic,
+    ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
         assert res.status_code == HTTP_200_OK
         assert res.json() is True
 
-        # async def test_user_can_fetch_notifications(
-        #     self,
-        #     app: FastAPI,
-        #     authorized_client: AsyncClient,
-        #     test_user: UserPublic,
-        # ) -> None:
+    async def test_user_can_fetch_notifications(
+        self,
+        app: FastAPI,
+        authorized_client: AsyncClient,
+        test_user: UserPublic,
+    ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
         logger.info(f"test_user_can_fetch_notifications {res.json()=}")
         assert len(res.json()) == 1
 
-        # async def test_user_does_not_receive_has_new_notification_alert_for_old_notifications(
-        #     self, app: FastAPI, authorized_client: AsyncClient, test_user
-        # ) -> None:
+    async def test_user_does_not_receive_has_new_notification_alert_for_old_notifications(
+        self, app: FastAPI, authorized_client: AsyncClient, test_user
+    ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
         assert res.status_code == HTTP_200_OK
         assert res.json() is False
 
-        # async def test_user_gets_no_new_notifications_if_all_read(
-        #     self,
-        #     app: FastAPI,
-        #     authorized_client: AsyncClient,
-        #     test_user: UserPublic,
-        # ) -> None:
+    async def test_user_gets_no_new_notifications_if_all_read(
+        self,
+        app: FastAPI,
+        authorized_client: AsyncClient,
+        test_user: UserPublic,
+    ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.post(app.url_path_for("users:get-feed"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
-
-        # async def test_user_can_get_all_notifications_from_datetime(
-        #     self, app: FastAPI, authorized_client: AsyncClient, test_user
-        # ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(
-            app.url_path_for("users:get-feed"),
-            json={"from_datetime": datetime.utcnow() - timedelta(days=365)},
-        )
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == 1
