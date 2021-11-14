@@ -175,28 +175,45 @@ async def request_password_reset(
 @router.post(
     "/notifications/",
     response_model=List[GlobalNotification],
-    name="users:get-feed",
+    name="users:get-feed-by-last-read",
     dependencies=[Depends(get_current_active_user)],
 )
-async def get_notification_feed_for_user(
-    # add some validation and metadata with Query
-    # page_chunk_size: int = Query(
-    #     GlobalNotificationsRepository.page_chunk_size,
-    #     ge=1,
-    #     le=50,
-    #     description="Number of notifications to retrieve",
-    # ),
-    # last_notification_at: datetime = Query(
-    #     datetime.utcnow(),
-    #     description="Used to determine the timestamp at which to begin querying for notification feed items.",
-    # ),
+async def get_notification_feed_for_user_by_last_read(
     user: UserPublic = Depends(get_current_active_user),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
 ) -> List[GlobalNotification]:
-    return await users_repo.fetch_notifications(
+    return await users_repo.fetch_notifications_by_last_read(
         user_id=user.id,
         last_notification_at=user.last_notification_at,
+        role=user.role,
         now=datetime.utcnow(),
+    )
+
+
+@router.post(
+    "/notifications/",
+    response_model=List[GlobalNotification],
+    name="users:get-feed",
+    dependencies=[Depends(get_current_active_user)],
+)
+async def get_notification_feed_for_user_by_date(
+    # add some validation and metadata with Query
+    page_chunk_size: int = Query(
+        GlobalNotificationsRepository.page_chunk_size,
+        ge=1,
+        le=50,
+        description="Number of notifications to retrieve",
+    ),
+    starting_date: datetime = Query(
+        datetime.utcnow(),
+        description="Used to determine the timestamp at which to begin querying for notification feed items.",
+    ),
+    user: UserPublic = Depends(get_current_active_user),
+    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+) -> List[GlobalNotification]:
+    return await users_repo.fetch_notifications_by_date(
+        role=user.role,
+        starting_date=starting_date,
     )
 
 

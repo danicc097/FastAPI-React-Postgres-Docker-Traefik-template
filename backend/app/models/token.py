@@ -14,7 +14,7 @@ class JWTMeta(CoreModel):
     ``exp`` - when this token expires and is no longer valid proof that the requesting user is logged in.
     """
 
-    iss: str = "myapp.io"
+    iss: str = "myapp.com"
     aud: str = JWT_AUDIENCE
     iat: float = datetime.timestamp(datetime.utcnow())
     exp: float = datetime.timestamp(datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))

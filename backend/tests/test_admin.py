@@ -250,13 +250,13 @@ class TestAdminUserModification:
         app: FastAPI,
         create_authorized_client: Callable,
         superuser_client: AsyncClient,
-        test_user: UserPublic,
+        test_user7: UserPublic,
         db: Database,
     ) -> None:
         user_repo = UsersRepository(db)
         role_update = RoleUpdate(
             role=Roles.manager.value,
-            email=test_user.email,
+            email=test_user7.email,
         )
 
         # actually any client can request it since the user won't know its own password
@@ -285,12 +285,12 @@ class TestAdminGlobalNotifications:
     ) -> None:
         global_notification_repo = GlobalNotificationsRepository(db)
 
-        # required to test proper pagination
+        # required to test proper pagination later
         assert self.n_notifications_start > global_notification_repo.page_chunk_size
 
         for i in range(1, self.n_notifications_start + 1):
             notification = GlobalNotificationCreate(
-                sender=test_admin_user.username,
+                sender=test_admin_user.email,
                 receiver_role=Roles.user.value,
                 title=f"Test notification {i}",
                 body=f"This is test notification {i}",
@@ -302,11 +302,14 @@ class TestAdminGlobalNotifications:
                 app.url_path_for("admin:create-notification"),
                 json={"notification": notification.dict()},
             )
-
+            logger.info(notification)
+            logger.info(res.json())
             assert res.status_code == HTTP_200_OK
 
-        number_of_notifications = await global_notification_repo.fetch_total_global_notifications()
-        assert number_of_notifications == self.n_notifications_start
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Roles.user.value}'"
+        logger.critical(f"query: {query}")
+        n_notifications = await db.fetch_val(query)
+        assert n_notifications == self.n_notifications_start
 
     async def test_user_receives_has_new_notification_alert(
         self,
@@ -327,7 +330,7 @@ class TestAdminGlobalNotifications:
         db: Database,
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:get-feed"))
+        res = await authorized_client.post(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         global_notification_repo = GlobalNotificationsRepository(db)
         assert len(res.json()) == global_notification_repo.page_chunk_size
@@ -347,6 +350,46 @@ class TestAdminGlobalNotifications:
         test_user: UserPublic,
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:get-feed"))
+        res = await authorized_client.post(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
+
+    async def test_user_does_not_see_manager_notifications(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: UserInDB,
+        test_user: UserPublic,
+        db: Database,
+    ) -> None:
+        notification = GlobalNotificationCreate(
+            sender=test_admin_user.email,
+            receiver_role=Roles.manager.value,
+            title="Test notification for manager",
+            body="This is test notification for manager",
+            label="Test label for manager",
+            link="https://www.google.com",
+        )
+
+        await superuser_client.post(
+            app.url_path_for("admin:create-notification"),
+            json={"notification": notification.dict()},
+        )
+        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
+        assert res.status_code == HTTP_200_OK
+        assert res.json() is False
+
+    async def test_user_can_fetch_notification_feed_by_date(
+        self,
+        app: FastAPI,
+        authorized_client: AsyncClient,
+        test_user: UserPublic,
+        db: Database,
+    ) -> None:
+        global_notification_repo = GlobalNotificationsRepository(db)
+        # this will fail if the user is created after the notification is sent
+        res = await authorized_client.post(app.url_path_for("users:get-feed"))
+        assert res.status_code == HTTP_200_OK
+        assert len(res.json()) == global_notification_repo.page_chunk_size

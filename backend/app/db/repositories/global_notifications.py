@@ -18,6 +18,8 @@ from app.models.global_notifications import (
 )
 from app.models.profile import ProfileCreate
 
+from app.models.user import Roles
+
 CREATE_NOTIFICATION_QUERY = """
 INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
 VALUES (:sender, :receiver_role, :title, :body, :label, :link)
@@ -70,7 +72,7 @@ def get_notifications_query(date_condition: str = "> :last_notification_at") -> 
         FROM
         global_notifications
         WHERE
-        updated_at {date_condition}
+        updated_at {date_condition} AND receiver_role = :role
         AND updated_at != created_at
         ORDER BY
         updated_at DESC
@@ -93,7 +95,7 @@ def get_notifications_query(date_condition: str = "> :last_notification_at") -> 
     FROM
         global_notifications
     WHERE
-        created_at {date_condition}
+        created_at {date_condition} AND receiver_role = :role
     ORDER BY
         created_at DESC
     LIMIT :page_chunk_size)) AS notifications_feed
@@ -113,13 +115,6 @@ SELECT
     WHERE
       updated_at > :last_notification_at
   ) AS has_new_notifications;
-"""
-
-FETCH_ALL_NOTIFICATIONS_NUMBER_QUERY = """
-SELECT
-  COUNT(*)
-FROM
-  global_notifications
 """
 
 ###############################################################
@@ -168,37 +163,41 @@ class GlobalNotificationsRepository(BaseRepository):
             CHECK_NEW_NOTIFICATIONS_QUERY, values={"last_notification_at": last_notification_at}
         )
 
-    async def fetch_notification_feed_by_last_read(
-        self, *, last_notification_at: datetime, page_chunk_size: int = page_chunk_size
+    async def fetch_notification_feed(
+        self,
+        *,
+        last_notification_at: datetime = None,
+        starting_date: datetime = None,
+        role: Roles = Roles.user,
+        by_last_read: bool = False,
     ) -> List[GlobalNotification]:
-        return [
-            GlobalNotification(**notification)
-            for notification in await self.db.fetch_all(
-                get_notifications_query(),
-                values={
-                    "last_notification_at": last_notification_at,
-                    "page_chunk_size": page_chunk_size,
-                },
-            )
-        ]
-
-    # TODO check cleanings implementation and simply replace condition
-    # last_notification_at is not used in this case
-    async def fetch_notification_feed_by_date(
-        self, *, last_notification_at: datetime, page_chunk_size: int = page_chunk_size
-    ) -> List[GlobalNotification]:
-        return [
-            GlobalNotification(**notification)
-            for notification in await self.db.fetch_all(
-                get_notifications_query(),
-                values={
-                    "last_notification_at": last_notification_at,
-                    "page_chunk_size": page_chunk_size,
-                },
-            )
-        ]
-
-    async def fetch_total_global_notifications(self) -> int:
-        return await self.db.fetch_val(
-            FETCH_ALL_NOTIFICATIONS_NUMBER_QUERY,
-        )
+        """
+        Fetch the notification feed for a given role.
+        """
+        logger.critical(f"Role is {role.value}")
+        if by_last_read:
+            date_condition = "> :last_notification_at"
+            return [
+                GlobalNotification(**notification)
+                for notification in await self.db.fetch_all(
+                    get_notifications_query(date_condition),
+                    values={
+                        "last_notification_at": last_notification_at,
+                        "page_chunk_size": self.page_chunk_size,
+                        "role": role.value,
+                    },
+                )
+            ]
+        else:
+            date_condition = "< :starting_date"
+            return [
+                GlobalNotification(**notification)
+                for notification in await self.db.fetch_all(
+                    get_notifications_query(date_condition),
+                    values={
+                        "starting_date": starting_date,
+                        "page_chunk_size": self.page_chunk_size,
+                        "role": role.value,
+                    },
+                )
+            ]

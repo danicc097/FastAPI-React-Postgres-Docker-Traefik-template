@@ -31,7 +31,7 @@ def upgrade() -> None:
     op.create_table(
         "global_notifications",
         sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("sender", sa.Text, sa.ForeignKey("users.username", ondelete="CASCADE")),
+        sa.Column("sender", sa.Text, sa.ForeignKey("users.email", ondelete="CASCADE")),
         sa.Column("receiver_role", sa.String(255), index=True, nullable=False),
         sa.Column("title", sa.String(255), nullable=False),
         sa.Column("body", sa.String(255), nullable=False),

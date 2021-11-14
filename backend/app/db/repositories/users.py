@@ -22,6 +22,7 @@ from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
 from app.models.user import (
     RoleUpdate,
+    Roles,
     UserCreate,
     UserInDB,
     UserPublic,
@@ -374,20 +375,14 @@ class UsersRepository(BaseRepository):
                 pass
         return new_password
 
-    async def fetch_has_new_notifications(self, *, user_id: int) -> None:
-        user = await self.get_user_by_id(user_id=user_id, to_public=False)
-        if not user:
-            raise UserNotFoundError
-        async with self.db.transaction():
-
-            await self.global_notif_repo.has_new_notifications(last_notification_at=user.last_notification_at)
-
-    async def fetch_notifications(
-        self, *, user_id: int, last_notification_at: datetime, now: datetime
+    async def fetch_notifications_by_last_read(
+        self, *, user_id: int, role: Roles, last_notification_at: datetime, now: datetime
     ) -> List[GlobalNotification]:
         async with self.db.transaction():
-            notifications = await self.global_notif_repo.fetch_notification_feed_by_last_read(
-                last_notification_at=last_notification_at
+            notifications = await self.global_notif_repo.fetch_notification_feed(
+                last_notification_at=last_notification_at,
+                role=role,
+                by_last_read=True,
             )
             await self.db.execute(
                 query=UPDATE_LAST_NOTIFICATION_AT_QUERY,
@@ -395,12 +390,17 @@ class UsersRepository(BaseRepository):
             )
             return notifications
 
+    async def fetch_notifications_by_date(self, *, role: Roles, starting_date: datetime) -> List[GlobalNotification]:
+        return await self.global_notif_repo.fetch_notification_feed(
+            starting_date=starting_date,
+            role=role,
+        )
+
     async def update_user_role(self, *, role_update: RoleUpdate) -> None:
         user = await self.get_user_by_email(email=role_update.email, to_public=False)
         if not user:
             raise UserNotFoundError
-        async with self.db.transaction():
-            await self.db.execute(
-                query=UPDATE_USER_ROLE_QUERY,
-                values={"id": user.id, "role": role_update.role},
-            )
+        await self.db.execute(
+            query=UPDATE_USER_ROLE_QUERY,
+            values={"id": user.id, "role": role_update.role},
+        )

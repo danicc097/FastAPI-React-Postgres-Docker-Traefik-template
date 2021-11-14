@@ -1,8 +1,10 @@
-# CI/CD
+# Backend
+
+## CI/CD
 
 ``.env.ci`` should be as close as possible to production.
 
-# Important notes
+## Important notes
 
 ``POSTGRES_SERVER`` must be equal to the name of the Postgres service in ``compose.yml`` files to resolve the correct host. Each container in Docker is a separate host, which means that we can't reach the Postgres host
 from service ``server`` using localhost or ``$HOSTNAME`` (container id). We have to use the hostname of the Postgres container,
@@ -12,7 +14,15 @@ Note: ``psql`` requires the ``postgresql-client`` package, which is only include
 
 More info about the postgres docker image at <https://hub.docker.com/_/postgres?tab=description>
 
-# Using pytest-xdist
+### Python specifics
+
+- We can make functions accept keyword arguments only with ``*``, which indicates all parameters after it must be passed as keywords arguments
+
+```python
+fn(self, *, keyword_arg: type, ...)
+```
+
+## Using pytest-xdist
 
 If tests start taking more than 2 minutes to run, consider using ``pytest-xdist``. Worker names are available as env var ``PYTEST_XDIST_WORKER``, making it easy to create test databases.
 
