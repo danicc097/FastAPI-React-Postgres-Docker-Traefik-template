@@ -21,9 +21,14 @@ export interface paths {
     post: operations["users_request_password_reset_api_users_request_password_reset__post"];
   };
   "/api/users/notifications/": {
-    post: operations["users_get_feed_api_users_notifications__post"];
+    get: operations["users_get_feed_api_users_notifications__get"];
+    post: operations["users_get_feed_by_last_read_api_users_notifications__post"];
   };
   "/api/users/notifications-check/": {
+    /**
+     * Hit the server to check if the user has unread notifications.
+     * It won't update the user's ``last_notification_at`` field.
+     */
     get: operations["users_check_user_has_unread_notifications_api_users_notifications_check__get"];
   };
   "/api/profiles/{username}/": {
@@ -302,11 +307,9 @@ export interface operations {
       };
     };
   };
-  users_get_feed_api_users_notifications__post: {
+  users_get_feed_api_users_notifications__get: {
     parameters: {
       query: {
-        /** Number of notifications to retrieve */
-        page_chunk_size?: number;
         /** Used to determine the timestamp at which to begin querying for notification feed items. */
         starting_date?: string;
       };
@@ -326,6 +329,20 @@ export interface operations {
       };
     };
   };
+  users_get_feed_by_last_read_api_users_notifications__post: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["GlobalNotification"][];
+        };
+      };
+    };
+  };
+  /**
+   * Hit the server to check if the user has unread notifications.
+   * It won't update the user's ``last_notification_at`` field.
+   */
   users_check_user_has_unread_notifications_api_users_notifications_check__get: {
     responses: {
       /** Successful Response */

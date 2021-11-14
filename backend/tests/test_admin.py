@@ -10,7 +10,7 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 
 import json
 from datetime import datetime, timedelta
-from typing import Callable, Dict, List, Optional, Type, Union, cast
+from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
 
 import jwt
 import pytest
@@ -271,7 +271,7 @@ class TestAdminUserModification:
 
 
 class TestAdminGlobalNotifications:
-    n_notifications_start = 20
+    n_notifications_start = 40
 
     async def test_admin_can_create_notifications(
         self,
@@ -397,10 +397,33 @@ class TestAdminGlobalNotifications:
     ) -> None:
         global_notification_repo = GlobalNotificationsRepository(db)
         # this will fail if the user is created after the notification is sent
-        starting_date = str(datetime.utcnow())
         res = await authorized_client.get(
             app.url_path_for("users:get-feed"),
-            params={"starting_date": starting_date},
+            # params={"starting_date": starting_date},
         )
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == global_notification_repo.page_chunk_size
+
+        starting_date = str(datetime.now() + timedelta(minutes=10))
+        combos: List[Set[str]] = []
+        total_feed_items_to_fetch = 30
+
+        assert self.n_notifications_start > total_feed_items_to_fetch
+
+        for _ in range(total_feed_items_to_fetch // global_notification_repo.page_chunk_size):
+            res = await authorized_client.get(
+                app.url_path_for("users:get-feed"),
+                params={"starting_date": starting_date},
+            )
+            assert res.status_code == status.HTTP_200_OK
+            paginated_json = res.json()
+            assert len(paginated_json) <= global_notification_repo.page_chunk_size
+            id_and_event_combo = set(f"{item['id']}-{item['event_type']}" for item in paginated_json)
+            combos.append(id_and_event_combo)
+            starting_date = paginated_json[-1]["event_timestamp"]
+
+        # Ensure that none of the items in any response exist in any other response
+        length_of_all_id_combos = sum(len(combo) for combo in combos)
+        id_set: Set[str] = set.union(*combos)
+        assert len(id_set) == length_of_all_id_combos
+        assert len(id_set) == total_feed_items_to_fetch

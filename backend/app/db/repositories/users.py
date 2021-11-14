@@ -18,6 +18,7 @@ from app.db.repositories.global_notifications import (
 )
 from app.db.repositories.profiles import ProfilesRepository
 from app.db.repositories.pwd_reset_req import UserPwdReqRepository
+from app.models.feed import GlobalNotificationFeedItem
 from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
 from app.models.user import (
@@ -377,7 +378,7 @@ class UsersRepository(BaseRepository):
 
     async def fetch_notifications_by_last_read(
         self, *, user_id: int, role: Roles, last_notification_at: datetime, now: datetime
-    ) -> List[GlobalNotification]:
+    ) -> List[GlobalNotificationFeedItem]:
         """ """
         async with self.db.transaction():
             notifications = await self.global_notif_repo.fetch_notification_feed(
@@ -391,7 +392,9 @@ class UsersRepository(BaseRepository):
             )
             return notifications
 
-    async def fetch_notifications_by_date(self, *, role: Roles, starting_date: datetime) -> List[GlobalNotification]:
+    async def fetch_notifications_by_date(
+        self, *, role: Roles, starting_date: datetime
+    ) -> List[GlobalNotificationFeedItem]:
         """
         Fetch arbitrarily paginated notifications without updating the user's ``last_notification_at`` field.
         """

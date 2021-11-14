@@ -32,7 +32,7 @@ from app.db.repositories.pwd_reset_req import (
     UserPwdReqRepository,
 )
 from app.db.repositories.users import UsersRepository
-from app.models.global_notifications import GlobalNotification
+from app.models.feed import GlobalNotificationFeedItem
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
@@ -174,14 +174,14 @@ async def request_password_reset(
 
 @router.post(
     "/notifications/",
-    response_model=List[GlobalNotification],
+    response_model=List[GlobalNotificationFeedItem],
     name="users:get-feed-by-last-read",
     dependencies=[Depends(get_current_active_user)],
 )
 async def get_notification_feed_for_user_by_last_read(
     user: UserPublic = Depends(get_current_active_user),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> List[GlobalNotification]:
+) -> List[GlobalNotificationFeedItem]:
     return await users_repo.fetch_notifications_by_last_read(
         user_id=user.id,
         last_notification_at=user.last_notification_at,
@@ -192,7 +192,7 @@ async def get_notification_feed_for_user_by_last_read(
 
 @router.get(
     "/notifications/",
-    response_model=List[GlobalNotification],
+    response_model=List[GlobalNotificationFeedItem],
     name="users:get-feed",
     dependencies=[Depends(get_current_active_user)],
 )
@@ -205,12 +205,12 @@ async def get_notification_feed_for_user_by_date(
     #     description="Number of notifications to retrieve",
     # ),
     starting_date: datetime = Query(
-        datetime.utcnow(),
+        datetime.utcnow() + timedelta(minutes=10),
         description="Used to determine the timestamp at which to begin querying for notification feed items.",
     ),
     user: UserPublic = Depends(get_current_active_user),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> List[GlobalNotification]:
+) -> List[GlobalNotificationFeedItem]:
     return await users_repo.fetch_notifications_by_date(
         role=user.role,
         starting_date=starting_date,

@@ -12,6 +12,7 @@ from starlette.status import (
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
+from app.models.feed import GlobalNotificationFeedItem
 from app.models.global_notifications import (
     GlobalNotification,
     GlobalNotificationCreate,
@@ -148,16 +149,16 @@ class GlobalNotificationsRepository(BaseRepository):
         super().__init__(db)
         # self.users_repo = UsersRepository(db) # circular dep can be avoided so far
 
-    async def create_notification(self, *, notification: GlobalNotificationCreate) -> GlobalNotification:
+    async def create_notification(self, *, notification: GlobalNotificationCreate) -> GlobalNotificationFeedItem:
         new_notification = await self.db.fetch_one(
             CREATE_NOTIFICATION_QUERY,
             values=notification.dict(exclude_unset=True),
         )
         if not new_notification:
             raise InvalidGlobalNotificationError
-        return GlobalNotification(**new_notification)
+        return GlobalNotificationFeedItem(**new_notification)
 
-    async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotification]:
+    async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotificationFeedItem]:
         pass
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:
@@ -176,7 +177,7 @@ class GlobalNotificationsRepository(BaseRepository):
         starting_date: datetime = None,
         role: Roles = Roles.user,
         by_last_read: bool = False,
-    ) -> List[GlobalNotification]:
+    ) -> List[GlobalNotificationFeedItem]:
         """
         Fetch the notification feed for a given role.
         """
@@ -184,7 +185,7 @@ class GlobalNotificationsRepository(BaseRepository):
         if by_last_read:
             date_condition = "> :last_notification_at"
             return [
-                GlobalNotification(**notification)
+                GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
                     get_notifications_query(date_condition),
                     values={
@@ -197,7 +198,7 @@ class GlobalNotificationsRepository(BaseRepository):
         else:
             date_condition = "< :starting_date"
             return [
-                GlobalNotification(**notification)
+                GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
                     get_notifications_query(date_condition),
                     values={
