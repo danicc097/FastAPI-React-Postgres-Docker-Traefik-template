@@ -106,8 +106,19 @@ export interface components {
     Body_users_update_user_by_id_api_users_me__put: {
       user_update: components["schemas"]["UserUpdate"];
     };
+    /** Any common logic to be shared by all models goes here */
+    GlobalNotificationCreate: {
+      sender: string;
+      receiver_role: components["schemas"]["Roles"];
+      title: string;
+      body: string;
+      label: string;
+      link?: string;
+    };
     /** Admins and authorized roles can send notifications to users based on role. */
-    GlobalNotification: {
+    GlobalNotificationFeedItem: {
+      row_number?: number;
+      event_timestamp?: string;
       id: number;
       created_at?: string;
       updated_at?: string;
@@ -117,15 +128,7 @@ export interface components {
       body: string;
       label: string;
       link?: string;
-    };
-    /** Any common logic to be shared by all models goes here */
-    GlobalNotificationCreate: {
-      sender: string;
-      receiver_role: components["schemas"]["Roles"];
-      title: string;
-      body: string;
-      label: string;
-      link?: string;
+      event_type?: "is_update" | "is_create";
     };
     HTTPValidationError: {
       detail?: components["schemas"]["ValidationError"][];
@@ -318,7 +321,7 @@ export interface operations {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["GlobalNotification"][];
+          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
         };
       };
       /** Validation Error */
@@ -334,7 +337,7 @@ export interface operations {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["GlobalNotification"][];
+          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
         };
       };
     };

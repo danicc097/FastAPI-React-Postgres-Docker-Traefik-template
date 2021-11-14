@@ -20,7 +20,7 @@ describe('Test forgot password form', () => {
   it.each`
     email                              | message          | error
     ${users['verified'].email}         | ${'please help'} | ${''}
-    ${users['verified'].email}         | ${'please help'} | ${'already requested'}
+    ${users['verified'].email}         | ${'please help'} | ${'already exists'}
     ${users['unregisteredUser'].email} | ${'please help'} | ${'not found'}
   `(
     'should display an appropiate error in a callout message box',
