@@ -17,7 +17,6 @@ from app.models.global_notifications import (
     GlobalNotificationCreate,
 )
 from app.models.profile import ProfileCreate
-
 from app.models.user import Roles
 
 CREATE_NOTIFICATION_QUERY = """
@@ -72,7 +71,8 @@ def get_notifications_query(date_condition: str = "> :last_notification_at") -> 
         FROM
         global_notifications
         WHERE
-        updated_at {date_condition} AND receiver_role = :role
+        updated_at {date_condition}
+        AND receiver_role = :role
         AND updated_at != created_at
         ORDER BY
         updated_at DESC
@@ -95,7 +95,8 @@ def get_notifications_query(date_condition: str = "> :last_notification_at") -> 
     FROM
         global_notifications
     WHERE
-        created_at {date_condition} AND receiver_role = :role
+        created_at {date_condition}
+        AND receiver_role = :role
     ORDER BY
         created_at DESC
     LIMIT :page_chunk_size)) AS notifications_feed
@@ -114,6 +115,7 @@ SELECT
       global_notifications
     WHERE
       updated_at > :last_notification_at
+      AND receiver_role = :role
   ) AS has_new_notifications;
 """
 
@@ -158,9 +160,13 @@ class GlobalNotificationsRepository(BaseRepository):
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotification]:
         pass
 
-    async def has_new_notifications(self, *, last_notification_at: datetime) -> bool:
+    async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:
         return await self.db.fetch_val(
-            CHECK_NEW_NOTIFICATIONS_QUERY, values={"last_notification_at": last_notification_at}
+            CHECK_NEW_NOTIFICATIONS_QUERY,
+            values={
+                "last_notification_at": last_notification_at,
+                "role": role,
+            },
         )
 
     async def fetch_notification_feed(

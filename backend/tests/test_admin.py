@@ -354,7 +354,7 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 
-    async def test_user_does_not_see_manager_notifications(
+    async def test_user_does_not_see_notifications_out_of_role_scope(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
@@ -377,11 +377,18 @@ class TestAdminGlobalNotifications:
             app.url_path_for("admin:create-notification"),
             json={"notification": notification.dict()},
         )
+
+        # alert that new feed is available
         res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
         assert res.status_code == HTTP_200_OK
         assert res.json() is False
 
-    async def test_user_can_fetch_notification_feed_by_date(
+        # feed itself
+        res = await authorized_client.post(app.url_path_for("users:get-feed-by-last-read"))
+        assert res.status_code == HTTP_200_OK
+        assert len(res.json()) == 0
+
+    async def test_user_can_arbitrarily_fetch_notification_feed_by_date(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
@@ -390,6 +397,10 @@ class TestAdminGlobalNotifications:
     ) -> None:
         global_notification_repo = GlobalNotificationsRepository(db)
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:get-feed"))
+        starting_date = str(datetime.utcnow())
+        res = await authorized_client.get(
+            app.url_path_for("users:get-feed"),
+            params={"starting_date": starting_date},
+        )
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == global_notification_repo.page_chunk_size

@@ -107,7 +107,7 @@ export interface components {
       created_at?: string;
       updated_at?: string;
       sender: string;
-      receiver_role: string;
+      receiver_role: components["schemas"]["Roles"];
       title: string;
       body: string;
       label: string;
@@ -116,7 +116,7 @@ export interface components {
     /** Any common logic to be shared by all models goes here */
     GlobalNotificationCreate: {
       sender: string;
-      receiver_role: string;
+      receiver_role: components["schemas"]["Roles"];
       title: string;
       body: string;
       label: string;
@@ -303,11 +303,25 @@ export interface operations {
     };
   };
   users_get_feed_api_users_notifications__post: {
+    parameters: {
+      query: {
+        /** Number of notifications to retrieve */
+        page_chunk_size?: number;
+        /** Used to determine the timestamp at which to begin querying for notification feed items. */
+        starting_date?: string;
+      };
+    };
     responses: {
       /** Successful Response */
       200: {
         content: {
           "application/json": components["schemas"]["GlobalNotification"][];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

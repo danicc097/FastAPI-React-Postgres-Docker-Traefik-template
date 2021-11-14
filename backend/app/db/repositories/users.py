@@ -21,8 +21,8 @@ from app.db.repositories.pwd_reset_req import UserPwdReqRepository
 from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
 from app.models.user import (
-    RoleUpdate,
     Roles,
+    RoleUpdate,
     UserCreate,
     UserInDB,
     UserPublic,
@@ -378,6 +378,7 @@ class UsersRepository(BaseRepository):
     async def fetch_notifications_by_last_read(
         self, *, user_id: int, role: Roles, last_notification_at: datetime, now: datetime
     ) -> List[GlobalNotification]:
+        """ """
         async with self.db.transaction():
             notifications = await self.global_notif_repo.fetch_notification_feed(
                 last_notification_at=last_notification_at,
@@ -391,6 +392,9 @@ class UsersRepository(BaseRepository):
             return notifications
 
     async def fetch_notifications_by_date(self, *, role: Roles, starting_date: datetime) -> List[GlobalNotification]:
+        """
+        Fetch arbitrarily paginated notifications without updating the user's ``last_notification_at`` field.
+        """
         return await self.global_notif_repo.fetch_notification_feed(
             starting_date=starting_date,
             role=role,
