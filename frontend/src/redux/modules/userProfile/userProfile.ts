@@ -1,10 +1,38 @@
 import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
-import initialState, { initialStateType } from '../../initialState'
-import { UiActions } from '../ui/ui'
-import { AuthActionType, UserProfileActionType } from '../../action-types'
+import { UiActionCreators } from '../ui/ui'
 import { loadingState } from '../../utils/slices'
+import { AuthActionType } from 'src/redux/modules/auth/auth'
+import { schema } from 'src/types/schema_override'
+
+type initialStateType = {
+  userProfile: {
+    isLoading: boolean
+    isUpdating: boolean
+    isUpdated: boolean
+    error?: schema['HTTPValidationError']
+    userLoaded: boolean
+    user: schema['UserPublic']
+  }
+}
+
+const initialState: initialStateType = {
+  userProfile: {
+    isLoading: false,
+    isUpdating: false,
+    isUpdated: false,
+    error: null,
+    userLoaded: false,
+    user: { id: null },
+  },
+}
+
+export enum UserProfileActionType {
+  REQUEST_USER_UPDATE = 'userProfile/REQUEST_USER_UPDATE',
+  REQUEST_USER_UPDATE_FAILURE = 'userProfile/REQUEST_USER_UPDATE_FAILURE',
+  REQUEST_USER_UPDATE_SUCCESS = 'userProfile/REQUEST_USER_UPDATE_SUCCESS',
+}
 
 // recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function userProfileReducer(
@@ -27,6 +55,7 @@ export default function userProfileReducer(
         isLoading: false,
         error: null,
       }
+    // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.userProfile
     default:
@@ -47,11 +76,10 @@ type UserUpdateActionsType = {
   requestUserUpdate: ({ email, username, password, old_password }: UserUpdateActionsParamsType) => any
 }
 
-export const UserUpdateActions: Partial<UserUpdateActionsType> = {}
+export const UserUpdateActionCreators: Partial<UserUpdateActionsType> = {}
 
-UserUpdateActions.requestUserUpdate =
-  ({ email, username, password, old_password }) =>
-  async (dispatch: AppDispatch) => {
+UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_password }) => {
+  ;(dispatch: AppDispatch) => {
     // create the url-encoded form data
 
     // set the request headers (override defaulOptions)
@@ -84,7 +112,7 @@ UserUpdateActions.requestUserUpdate =
         },
         onSuccess: (res) => {
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'user-update-toast-success',
               title: `Your credentials have been updated!`,
               color: 'success',
@@ -105,7 +133,7 @@ UserUpdateActions.requestUserUpdate =
           console.log(res)
           console.log(res.error?.data?.detail)
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'user-update-toast-failure',
               title: 'Failure!',
               color: 'danger',
@@ -125,3 +153,4 @@ UserUpdateActions.requestUserUpdate =
       }),
     )
   }
+}

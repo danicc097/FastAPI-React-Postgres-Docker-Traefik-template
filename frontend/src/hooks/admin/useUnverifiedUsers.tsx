@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { shallowEqual } from 'react-redux'
-import { AdminActions } from 'src/redux/modules/admin/admin'
+import { AdminActionCreators } from 'src/redux/modules/admin/admin'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
 export const useUnverifiedUsers = () => {
@@ -13,23 +13,23 @@ export const useUnverifiedUsers = () => {
 
   useEffect(() => {
     if (isAdmin && unverifiedUsers === undefined) {
-      return dispatch(AdminActions.fetchAllNonVerifiedUsers())
+      return dispatch(AdminActionCreators.fetchAllNonVerifiedUsers())
       // specify a cleanup function as return (if any)
       // return () => dispatch(CleaningActions.clearCurrentCleaningJob())
     }
-  }, [isAdmin, dispatch, AdminActions.fetchAllNonVerifiedUsers])
+  }, [isAdmin, dispatch, AdminActionCreators.fetchAllNonVerifiedUsers])
 
   // use all this functionality anywhere
   const fetchAllNonVerifiedUsers = () => {
-    return dispatch(AdminActions.fetchAllNonVerifiedUsers())
+    return dispatch(AdminActionCreators.fetchAllNonVerifiedUsers())
   }
 
   const verifyUsers = ({ userEmails }) => {
-    return dispatch(AdminActions.verifyUsers({ userEmails }))
+    return dispatch(AdminActionCreators.verifyUsers({ userEmails }))
   }
 
   const removeVerifiedUsersFromStore = ({ users }) => {
-    return dispatch(AdminActions.removeVerifiedUsersFromStore({ users }))
+    return dispatch(AdminActionCreators.removeVerifiedUsersFromStore({ users }))
   }
 
   return {

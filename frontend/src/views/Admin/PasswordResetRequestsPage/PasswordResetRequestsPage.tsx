@@ -11,7 +11,7 @@ import {
 } from '@elastic/eui'
 import React, { Fragment, useState } from 'react'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
-import { AdminActionType } from 'src/redux/action-types'
+import { AdminActionType } from 'src/redux/modules/admin/admin'
 import { createTextFileWithCreds } from 'src/utils/files'
 import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { AuthActions } from 'src/redux/modules/auth/auth'
+import { AuthActionCreators } from 'src/redux/modules/auth/auth'
 import { extractErrorMessages } from 'src/utils/errors'
 import validation from 'src/utils/validation'
 
@@ -55,7 +55,8 @@ export const useForgotPasswordForm = () => {
     return formErrors
   }
 
-  const requestPasswordReset = ({ email, message }) => dispatch(AuthActions.requestPasswordReset({ email, message }))
+  const requestPasswordReset = ({ email, message }) =>
+    dispatch(AuthActionCreators.requestPasswordReset({ email, message }))
 
   return {
     form,

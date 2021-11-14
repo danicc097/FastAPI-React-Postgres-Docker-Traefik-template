@@ -154,7 +154,7 @@ export default function Navbar() {
         },
         {
           items: [
-            <Notifications key={0} />,
+            user.is_verified ? <Notifications key={0} /> : null,
             <EuiPopover
               id="avatar-menu"
               key={0}

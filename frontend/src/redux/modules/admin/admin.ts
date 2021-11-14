@@ -4,11 +4,65 @@
 import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
-import initialState, { initialStateType } from '../../initialState'
-import { UiActions } from '../ui/ui'
+import { UiActionCreators } from '../ui/ui'
 import { schema } from 'src/types/schema_override'
-import { AdminActionType, AuthActionType } from '../../action-types'
 import { errorState, loadingState } from '../../utils/slices'
+import { AuthActionType } from 'src/redux/modules/auth/auth'
+
+type AdminDataType = {
+  unverifiedUsers?: Array<schema['UserPublic']>
+  passwordResetRequests?: Array<schema['PasswordResetRequest']>
+  allUsers?: Array<schema['UserPublic']>
+  //   [key: number]: Array<schema['OfferPublic']>
+}
+
+type initialStateType = {
+  admin: {
+    isLoading: boolean
+    isUpdating: boolean
+    error?: schema['HTTPValidationError'] | GenObjType<string>
+    data?: AdminDataType | GenObjType<null>
+  }
+}
+
+const initialState: initialStateType = {
+  admin: {
+    isLoading: false,
+    isUpdating: false,
+    error: null,
+    data: {},
+  },
+}
+
+export enum AdminActionType {
+  FETCH_ALL_USERS = 'admin/FETCH_ALL_USERS',
+  FETCH_ALL_USERS_SUCCESS = 'admin/FETCH_ALL_USERS_SUCCESS',
+  FETCH_ALL_USERS_FAILURE = 'admin/FETCH_ALL_USERS_FAILURE',
+
+  FETCH_ALL_UNVERIFIED_USERS = 'admin/FETCH_ALL_UNVERIFIED_USERS',
+  FETCH_ALL_UNVERIFIED_USERS_SUCCESS = 'admin/FETCH_ALL_UNVERIFIED_USERS_SUCCESS',
+  FETCH_ALL_UNVERIFIED_USERS_FAILURE = 'admin/FETCH_ALL_UNVERIFIED_USERS_FAILURE',
+
+  VERIFY_USERS = 'admin/VERIFY_USERS',
+  VERIFY_USERS_SUCCESS = 'admin/VERIFY_USERS_SUCCESS',
+  VERIFY_USERS_FAILURE = 'admin/VERIFY_USERS_FAILURE',
+
+  REMOVE_VERIFIED_USERS_FROM_STORE = 'admin/REMOVE_VERIFIED_USERS_FROM_STORE',
+
+  FETCH_ALL_PASSWORD_RESET_REQUESTS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS',
+  FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS',
+  FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE',
+
+  RESET_PASSWORD_FOR_USER = 'admin/RESET_PASSWORD_FOR_USER',
+  RESET_PASSWORD_FOR_USER_SUCCESS = 'admin/RESET_PASSWORD_FOR_USER_SUCCESS',
+  RESET_PASSWORD_FOR_USER_FAILURE = 'admin/RESET_PASSWORD_FOR_USER_FAILURE',
+
+  DELETE_PASSWORD_RESET_REQUEST = 'admin/DELETE_PASSWORD_RESET_REQUEST',
+  DELETE_PASSWORD_RESET_REQUEST_SUCCESS = 'admin/DELETE_PASSWORD_RESET_REQUEST_SUCCESS',
+  DELETE_PASSWORD_RESET_REQUEST_FAILURE = 'admin/DELETE_PASSWORD_RESET_REQUEST_FAILURE',
+
+  REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE = 'admin/REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE',
+}
 
 /*
 isRemoval: whether it's a removal or addition of unverified users
@@ -85,6 +139,7 @@ export default function adminReducer(
       }
     case AdminActionType.FETCH_ALL_USERS_FAILURE:
       return errorState(state, action)
+
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS:
       return loadingState(state)
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS:
@@ -102,8 +157,7 @@ export default function adminReducer(
       return errorState(state, action)
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
-
-    // auth related actions
+    // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.admin
     default:
@@ -124,59 +178,69 @@ type AdminActionsType = {
   verifyUsers: ({ userEmails }: AdminActionsParamsType) => any
   removeVerifiedUsersFromStore: ({ users }: AdminActionsParamsType) => any
   fetchAllPasswordResetUsers: () => any
+  /**
+   * Accept a password reset request created by a user.
+   * Also used to manually reset passwords.
+   */
   resetPasswordForUser: ({ email }: AdminActionsParamsType) => any
+  /**
+   * Delete a password reset request created by a user.
+   */
   deletePasswordResetRequest: ({ request }: AdminActionsParamsType) => any
   removeResetPasswordRequestFromStore: ({ email }: AdminActionsParamsType) => any
 }
 
-export const AdminActions: Partial<AdminActionsType> = {}
+export const AdminActionCreators: Partial<AdminActionsType> = {}
 
-AdminActions.fetchAllUsers = () => async (dispatch: AppDispatch) => {
-  const headers = {}
-  return dispatch(
-    apiClient({
-      url: `/admin/users/`,
-      method: 'get',
-      types: {
-        REQUEST: AdminActionType.FETCH_ALL_USERS,
-        SUCCESS: AdminActionType.FETCH_ALL_USERS_SUCCESS,
-        FAILURE: AdminActionType.FETCH_ALL_USERS_FAILURE,
-      },
-      options: {
-        headers,
-        data: {},
-        params: {},
-      },
-    }),
-  )
+AdminActionCreators.fetchAllUsers = () => {
+  ;(dispatch: AppDispatch) => {
+    const headers = {}
+    return dispatch(
+      apiClient({
+        url: `/admin/users/`,
+        method: 'get',
+        types: {
+          REQUEST: AdminActionType.FETCH_ALL_USERS,
+          SUCCESS: AdminActionType.FETCH_ALL_USERS_SUCCESS,
+          FAILURE: AdminActionType.FETCH_ALL_USERS_FAILURE,
+        },
+        options: {
+          headers,
+          data: {},
+          params: {},
+        },
+      }),
+    )
+  }
 }
 
-AdminActions.fetchAllNonVerifiedUsers = () => async (dispatch: AppDispatch) => {
-  // set the request headers (override defaultOptions)
-  const headers = {}
-  // we HAVE TO _return_ a dispatch, else we won't get the
-  // returns of onSuccess or onFailure and verify types
-  return dispatch(
-    apiClient({
-      url: `/admin/users-unverified/`,
-      method: 'get',
-      types: {
-        REQUEST: AdminActionType.FETCH_ALL_UNVERIFIED_USERS,
-        SUCCESS: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS,
-        FAILURE: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE,
-      },
-      options: {
-        headers,
-        data: {},
-        params: {},
-      },
-    }),
-  )
+AdminActionCreators.fetchAllNonVerifiedUsers = () => {
+  ;(dispatch: AppDispatch) => {
+    // set the request headers (override defaultOptions)
+    const headers = {}
+    // we HAVE TO _return_ a dispatch, else we won't get the
+    // returns of onSuccess or onFailure and verify types
+    return dispatch(
+      apiClient({
+        url: `/admin/users-unverified/`,
+        method: 'get',
+        types: {
+          REQUEST: AdminActionType.FETCH_ALL_UNVERIFIED_USERS,
+          SUCCESS: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS,
+          FAILURE: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE,
+        },
+        options: {
+          headers,
+          data: {},
+          params: {},
+        },
+      }),
+    )
+  }
 }
 
-AdminActions.verifyUsers =
-  ({ userEmails }) =>
-  async (dispatch: AppDispatch) => {
+AdminActionCreators.verifyUsers = ({ userEmails }) => {
+  ;(dispatch: AppDispatch) => {
     // set the request headers (override defaultOptions)
     const headers = {}
     // we HAVE TO _return_ a dispatch, else we won't get the
@@ -199,7 +263,7 @@ AdminActions.verifyUsers =
         onSuccess: (res) => {
           dispatch({ type: AdminActionType.VERIFY_USERS_SUCCESS })
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'verify-user-toast-success',
               title: `Successfully verified users!`,
               color: 'success',
@@ -219,7 +283,7 @@ AdminActions.verifyUsers =
         onFailure: (res) => {
           console.log('onFailure: ', res)
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'verify-user-toast-failure',
               title: 'Failure!',
               color: 'danger',
@@ -239,39 +303,37 @@ AdminActions.verifyUsers =
       }),
     )
   }
-
-// we can directly dispatch an action that edits the store
-AdminActions.removeVerifiedUsersFromStore =
-  ({ users }) =>
-  async (dispatch: AppDispatch) => {
-    return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
-  }
-
-AdminActions.fetchAllPasswordResetUsers = () => async (dispatch: AppDispatch) => {
-  return dispatch(
-    apiClient({
-      url: `/admin/reset-user-password/`,
-      method: 'get',
-      types: {
-        REQUEST: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS,
-        SUCCESS: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS,
-        FAILURE: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE,
-      },
-      options: {
-        data: {},
-        params: {},
-      },
-    }),
-  )
 }
 
-/**
- * Accept a password reset request created by a user.
- * Also used to manually reset passwords.
- */
-AdminActions.resetPasswordForUser =
-  ({ email }) =>
-  async (dispatch: AppDispatch) => {
+// we can directly dispatch an action that edits the store
+AdminActionCreators.removeVerifiedUsersFromStore = ({ users }) => {
+  ;(dispatch: AppDispatch) => {
+    return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
+  }
+}
+
+AdminActionCreators.fetchAllPasswordResetUsers = () => {
+  ;(dispatch: AppDispatch) => {
+    return dispatch(
+      apiClient({
+        url: `/admin/reset-user-password/`,
+        method: 'get',
+        types: {
+          REQUEST: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS,
+          SUCCESS: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS,
+          FAILURE: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE,
+        },
+        options: {
+          data: {},
+          params: {},
+        },
+      }),
+    )
+  }
+}
+
+AdminActionCreators.resetPasswordForUser = ({ email }) => {
+  ;(dispatch: AppDispatch) => {
     const headers = {}
     return dispatch(
       apiClient({
@@ -289,9 +351,9 @@ AdminActions.resetPasswordForUser =
           params: {},
         },
         onSuccess: (res) => {
-          dispatch(AdminActions.removeResetPasswordRequestFromStore({ email }))
+          dispatch(AdminActionCreators.removeResetPasswordRequestFromStore({ email }))
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'reset-user-password-success',
               title: `Successfully reset password!`,
               color: 'success',
@@ -312,7 +374,7 @@ AdminActions.resetPasswordForUser =
         onFailure: (res) => {
           console.log('onFailure: ', res)
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'reset-user-password-failure',
               title: 'Failure!',
               color: 'danger',
@@ -332,13 +394,10 @@ AdminActions.resetPasswordForUser =
       }),
     )
   }
+}
 
-/**
- * Cancel a password reset request created by a user.
- */
-AdminActions.deletePasswordResetRequest =
-  ({ request }) =>
-  async (dispatch: AppDispatch) => {
+AdminActionCreators.deletePasswordResetRequest = ({ request }) => {
+  ;(dispatch: AppDispatch) => {
     // set the request headers (override defaultOptions)
     const headers = {}
     // we HAVE TO _return_ a dispatch, else we won't get the
@@ -357,7 +416,7 @@ AdminActions.deletePasswordResetRequest =
           params: {},
         },
         onSuccess: (res) => {
-          dispatch(AdminActions.removeResetPasswordRequestFromStore({ email: request.email }))
+          dispatch(AdminActionCreators.removeResetPasswordRequestFromStore({ email: request.email }))
           return {
             type: AdminActionType.DELETE_PASSWORD_RESET_REQUEST_SUCCESS,
             success: true,
@@ -378,10 +437,11 @@ AdminActions.deletePasswordResetRequest =
       }),
     )
   }
+}
 
 // we can directly dispatch an action that edits the store
-AdminActions.removeResetPasswordRequestFromStore =
-  ({ email }) =>
-  async (dispatch: AppDispatch) => {
+AdminActionCreators.removeResetPasswordRequestFromStore = ({ email }) => {
+  ;(dispatch: AppDispatch) => {
     return dispatch({ type: AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE, data: [email] })
   }
+}

@@ -16,7 +16,7 @@ import _ from 'lodash'
 import React, { Fragment, useEffect, useState } from 'react'
 import { useAllUsers } from 'src/hooks/admin/useAllUsers'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
-import { AdminActionType } from 'src/redux/action-types'
+import { AdminActionType } from 'src/redux/modules/admin/admin'
 import { createTextFileWithCreds } from 'src/utils/files'
 import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 

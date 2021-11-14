@@ -1,11 +1,53 @@
 import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
-import initialState, { initialStateType } from '../../initialState'
-import { UiActions } from '../ui/ui'
-import { AuthActionType } from '../../action-types'
+import { UiActionCreators } from '../ui/ui'
 import { schema } from 'src/types/schema_override'
 import { loadingState } from '../../utils/slices'
+
+type initialStateType = {
+  auth: {
+    isLoading: boolean
+    isUpdating: boolean
+    isAuthenticated: boolean
+    error?: schema['HTTPValidationError']
+    pwdResetError?: schema['HTTPValidationError']
+    userLoaded: boolean
+    user: schema['UserPublic']
+  }
+}
+
+const initialState: initialStateType = {
+  auth: {
+    isLoading: false,
+    isUpdating: false,
+    isAuthenticated: false,
+    error: null,
+    pwdResetError: null,
+    userLoaded: false,
+    user: { id: null },
+  },
+}
+
+export enum AuthActionType {
+  REQUEST_LOGIN = 'auth/REQUEST_LOGIN',
+  REQUEST_LOGIN_FAILURE = 'auth/REQUEST_LOGIN_FAILURE',
+  REQUEST_LOGIN_SUCCESS = 'auth/REQUEST_LOGIN_SUCCESS',
+
+  REQUEST_LOG_USER_OUT = 'auth/REQUEST_LOG_USER_OUT',
+
+  FETCHING_USER_FROM_TOKEN = 'auth/FETCHING_USER_FROM_TOKEN',
+  FETCHING_USER_FROM_TOKEN_SUCCESS = 'auth/FETCHING_USER_FROM_TOKEN_SUCCESS',
+  FETCHING_USER_FROM_TOKEN_FAILURE = 'auth/FETCHING_USER_FROM_TOKEN_FAILURE',
+
+  REQUEST_USER_SIGN_UP = 'auth/REQUEST_USER_SIGN_UP',
+  REQUEST_USER_SIGN_UP_SUCCESS = 'auth/REQUEST_USER_SIGN_UP_SUCCESS',
+  REQUEST_USER_SIGN_UP_FAILURE = 'auth/REQUEST_USER_SIGN_UP_FAILURE',
+
+  REQUEST_PASSWORD_RESET = 'auth/REQUEST_PASSWORD_RESET',
+  REQUEST_PASSWORD_RESET_SUCCESS = 'auth/REQUEST_PASSWORD_RESET_SUCCESS',
+  REQUEST_PASSWORD_RESET_FAILURE = 'auth/REQUEST_PASSWORD_RESET_FAILURE',
+}
 
 // recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function authReducer(
@@ -28,6 +70,7 @@ export default function authReducer(
         isLoading: false,
         error: null,
       }
+    // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return {
         ...initialState.auth,
@@ -102,7 +145,7 @@ type AuthActionsType = {
   requestPasswordReset: ({ email, message }: AuthActionsParamsType) => any
 }
 
-export const AuthActions: Partial<AuthActionsType> = {}
+export const AuthActionCreators: Partial<AuthActionsType> = {}
 
 // make our action creators return asynchronous functions to take advantage
 // of fastAPI async capabilities.
@@ -118,9 +161,8 @@ export const AuthActions: Partial<AuthActionsType> = {}
 // As soon as an error pops up, we log it, and dispatch the REQUEST_LOGIN_FAILURE action.
 // -- We also want to provide UI feedback for all this, over at LoginForm.js
 
-AuthActions.requestUserLogin =
-  ({ email, password }) =>
-  async (dispatch: AppDispatch) => {
+AuthActionCreators.requestUserLogin = ({ email, password }) => {
+  ;(dispatch: AppDispatch) => {
     // create the url-encoded form data
     const formData = new FormData()
     formData.set('username', email)
@@ -148,7 +190,7 @@ AuthActions.requestUserLogin =
           localStorage.setItem('access_token', access_token)
           dispatch({ type: AuthActionType.REQUEST_LOGIN_SUCCESS })
           // dispatch the fetch user from token action creator instead
-          return dispatch(AuthActions.fetchUserFromToken())
+          return dispatch(AuthActionCreators.fetchUserFromToken())
         },
         onFailure: (res) => {
           console.log(`onFailure res:`, res)
@@ -162,10 +204,10 @@ AuthActions.requestUserLogin =
       }),
     )
   }
+}
 
-AuthActions.requestPasswordReset =
-  ({ email, message }) =>
-  async (dispatch: AppDispatch) => {
+AuthActionCreators.requestPasswordReset = ({ email, message }) => {
+  ;(dispatch: AppDispatch) => {
     // create the url-encoded form data
     // set the request headers (override defaulOptions)
     const headers = {
@@ -191,7 +233,7 @@ AuthActions.requestPasswordReset =
         },
         onSuccess: (res) => {
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'password-reset-request-toast-success',
               title: `Your password reset request has been received!`,
               color: 'success',
@@ -214,34 +256,37 @@ AuthActions.requestPasswordReset =
       }),
     )
   }
-
-// retrieve all user data from backend
-AuthActions.fetchUserFromToken = () => async (dispatch: AppDispatch) => {
-  return dispatch(
-    apiClient({
-      url: '/users/me/',
-      method: 'get',
-      types: {
-        REQUEST: AuthActionType.FETCHING_USER_FROM_TOKEN,
-        SUCCESS: AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS,
-        FAILURE: AuthActionType.FETCHING_USER_FROM_TOKEN_FAILURE,
-      },
-      options: {
-        data: {},
-        params: {},
-      },
-      onSuccess: (res) => {
-        // dispatch(cleaningActions.fetchAllUserOwnedCleaningJobs()); // why was this here in the first place
-        console.log(`res`, res)
-        dispatch(UiActions.removeToastById('auth-toast-redirect'))
-
-        return { success: true, status: res.status, data: res.data }
-      },
-    }),
-  )
 }
 
-AuthActions.logUserOut = () => {
+// retrieve all user data from backend
+AuthActionCreators.fetchUserFromToken = () => {
+  ;(dispatch: AppDispatch) => {
+    return dispatch(
+      apiClient({
+        url: '/users/me/',
+        method: 'get',
+        types: {
+          REQUEST: AuthActionType.FETCHING_USER_FROM_TOKEN,
+          SUCCESS: AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS,
+          FAILURE: AuthActionType.FETCHING_USER_FROM_TOKEN_FAILURE,
+        },
+        options: {
+          data: {},
+          params: {},
+        },
+        onSuccess: (res) => {
+          // dispatch(cleaningActions.fetchAllUserOwnedCleaningJobs()); // why was this here in the first place
+          console.log(`res`, res)
+          dispatch(UiActionCreators.removeToastById('auth-toast-redirect'))
+
+          return { success: true, status: res.status, data: res.data }
+        },
+      }),
+    )
+  }
+}
+
+AuthActionCreators.logUserOut = () => {
   localStorage.removeItem('access_token')
 
   return {
@@ -252,9 +297,8 @@ AuthActions.logUserOut = () => {
 // use async actions for backend stuff.
 // We are calling the dispatch function on the apiClient so that
 // we have access to dispatch in the onSuccess handler
-AuthActions.registerNewUser =
-  ({ username, email, password }) =>
-  async (dispatch: AppDispatch) => {
+AuthActionCreators.registerNewUser = ({ username, email, password }) => {
+  ;(dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
         url: '/users/',
@@ -272,10 +316,10 @@ AuthActions.registerNewUser =
           // stash the access_token our server returns
           //   const access_token = res?.data?.access_token?.access_token
           //   localStorage.setItem('access_token', access_token)
-          //   return dispatch(AuthActions.fetchUserFromToken())
+          //   return dispatch(AuthActionCreators.fetchUserFromToken())
           console.log(`res`, res)
           dispatch(
-            UiActions.addToast({
+            UiActionCreators.addToast({
               id: 'user-register-toast-success',
               title: `Successfully registered!`,
               color: 'success',
@@ -300,3 +344,4 @@ AuthActions.registerNewUser =
       }),
     )
   }
+}

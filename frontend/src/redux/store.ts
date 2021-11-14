@@ -1,5 +1,5 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
-import { AuthActions } from './modules/auth/auth'
+import { AuthActionCreators } from './modules/auth/auth'
 import rootReducer from './rootReducer'
 
 // no need to delete reducers from store based on access level.
@@ -21,7 +21,7 @@ const store = configureStore({
 export default function configureReduxStore() {
   // If a token exists in local storage, our action creator will
   // find it and attempt to fetch the logged in user right away
-  store.dispatch(AuthActions.fetchUserFromToken())
+  store.dispatch(AuthActionCreators.fetchUserFromToken())
 
   // enable hot reloading in development
   if (process.env.NODE_ENV !== 'production' && module.hot) {

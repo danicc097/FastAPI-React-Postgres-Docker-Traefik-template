@@ -12,7 +12,7 @@ import styled from 'styled-components'
 import React, { useState } from 'react'
 
 import { useForgotPasswordForm } from 'src/hooks/auth/useForgotPasswordForm'
-import { AuthActionType } from 'src/redux/action-types'
+import { AuthActionType } from 'src/redux/modules/auth/auth'
 
 const ForgotPasswordFormWrapper = styled.div`
   padding: 2rem;

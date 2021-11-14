@@ -5,8 +5,8 @@ import { EuiButton, EuiFieldText, EuiForm, EuiFormRow, EuiFieldPassword, EuiSpac
 import styled from 'styled-components'
 import React from 'react'
 
-import { AuthActionType } from 'src/redux/action-types'
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
+import { AuthActionType } from 'src/redux/modules/auth/auth'
 
 const LoginFormWrapper = styled.div`
   padding: 2rem;

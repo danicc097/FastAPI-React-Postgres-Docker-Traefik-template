@@ -1,5 +1,7 @@
-import { initialStateType } from 'src/redux/initialState'
-
+/**
+ * Snapshot data for unit and integration tests.
+ * Update regularly after feature updates, do not type check as its an unnecessary burden
+ */
 export const testInitialState = {
   auth: {
     isLoading: false,

@@ -20,7 +20,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import { useUserForms } from 'src/hooks/auth/useUserForms'
-import { UserProfileActionType } from 'src/redux/action-types'
+import { UserProfileActionType } from 'src/redux/modules/userProfile/userProfile'
 import styled from 'styled-components'
 
 const StyledEuiAccordion = styled(EuiAccordion)`

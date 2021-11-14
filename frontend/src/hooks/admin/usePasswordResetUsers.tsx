@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { shallowEqual } from 'react-redux'
-import { AdminActions } from 'src/redux/modules/admin/admin'
+import { AdminActionCreators } from 'src/redux/modules/admin/admin'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
 export const usePasswordResetUsers = () => {
@@ -13,30 +13,30 @@ export const usePasswordResetUsers = () => {
   // fetch password reset users whenever the hook is called in a component and isAdmin
   useEffect(() => {
     if (isAdmin && passwordResetRequests === undefined) {
-      return dispatch(AdminActions.fetchAllPasswordResetUsers())
+      return dispatch(AdminActionCreators.fetchAllPasswordResetUsers())
       // specify a cleanup function as return (if any)
       // return () => dispatch(CleaningActions.clearCurrentCleaningJob())
     }
-  }, [isAdmin, dispatch, AdminActions.fetchAllPasswordResetUsers])
+  }, [isAdmin, dispatch, AdminActionCreators.fetchAllPasswordResetUsers])
 
   // add a new key label: user.email for every user in the passwordResetRequests array using a reference to the original selector and without using the map function
 
   // use all this functionality anywhere
   const fetchAllPasswordResetUsers = () => {
-    return dispatch(AdminActions.fetchAllPasswordResetUsers())
+    return dispatch(AdminActionCreators.fetchAllPasswordResetUsers())
   }
 
   const resetPasswordForUser = ({ email }) => {
-    return dispatch(AdminActions.resetPasswordForUser({ email }))
+    return dispatch(AdminActionCreators.resetPasswordForUser({ email }))
   }
 
   // remove email that has had their password reset
   const removeResetPasswordRequestFromStore = ({ email }) => {
-    return dispatch(AdminActions.removeResetPasswordRequestFromStore({ email }))
+    return dispatch(AdminActionCreators.removeResetPasswordRequestFromStore({ email }))
   }
 
   const deletePasswordResetRequest = ({ request }) => {
-    return dispatch(AdminActions.deletePasswordResetRequest({ request }))
+    return dispatch(AdminActionCreators.deletePasswordResetRequest({ request }))
   }
 
   return {
