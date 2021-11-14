@@ -1,8 +1,8 @@
 import { Toast } from '@elastic/eui/src/components/toast/global_toast_list'
 import { AnyAction } from '@reduxjs/toolkit'
-import { UiActionType } from './action-types'
-import initialState, { initialStateType } from './initialState'
-import { AppDispatch } from './store'
+import { AppDispatch } from 'src/redux'
+import { UiActionType } from '../../action-types'
+import initialState, { initialStateType } from '../../initialState'
 
 // Recommended to enforce the return type of reducers to prevent "nevers".
 // When we do dispatch({ type: UiActionType.ADD_TOAST, toast })

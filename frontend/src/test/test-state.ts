@@ -1,6 +1,6 @@
 import { initialStateType } from 'src/redux/initialState'
 
-export const testInitialState: initialStateType = {
+export const testInitialState = {
   auth: {
     isLoading: false,
     isUpdating: false,
@@ -42,6 +42,15 @@ export const testInitialState: initialStateType = {
     userLoaded: false,
     user: {
       id: null,
+    },
+  },
+  feed: {
+    globalNotifications: {
+      data: null,
+      canLoadMore: false,
+      hasNewNotifications: false,
+      isLoading: false,
+      error: null,
     },
   },
   admin: {

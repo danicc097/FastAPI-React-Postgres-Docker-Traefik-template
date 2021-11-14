@@ -1,5 +1,5 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
-import { AuthActions } from './auth'
+import { AuthActions } from './modules/auth/auth'
 import rootReducer from './rootReducer'
 
 // no need to delete reducers from store based on access level.

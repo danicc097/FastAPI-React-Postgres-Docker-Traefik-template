@@ -5,6 +5,7 @@ import React, { useState } from 'react'
 import {
   EuiAvatar,
   EuiBadge,
+  EuiButton,
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
@@ -180,7 +181,9 @@ export default function Notifications() {
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
               <EuiText color="subdued" size="s">
-                <p>Version 7.0</p>
+                <EuiButton size="s" fill>
+                  Load more
+                </EuiButton>
               </EuiText>
             </EuiFlexItem>
           </EuiFlexGroup>
@@ -215,7 +218,9 @@ export default function Notifications() {
       </div>
       <EuiPopoverFooter paddingSize="s">
         <EuiText color="subdued" size="s">
-          <p>Version 7.0</p>
+          <EuiButtonEmpty iconType="refresh" onClick={null} size="m">
+            Load more
+          </EuiButtonEmpty>
         </EuiText>
       </EuiPopoverFooter>
     </EuiPopover>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AuthActions } from 'src/redux/auth'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
+import { AuthActions } from 'src/redux/modules/auth/auth'
 import { extractErrorMessages } from 'src/utils/errors'
 import validation from 'src/utils/validation'
 

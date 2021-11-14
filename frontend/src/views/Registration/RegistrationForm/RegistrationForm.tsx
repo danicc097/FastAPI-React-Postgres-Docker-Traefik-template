@@ -1,4 +1,4 @@
-import { useLoginAndRegistrationForm } from 'src/hooks/ui/useLoginAndRegistrationForm'
+import { useUserForms } from 'src/hooks/auth/useUserForms'
 import {
   EuiButton,
   EuiCheckbox,
@@ -36,7 +36,7 @@ export default function RegistrationForm() {
     validateInput,
     registerNewUser,
     handlePasswordConfirmChange,
-  } = useLoginAndRegistrationForm({ isLogin: false })
+  } = useUserForms({ isLogin: false })
 
   const handleSubmit = async function handleSubmit(e: any) {
     e.preventDefault()

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { shallowEqual } from 'react-redux'
-import { AdminActions } from 'src/redux/admin'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
+import { AdminActions } from 'src/redux/modules/admin/admin'
 
 export const useAllUsers = () => {
   const dispatch = useAppDispatch()

@@ -20,6 +20,10 @@ export type AdminDataType = {
   //   [key: number]: Array<schema['OfferPublic']>
 }
 
+export type GlobalNotificationsFeedDataType = {
+  globalNotification: Array<schema['GlobalNotificationFeedItem']>
+}
+
 export type initialStateType = {
   auth: {
     isLoading: boolean
@@ -40,6 +44,15 @@ export type initialStateType = {
     error?: schema['HTTPValidationError']
     userLoaded: boolean
     user: schema['UserPublic']
+  }
+  feed: {
+    globalNotifications: {
+      data?: GlobalNotificationsFeedDataType | GenObjType<null>
+      canLoadMore: boolean
+      hasNewNotifications: boolean
+      isLoading: boolean
+      error: schema['HTTPValidationError']
+    }
   }
   admin: {
     isLoading: boolean
@@ -69,6 +82,15 @@ const initialState: initialStateType = {
     error: null,
     userLoaded: false,
     user: { id: null },
+  },
+  feed: {
+    globalNotifications: {
+      data: null,
+      canLoadMore: false,
+      hasNewNotifications: false,
+      isLoading: false,
+      error: null,
+    },
   },
   admin: {
     isLoading: false,

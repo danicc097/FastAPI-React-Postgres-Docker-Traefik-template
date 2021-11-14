@@ -19,7 +19,7 @@ import _ from 'lodash'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
-import { useLoginAndRegistrationForm } from 'src/hooks/ui/useLoginAndRegistrationForm'
+import { useUserForms } from 'src/hooks/auth/useUserForms'
 import { UserProfileActionType } from 'src/redux/action-types'
 import styled from 'styled-components'
 
@@ -49,7 +49,7 @@ export default function UserUpdateAccordion() {
     handleInputChange,
     validateInput,
     handlePasswordConfirmChange,
-  } = useLoginAndRegistrationForm({ isLogin: false, isUpdating: true })
+  } = useUserForms({ isLogin: false, isUpdating: true })
 
   const resetForm = () => {
     Object.keys(form).forEach((key) => {

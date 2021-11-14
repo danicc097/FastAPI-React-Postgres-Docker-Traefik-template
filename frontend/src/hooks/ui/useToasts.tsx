@@ -3,7 +3,7 @@
 import { Toast } from '@elastic/eui/src/components/toast/global_toast_list'
 import { shallowEqual } from 'react-redux'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { UiActions } from 'src/redux/ui'
+import { UiActions } from 'src/redux/modules/ui/ui'
 
 export const useToasts = () => {
   const dispatch = useAppDispatch()

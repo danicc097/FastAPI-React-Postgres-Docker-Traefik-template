@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { useLoginAndRegistrationForm } from 'src/hooks/ui/useLoginAndRegistrationForm'
+import { useUserForms } from 'src/hooks/auth/useUserForms'
 import { EuiButton, EuiFieldText, EuiForm, EuiFormRow, EuiFieldPassword, EuiSpacer } from '@elastic/eui'
 import styled from 'styled-components'
 import React from 'react'
@@ -26,7 +26,7 @@ export default function LoginForm() {
     handleInputChange,
     setHasSubmitted,
     requestUserLogin,
-  } = useLoginAndRegistrationForm({ isLogin: true })
+  } = useUserForms({ isLogin: true })
 
   // don't forget async...
   const handleSubmit = async (e) => {

@@ -4,12 +4,12 @@ import { Provider } from 'react-redux'
 import { combineReducers } from 'redux'
 import App from 'src/App'
 import { useAuthenticatedUser } from './hooks/auth/useAuthenticatedUser'
-import authReducer from './redux/auth'
+import authReducer from './redux/modules/auth/auth'
 // import '@fortawesome/fontawesome-free/js/all.js'; // terrible
 
 import configureReduxStore from './redux/store'
-import uiReducer from './redux/ui'
-import userProfileReducer from './redux/userProfile'
+import uiReducer from './redux/modules/ui/ui'
+import userProfileReducer from './redux/modules/userProfile/userProfile'
 
 if (process.env.NODE_ENV === 'production') {
   // eslint-disable-next-line @typescript-eslint/no-empty-function

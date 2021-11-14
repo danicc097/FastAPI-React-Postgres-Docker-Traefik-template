@@ -1,10 +1,10 @@
 import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
-import { AppDispatch } from './store'
-import initialState, { initialStateType } from './initialState'
-import { UiActions } from './ui'
-import { AuthActionType, UserProfileActionType } from './action-types'
-import { loadingState } from './utils/slices'
+import { AppDispatch } from '../../store'
+import initialState, { initialStateType } from '../../initialState'
+import { UiActions } from '../ui/ui'
+import { AuthActionType, UserProfileActionType } from '../../action-types'
+import { loadingState } from '../../utils/slices'
 
 // recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function userProfileReducer(

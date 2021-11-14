@@ -1,7 +1,7 @@
 // centralize authentication logic as well
 
 import { shallowEqual } from 'react-redux'
-import { AuthActions, AuthActionsParamsType } from 'src/redux/auth'
+import { AuthActions, AuthActionsParamsType } from '../../redux/modules/auth/auth'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
 export const useAuthenticatedUser = () => {

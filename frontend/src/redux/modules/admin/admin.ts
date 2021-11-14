@@ -3,12 +3,12 @@
 
 import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
-import { AppDispatch } from './store'
-import initialState, { initialStateType } from './initialState'
-import { UiActions } from './ui'
+import { AppDispatch } from '../../store'
+import initialState, { initialStateType } from '../../initialState'
+import { UiActions } from '../ui/ui'
 import { schema } from 'src/types/schema_override'
-import { AdminActionType, AuthActionType } from './action-types'
-import { errorState, loadingState } from './utils/slices'
+import { AdminActionType, AuthActionType } from '../../action-types'
+import { errorState, loadingState } from '../../utils/slices'
 
 /*
 isRemoval: whether it's a removal or addition of unverified users

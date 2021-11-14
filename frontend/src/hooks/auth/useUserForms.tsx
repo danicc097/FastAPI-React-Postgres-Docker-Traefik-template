@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { UserUpdateActions, UserUpdateActionsParamsType } from 'src/redux/userProfile'
+import { UserUpdateActions, UserUpdateActionsParamsType } from 'src/redux/modules/userProfile/userProfile'
 import { extractErrorMessages } from 'src/utils/errors'
 import validation from 'src/utils/validation'
 
 /**
  *  handle LoginForm, RegistrationForm and ProfilePage update form
  */
-export const useLoginAndRegistrationForm = ({ isLogin = false, isUpdate = false }: GenObjType<boolean>) => {
+export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<boolean>) => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { user, authError, isLoading, isAuthenticated, requestUserLogin, registerNewUser } = useAuthenticatedUser()

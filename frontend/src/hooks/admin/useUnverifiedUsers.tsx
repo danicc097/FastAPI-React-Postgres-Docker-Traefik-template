@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { shallowEqual } from 'react-redux'
-import { AdminActions } from 'src/redux/admin'
+import { AdminActions } from 'src/redux/modules/admin/admin'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
 export const useUnverifiedUsers = () => {
