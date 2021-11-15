@@ -79,7 +79,7 @@ type UserUpdateActionsType = {
 export const UserUpdateActionCreators: Partial<UserUpdateActionsType> = {}
 
 UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_password }) => {
-  ;(dispatch: AppDispatch) => {
+  return (dispatch: AppDispatch) => {
     // create the url-encoded form data
 
     // set the request headers (override defaulOptions)
