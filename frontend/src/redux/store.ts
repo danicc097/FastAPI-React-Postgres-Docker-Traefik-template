@@ -1,6 +1,8 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit'
+import moment from 'moment'
 import { AuthActionCreators } from './modules/auth/auth'
 import rootReducer from './rootReducer'
+import thunkMiddleware from 'redux-thunk'
 
 // no need to delete reducers from store based on access level.
 // end user could at most see the initial state, which will
@@ -12,16 +14,16 @@ import rootReducer from './rootReducer'
 // (in any case, the backend will ultimately reject based on role.)
 
 const loggerMiddleware = (storeAPI) => (next) => (action) => {
-  console.log('dispatching', action)
+  // with current timestamp with moment.js
+  console.log(`%c ${moment(new Date()).format('YYYY-MM-DD HH:mm:ss')}`, 'color: #0099ff; font-weight: bold;', action)
   const result = next(action)
-  // console.log('next state', storeAPI.getState())
   return result
 }
 
 const store = configureStore({
   // these are our combined reducers into rootReducer
   reducer: rootReducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(loggerMiddleware), // .concat(thunkMiddleware)
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(loggerMiddleware).concat(thunkMiddleware),
   ...(process.env.NODE_ENV === 'production' && { devTools: false }),
 })
 

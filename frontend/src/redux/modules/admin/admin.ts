@@ -192,51 +192,55 @@ type AdminActionsType = {
 
 export const AdminActionCreators: Partial<AdminActionsType> = {}
 
-AdminActionCreators.fetchAllUsers = () => (dispatch: AppDispatch) => {
-  const headers = {}
-  return dispatch(
-    apiClient({
-      url: `/admin/users/`,
-      method: 'get',
-      types: {
-        REQUEST: AdminActionType.FETCH_ALL_USERS,
-        SUCCESS: AdminActionType.FETCH_ALL_USERS_SUCCESS,
-        FAILURE: AdminActionType.FETCH_ALL_USERS_FAILURE,
-      },
-      options: {
-        headers,
-        data: {},
-        params: {},
-      },
-    }),
-  )
+AdminActionCreators.fetchAllUsers = () => {
+  return async (dispatch: AppDispatch) => {
+    const headers = {}
+    return dispatch(
+      apiClient({
+        url: `/admin/users/`,
+        method: 'get',
+        types: {
+          REQUEST: AdminActionType.FETCH_ALL_USERS,
+          SUCCESS: AdminActionType.FETCH_ALL_USERS_SUCCESS,
+          FAILURE: AdminActionType.FETCH_ALL_USERS_FAILURE,
+        },
+        options: {
+          headers,
+          data: {},
+          params: {},
+        },
+      }),
+    )
+  }
 }
 
-AdminActionCreators.fetchAllNonVerifiedUsers = () => (dispatch: AppDispatch) => {
-  // set the request headers (override defaultOptions)
-  const headers = {}
-  // we HAVE TO _return_ a dispatch, else we won't get the
-  // returns of onSuccess or onFailure and verify types
-  return dispatch(
-    apiClient({
-      url: `/admin/users-unverified/`,
-      method: 'get',
-      types: {
-        REQUEST: AdminActionType.FETCH_ALL_UNVERIFIED_USERS,
-        SUCCESS: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS,
-        FAILURE: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE,
-      },
-      options: {
-        headers,
-        data: {},
-        params: {},
-      },
-    }),
-  )
+AdminActionCreators.fetchAllNonVerifiedUsers = () => {
+  return async (dispatch: AppDispatch) => {
+    // set the request headers (override defaultOptions)
+    const headers = {}
+    // we HAVE TO _return_ a dispatch, else we won't get the
+    // returns of onSuccess or onFailure and verify types
+    return dispatch(
+      apiClient({
+        url: `/admin/users-unverified/`,
+        method: 'get',
+        types: {
+          REQUEST: AdminActionType.FETCH_ALL_UNVERIFIED_USERS,
+          SUCCESS: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS,
+          FAILURE: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE,
+        },
+        options: {
+          headers,
+          data: {},
+          params: {},
+        },
+      }),
+    )
+  }
 }
 
 AdminActionCreators.verifyUsers = ({ userEmails }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     // set the request headers (override defaultOptions)
     const headers = {}
     // we HAVE TO _return_ a dispatch, else we won't get the
@@ -303,27 +307,29 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
 
 // we can directly dispatch an action that edits the store
 AdminActionCreators.removeVerifiedUsersFromStore = ({ users }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
   }
 }
 
-AdminActionCreators.fetchAllPasswordResetUsers = () => (dispatch: AppDispatch) => {
-  return dispatch(
-    apiClient({
-      url: `/admin/reset-user-password/`,
-      method: 'get',
-      types: {
-        REQUEST: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS,
-        SUCCESS: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS,
-        FAILURE: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE,
-      },
-      options: {
-        data: {},
-        params: {},
-      },
-    }),
-  )
+AdminActionCreators.fetchAllPasswordResetUsers = () => {
+  return async (dispatch: AppDispatch) => {
+    return dispatch(
+      apiClient({
+        url: `/admin/reset-user-password/`,
+        method: 'get',
+        types: {
+          REQUEST: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS,
+          SUCCESS: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS,
+          FAILURE: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE,
+        },
+        options: {
+          data: {},
+          params: {},
+        },
+      }),
+    )
+  }
 }
 
 AdminActionCreators.resetPasswordForUser = ({ email }) => {

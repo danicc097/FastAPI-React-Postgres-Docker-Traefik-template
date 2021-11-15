@@ -103,7 +103,7 @@ export const GlobalNotificationsActionCreators: FeedActionsType = {}
 GlobalNotificationsActionCreators.clearFeedItems = () => ({ type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS })
 
 GlobalNotificationsActionCreators.fetchCleaningFeedItems = (starting_date = new Date(), page_chunk_size = 20) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
         url: '/feed/cleanings/',

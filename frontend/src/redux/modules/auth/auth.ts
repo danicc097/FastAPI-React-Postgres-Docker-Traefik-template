@@ -162,7 +162,7 @@ export const AuthActionCreators: Partial<AuthActionsType> = {}
 // -- We also want to provide UI feedback for all this, over at LoginForm.js
 
 AuthActionCreators.requestUserLogin = ({ email, password }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     // create the url-encoded form data
     const formData = new FormData()
     formData.set('username', email)
@@ -207,7 +207,7 @@ AuthActionCreators.requestUserLogin = ({ email, password }) => {
 }
 
 AuthActionCreators.requestPasswordReset = ({ email, message }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     // create the url-encoded form data
     // set the request headers (override defaulOptions)
     const headers = {
@@ -259,29 +259,31 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
 }
 
 // retrieve all user data from backend
-AuthActionCreators.fetchUserFromToken = () => (dispatch: AppDispatch) => {
-  return dispatch(
-    apiClient({
-      url: '/users/me/',
-      method: 'get',
-      types: {
-        REQUEST: AuthActionType.FETCHING_USER_FROM_TOKEN,
-        SUCCESS: AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS,
-        FAILURE: AuthActionType.FETCHING_USER_FROM_TOKEN_FAILURE,
-      },
-      options: {
-        data: {},
-        params: {},
-      },
-      onSuccess: (res) => {
-        // dispatch(cleaningActions.fetchAllUserOwnedCleaningJobs()); // why was this here in the first place
-        console.log(`res`, res)
-        dispatch(UiActionCreators.removeToastById('auth-toast-redirect'))
+AuthActionCreators.fetchUserFromToken = () => {
+  return async (dispatch: AppDispatch) => {
+    dispatch(
+      apiClient({
+        url: '/users/me/',
+        method: 'get',
+        types: {
+          REQUEST: AuthActionType.FETCHING_USER_FROM_TOKEN,
+          SUCCESS: AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS,
+          FAILURE: AuthActionType.FETCHING_USER_FROM_TOKEN_FAILURE,
+        },
+        options: {
+          data: {},
+          params: {},
+        },
+        onSuccess: (res) => {
+          // dispatch(cleaningActions.fetchAllUserOwnedCleaningJobs()); // why was this here in the first place
+          console.log(`res`, res)
+          dispatch(UiActionCreators.removeToastById('auth-toast-redirect'))
 
-        return { success: true, status: res.status, data: res.data }
-      },
-    }),
-  )
+          return { success: true, status: res.status, data: res.data }
+        },
+      }),
+    )
+  }
 }
 
 AuthActionCreators.logUserOut = () => {
@@ -296,7 +298,7 @@ AuthActionCreators.logUserOut = () => {
 // We are calling the dispatch function on the apiClient so that
 // we have access to dispatch in the onSuccess handler
 AuthActionCreators.registerNewUser = ({ username, email, password }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
         url: '/users/',

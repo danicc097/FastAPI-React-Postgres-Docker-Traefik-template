@@ -4,8 +4,9 @@ from typing import Dict
 from loguru import logger
 
 from app.models.pwd_reset_req import PasswordResetRequestCreate
-from app.models.user import UserCreate
+from app.models.user import RoleUpdate, Roles, UserCreate
 from initial_data.utils import (
+    change_user_role,
     create_password_reset_request,
     create_user,
     init_database,
@@ -15,6 +16,11 @@ USERS: Dict[str, UserCreate] = {
     "admin": UserCreate(
         username="admin",
         email="admin@myapp.com",
+        password="12341234",
+    ),
+    "manager": UserCreate(
+        username="manager",
+        email="manager@myapp.com",
         password="12341234",
     ),
     "verified": UserCreate(
@@ -59,6 +65,18 @@ async def main():
         verified=True,
     )
     logger.info(f'Created superuser {USERS["admin"].email}') if not err else logger.exception(err)
+    err = await change_user_role(database, RoleUpdate(email=USERS["admin"].email, role=Roles.admin))
+    logger.info(f'Changed role for {USERS["admin"].email}') if not err else logger.exception(err)
+
+    err = await create_user(
+        database,
+        USERS["manager"],
+        admin=False,
+        verified=True,
+    )
+    logger.info(f'Created superuser {USERS["manager"].email}') if not err else logger.exception(err)
+    err = await change_user_role(database, RoleUpdate(email=USERS["manager"].email, role=Roles.manager))
+    logger.info(f'Changed role for {USERS["manager"].email}') if not err else logger.exception(err)
 
     err = await create_user(
         database,

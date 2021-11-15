@@ -8,8 +8,8 @@ from databases import Database
 from loguru import logger
 
 from app.core.config import ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_USERNAME
-from app.models.user import UserCreate
-from initial_data.utils import create_user, init_database
+from app.models.user import RoleUpdate, Roles, UserCreate
+from initial_data.utils import change_user_role, create_user, init_database
 
 # injected from .env with starlette config
 USERS: Dict[str, UserCreate] = {
@@ -30,6 +30,8 @@ async def main():
         verified=True,
     )
     logger.info(f'Created superuser {USERS["admin"].email}') if not err else logger.exception(err)
+    err = await change_user_role(database, RoleUpdate(email=USERS["admin"].email, role=Roles.admin))
+    logger.info(f'Changed role for {USERS["admin"].email}') if not err else logger.exception(err)
 
 
 if __name__ == "__main__":

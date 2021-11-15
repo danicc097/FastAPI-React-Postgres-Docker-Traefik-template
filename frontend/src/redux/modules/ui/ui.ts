@@ -51,20 +51,26 @@ type UiActionsType = {
 
 export const UiActionCreators: Partial<UiActionsType> = {}
 
-UiActionCreators.addToast = (toast) => (dispatch: AppDispatch, getState: () => initialStateType) => {
-  // we can access state inside action creators
-  const { ui } = getState()
-  const toastIds = ui.toastList.map((toast) => toast.id)
+UiActionCreators.addToast = (toast) => {
+  return async (dispatch: AppDispatch, getState: () => initialStateType) => {
+    // we can access state inside action creators
+    const { ui } = getState()
+    const toastIds = ui.toastList.map((toast) => toast.id)
 
-  if (toastIds.indexOf(toast.id) === -1) {
-    dispatch({ type: UiActionType.ADD_TOAST, toast })
+    if (toastIds.indexOf(toast.id) === -1) {
+      dispatch({ type: UiActionType.ADD_TOAST, toast })
+    }
   }
 }
 
-UiActionCreators.removeToast = (toast) => (dispatch: AppDispatch) => {
-  dispatch({ type: UiActionType.REMOVE_TOAST, toastId: toast.id })
+UiActionCreators.removeToast = (toast) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch({ type: UiActionType.REMOVE_TOAST, toastId: toast.id })
+  }
 }
 
-UiActionCreators.removeToastById = (toastId) => (dispatch: AppDispatch) => {
-  dispatch({ type: UiActionType.REMOVE_TOAST, toastId: toastId })
+UiActionCreators.removeToastById = (toastId) => {
+  return async (dispatch: AppDispatch) => {
+    dispatch({ type: UiActionType.REMOVE_TOAST, toastId: toastId })
+  }
 }
