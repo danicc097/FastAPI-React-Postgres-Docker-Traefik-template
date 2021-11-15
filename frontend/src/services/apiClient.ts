@@ -95,11 +95,6 @@ const apiClient =
       // errors have the same structure but are returned as an error object
       console.log('ERROR in apiClient: ', error?.response?.data)
 
-      // if (error.response?.data?.detail.includes('Not Found')) {
-      //   // sleep 3 seconds
-      //   await new Promise((resolve) => setTimeout(resolve, 5000))
-      // }
-
       dispatch({
         type: FAILURE,
         error: error?.response?.data?.detail ? error.response.data : error,

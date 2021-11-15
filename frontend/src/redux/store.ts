@@ -11,10 +11,17 @@ import rootReducer from './rootReducer'
 //   }
 // (in any case, the backend will ultimately reject based on role.)
 
+const loggerMiddleware = (storeAPI) => (next) => (action) => {
+  console.log('dispatching', action)
+  const result = next(action)
+  // console.log('next state', storeAPI.getState())
+  return result
+}
+
 const store = configureStore({
   // these are our combined reducers into rootReducer
   reducer: rootReducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware(), // .concat(thunkMiddleware)
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(loggerMiddleware), // .concat(thunkMiddleware)
   ...(process.env.NODE_ENV === 'production' && { devTools: false }),
 })
 
