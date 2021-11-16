@@ -5,7 +5,7 @@ beforeEach(async () => {
   // submit button will be disabled once sent, reload first
   await forgotPasswordPo.go()
 
-  await page.waitForNetworkIdle()
+  // await page.waitForNetworkIdle()
 })
 
 // afterAll(async () => {

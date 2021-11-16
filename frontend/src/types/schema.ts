@@ -20,16 +20,18 @@ export interface paths {
     /** Any client, including unauthorized, can request a password reset that needs admin approval. */
     post: operations["users_request_password_reset_api_users_request_password_reset__post"];
   };
+  "/api/users/notifications-by-last-read/": {
+    get: operations["users_get_feed_by_last_read_api_users_notifications_by_last_read__get"];
+  };
   "/api/users/notifications/": {
     get: operations["users_get_feed_api_users_notifications__get"];
-    post: operations["users_get_feed_by_last_read_api_users_notifications__post"];
   };
-  "/api/users/notifications-check/": {
+  "/api/users/check-user-has-unread-notifications/": {
     /**
      * Hit the server to check if the user has unread notifications.
      * It won't update the user's ``last_notification_at`` field.
      */
-    get: operations["users_check_user_has_unread_notifications_api_users_notifications_check__get"];
+    get: operations["users_check_user_has_unread_notifications_api_users_check_user_has_unread_notifications__get"];
   };
   "/api/profiles/{username}/": {
     get: operations["profiles_get_profile_by_username_api_profiles__username___get"];
@@ -310,9 +312,21 @@ export interface operations {
       };
     };
   };
+  users_get_feed_by_last_read_api_users_notifications_by_last_read__get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
+        };
+      };
+    };
+  };
   users_get_feed_api_users_notifications__get: {
     parameters: {
       query: {
+        /** Number of notifications to retrieve */
+        page_chunk_size?: number;
         /** Used to determine the timestamp at which to begin querying for notification feed items. */
         starting_date?: string;
       };
@@ -332,21 +346,11 @@ export interface operations {
       };
     };
   };
-  users_get_feed_by_last_read_api_users_notifications__post: {
-    responses: {
-      /** Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
-        };
-      };
-    };
-  };
   /**
    * Hit the server to check if the user has unread notifications.
    * It won't update the user's ``last_notification_at`` field.
    */
-  users_check_user_has_unread_notifications_api_users_notifications_check__get: {
+  users_check_user_has_unread_notifications_api_users_check_user_has_unread_notifications__get: {
     responses: {
       /** Successful Response */
       200: {

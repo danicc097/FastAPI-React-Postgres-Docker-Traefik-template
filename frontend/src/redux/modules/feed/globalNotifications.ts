@@ -9,6 +9,7 @@ type initialStateType = {
   feed: {
     globalNotifications: {
       data?: Array<schema['GlobalNotificationFeedItem']> | []
+      unreadData?: Array<schema['GlobalNotificationFeedItem']> | []
       canLoadMore: boolean
       hasNewNotifications: boolean
       isLoading: boolean
@@ -21,6 +22,7 @@ const initialState: initialStateType = {
   feed: {
     globalNotifications: {
       data: [],
+      unreadData: [],
       canLoadMore: false,
       hasNewNotifications: false,
       isLoading: false,
@@ -33,6 +35,10 @@ export enum GlobalNotificationsActionType {
   FETCH_NOTIFICATIONS = 'globalNotifications/FETCH_NOTIFICATIONS',
   FETCH_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_NOTIFICATIONS_SUCCESS',
   FETCH_NOTIFICATIONS_FAILURE = 'globalNotifications/FETCH_NOTIFICATIONS_FAILURE',
+
+  FETCH_UNREAD_NOTIFICATIONS = 'globalNotifications/FETCH_UNREAD_NOTIFICATIONS',
+  FETCH_UNREAD_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_UNREAD_NOTIFICATIONS_SUCCESS',
+  FETCH_UNREAD_NOTIFICATIONS_FAILURE = 'globalNotifications/FETCH_UNREAD_NOTIFICATIONS_FAILURE',
 
   FETCH_HAS_NEW_NOTIFICATIONS = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS',
   FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS',
@@ -72,6 +78,24 @@ export default function globalNotificationsReducer(
         data: [...(state.data || []), ...action.data],
       }
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE:
+      return {
+        ...state,
+        isLoading: false,
+        error: action.error,
+      }
+    case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS:
+      return {
+        ...state,
+        isLoading: true,
+      }
+    case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        unreadData: [...action.data], // override each time
+      }
+    case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_FAILURE:
       return {
         ...state,
         isLoading: false,
@@ -144,20 +168,15 @@ GlobalNotificationsActionCreators.fetchFeedItemsByLastRead = () => {
         url: '/users/notifications-by-last-read/',
         method: 'get',
         types: {
-          REQUEST: GlobalNotificationsActionType.FETCH_NOTIFICATIONS,
-          SUCCESS: GlobalNotificationsActionType.FETCH_NOTIFICATIONS_SUCCESS,
-          FAILURE: GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE,
+          REQUEST: GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS,
+          SUCCESS: GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_SUCCESS,
+          FAILURE: GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_FAILURE,
         },
         options: {
           data: {},
           params: {},
         },
         onSuccess: (res) => {
-          dispatch({
-            type: GlobalNotificationsActionType.SET_CAN_LOAD_MORE_NOTIFICATIONS,
-            // assume that there are more items if we receive the max chunk size
-            canLoadMore: Boolean(res?.data?.length === PAGE_CHUNK_SIZE),
-          })
           return { success: true, status: res.status, data: res.data }
         },
       }),

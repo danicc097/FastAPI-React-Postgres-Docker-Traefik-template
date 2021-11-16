@@ -20,7 +20,7 @@ describe('Test admin functionality', () => {
     await unverifiedUsersPo.go()
     await unverifiedUsersPo.selectFromUnverifiedUsersTable(users['toBeVerified'].email)
     await unverifiedUsersPo.waitUntilHTMLRendered(page, 100) // button will be rendered
-    await unverifiedUsersPo.clickVerifyUsersButton()
+    await await unverifiedUsersPo.clickVerifyUsersButton()
   })
 
   test('resetting a user`s password manually', async () => {

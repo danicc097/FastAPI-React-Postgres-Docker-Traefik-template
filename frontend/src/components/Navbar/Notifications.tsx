@@ -15,6 +15,7 @@ import {
   EuiFlyoutHeader,
   EuiHeader,
   EuiHeaderAlert,
+  EuiHeaderAlertProps,
   EuiHeaderLogo,
   EuiHeaderSection,
   EuiHeaderSectionItem,
@@ -32,6 +33,7 @@ import {
 } from '@elastic/eui'
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
+import moment from 'moment'
 
 export default function Notifications() {
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false)
@@ -42,9 +44,62 @@ export default function Notifications() {
   })
   const newsFeedPopoverId = useGeneratedHtmlId({ prefix: 'newsFeedPopover' })
 
-  const { hasNewNotifications } = useGlobalNotificationsFeed()
+  const {
+    hasNewNotifications,
+    fetchFeedItemsByLastRead,
+    globalNotificationsFeedItems,
+    globalNotificationsUnreadItems,
+    isLoading,
+    error,
+    fetchFeedItems,
+  } = useGlobalNotificationsFeed()
 
-  const alerts = [
+  const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
+
+  const globalNotificationsAlerts: Array<EuiHeaderAlertProps> = globalNotificationsFeedItems.map(
+    (item: ArrayElement<typeof globalNotificationsFeedItems>) => {
+      const {
+        row_number,
+        event_timestamp,
+        id,
+        created_at,
+        updated_at,
+        sender,
+        receiver_role,
+        title,
+        body,
+        label,
+        link,
+        event_type,
+      } = item
+
+      const alertProps = {
+        title: event_type === 'is_update' ? '[UPDATE]' + title : title,
+        text: body,
+        action: link ? (
+          <EuiLink href={link} target="_blank">
+            {label}
+          </EuiLink>
+        ) : null,
+        // pretty format date with elastic ui helper
+        date: moment(event_timestamp).fromNow(),
+        badge: (
+          <EuiFlexGroup alignItems="center" gutterSize="xs">
+            <EuiFlexItem grow={false}>
+              {unreadIds.includes(id) ? <EuiBadge color="danger">NEW</EuiBadge> : null}
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <EuiBadge>{label}</EuiBadge>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+        ),
+      } as EuiHeaderAlertProps
+
+      return alertProps
+    },
+  )
+
+  const alerts: Array<EuiHeaderAlertProps> = [
     {
       title: 'Control access to features',
       text: 'Show or hide applications and features per space in Kibana.',
@@ -122,10 +177,18 @@ export default function Notifications() {
   }
 
   const showFlyout = () => {
+    if (!isFlyoutVisible) {
+      fetchFeedItemsByLastRead()
+      fetchFeedItems()
+    }
     setIsFlyoutVisible(!isFlyoutVisible)
   }
 
   const showPopover = () => {
+    if (!isPopoverVisible) {
+      fetchFeedItemsByLastRead()
+      fetchFeedItems()
+    }
     setIsPopoverVisible(!isPopoverVisible)
   }
 
@@ -168,7 +231,7 @@ export default function Notifications() {
           </EuiTitle>
         </EuiFlyoutHeader>
         <EuiFlyoutBody>
-          {alerts.map((alert, i) => (
+          {globalNotificationsAlerts.map((alert, i) => (
             <EuiHeaderAlert
               key={`alert-${i}`}
               title={alert.title}
@@ -212,7 +275,7 @@ export default function Notifications() {
       <EuiPopoverTitle paddingSize="s">Reminders</EuiPopoverTitle>
       <div style={{ maxHeight: '40vh', overflowY: 'auto', padding: 4 }}>
         <EuiSpacer size="s" />
-        {alerts.map((alert, i) => (
+        {globalNotificationsAlerts.map((alert, i) => (
           <EuiHeaderAlert
             key={`alert-${i}`}
             title={alert.title}

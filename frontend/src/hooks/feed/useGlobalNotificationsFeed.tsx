@@ -20,7 +20,11 @@ export function useGlobalNotificationsFeed() {
   const isLoading = useAppSelector((state) => state.feed.globalNotifications.isLoading)
   // When comparing objects, remember to use shallow equal
   const error = useAppSelector((state) => state.feed.globalNotifications.error, shallowEqual)
-  const feedItems = useAppSelector((state) => state.feed.globalNotifications.data, shallowEqual)
+  const globalNotificationsFeedItems = useAppSelector((state) => state.feed.globalNotifications.data, shallowEqual)
+  const globalNotificationsUnreadItems = useAppSelector(
+    (state) => state.feed.globalNotifications.unreadData,
+    shallowEqual,
+  )
   const hasNewNotifications = useAppSelector((state) => Boolean(state.feed.globalNotifications.hasNewNotifications))
 
   /**
@@ -42,7 +46,10 @@ export function useGlobalNotificationsFeed() {
     dispatch(GlobalNotificationsActionCreators.fetchFeedItemsByLastRead())
   }
 
-  // useeffect to update hasNewNotifications with GlobalNotificationsActionCreators.updateHasNewNotifications() every 10 seconds
+  // one-off dispatch when the component mounts
+  useEffect(() => {
+    dispatch(GlobalNotificationsActionCreators.updateHasNewNotifications())
+  }, [dispatch])
 
   useEffect(() => {
     if (!hasNewNotifications) {
@@ -57,7 +64,8 @@ export function useGlobalNotificationsFeed() {
     isLoading,
     error,
     hasNewNotifications,
-    feedItems,
+    globalNotificationsFeedItems,
+    globalNotificationsUnreadItems,
     fetchFeedItems,
     fetchFeedItemsByLastRead,
   }
