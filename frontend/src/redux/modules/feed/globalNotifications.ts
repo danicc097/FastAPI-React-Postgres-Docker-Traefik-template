@@ -161,7 +161,6 @@ GlobalNotificationsActionCreators.fetchFeedItems = (starting_date = new Date(mom
 }
 
 GlobalNotificationsActionCreators.fetchFeedItemsByLastRead = () => {
-  const PAGE_CHUNK_SIZE = 10
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
@@ -177,6 +176,10 @@ GlobalNotificationsActionCreators.fetchFeedItemsByLastRead = () => {
           params: {},
         },
         onSuccess: (res) => {
+          dispatch({
+            type: GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS,
+            setHasNewNotifications: false,
+          })
           return { success: true, status: res.status, data: res.data }
         },
       }),

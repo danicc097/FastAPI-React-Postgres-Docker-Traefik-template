@@ -7,12 +7,12 @@ import { BrowserRouter } from 'react-router-dom'
 // this is an overridden render from @testing-library/react
 import { render as renderWithStore } from 'src/test/test-utils'
 import { testInitialState } from 'src/test/test-state'
-import Notifications from './Notifications'
+import GlobalNotifications from './GlobalNotifications'
 
 test('Renders content', async () => {
   renderWithStore(
     <BrowserRouter>
-      <Notifications />
+      <GlobalNotifications />
     </BrowserRouter>,
     { initialState: testInitialState },
   )

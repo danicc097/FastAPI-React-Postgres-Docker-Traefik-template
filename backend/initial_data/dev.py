@@ -117,7 +117,11 @@ async def main():
             sender=USERS["admin"].email,
             receiver_role=Roles.user.value,
             title=f"Test notification {i}",
-            body=f"This is test notification {i}",
+            body=f"""
+                This is test notification {i}.\n
+                As you can observe the title is getting longer as I write but it should
+                come out nicely in the frontend.
+                """,
             label=f"Test label {i}",
             link="https://www.google.com",
         )
