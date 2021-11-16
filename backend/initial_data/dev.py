@@ -119,8 +119,8 @@ async def main():
             title=f"Test notification {i}",
             body=f"""
                 This is test notification {i}.\n
-                As you can observe the title is getting longer as I write but it should
-                come out nicely in the frontend.
+                As you can observe the body is getting bigger as I write this unnecessarily long sentence but it should
+                come out nicely in the frontend nevertheless.
                 """,
             label=f"Test label {i}",
             link="https://www.google.com",

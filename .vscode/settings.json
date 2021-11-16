@@ -35,5 +35,6 @@
   "terminal.integrated.env.linux": {
     "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/"
   },
-  "python.formatting.provider": "black"
+  "python.formatting.provider": "black",
+  "cSpell.words": ["ondelete"]
 }

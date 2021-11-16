@@ -34,7 +34,7 @@ def upgrade() -> None:
         sa.Column("sender", sa.Text, sa.ForeignKey("users.email", ondelete="CASCADE")),
         sa.Column("receiver_role", sa.String(255), index=True, nullable=False),
         sa.Column("title", sa.String(255), nullable=False),
-        sa.Column("body", sa.String(255), nullable=False),
+        sa.Column("body", sa.Text, nullable=False),
         sa.Column("label", sa.String(255), nullable=False),
         sa.Column("link", sa.String(255)),
         *timestamps(indexed=True),

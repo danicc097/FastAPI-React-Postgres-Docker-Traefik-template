@@ -9,8 +9,6 @@ import { schema } from 'src/types/schema_override'
 type initialStateType = {
   userProfile: {
     isLoading: boolean
-    isUpdating: boolean
-    isUpdated: boolean
     error?: schema['HTTPValidationError']
     userLoaded: boolean
     user: schema['UserPublic']
@@ -20,8 +18,6 @@ type initialStateType = {
 const initialState: initialStateType = {
   userProfile: {
     isLoading: false,
-    isUpdating: false,
-    isUpdated: false,
     error: null,
     userLoaded: false,
     user: { id: null },

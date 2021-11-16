@@ -28,6 +28,14 @@ import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotification
 import moment from 'moment'
 import { motion } from 'framer-motion'
 import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
+import styled from 'styled-components'
+
+const Center = styled.div`
+  align-self: center;
+  & > * {
+    margin-inline-end: 0.2rem;
+  }
+`
 
 export default function Notifications() {
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false)
@@ -67,20 +75,28 @@ export default function Notifications() {
 
       const alertProps = {
         title: event_type === 'is_update' ? '[UPDATE]' + title : title,
-        text: body,
+        text: <EuiText size="s">{body}</EuiText>,
         action: link ? (
           <EuiLink href={link} target="_blank">
             {label}
           </EuiLink>
         ) : null,
-        date: moment(event_timestamp).fromNow(),
+        date: (
+          <EuiBadge color="lightblue">
+            <Center>
+              <EuiIcon type="clock" size="m" />
+              {/* TODO user timezones */}
+              {moment(created_at).fromNow()}
+            </Center>
+          </EuiBadge>
+        ),
         badge: (
           <EuiFlexGroup alignItems="center" gutterSize="xs">
             <EuiFlexItem grow={false}>
               {unreadIds.includes(id) ? <EuiBadge color="danger">NEW</EuiBadge> : null}
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
-              <EuiBadge>{label}</EuiBadge>
+              <EuiBadge color="lightgreen">{label}</EuiBadge>
             </EuiFlexItem>
           </EuiFlexGroup>
         ),
@@ -104,12 +120,9 @@ export default function Notifications() {
 
   const bellButtonNotificationColor: any = 'lightgreen' // bad eui typing
 
-  // animate moving 45 degrees to right, then going back to 0 degrees and repeating -45 degrees to the left side
-  // infinitely based on hasNewNotifications
   const bellIconMotion = (
     <motion.div
       animate={{ rotate: hasNewNotifications ? [0, 45, -45, 25, -25, 0] : 0 }}
-      // repeat: Infinity only if hasNewNotifications
       transition={{ duration: 2.5, ...(hasNewNotifications ? { repeat: Infinity } : {}) }}
     >
       <EuiIcon type="bell" />
@@ -132,7 +145,13 @@ export default function Notifications() {
 
   const flyout = (
     <EuiPortal>
-      <EuiFlyout onClose={closeFlyout} size="s" id={newsFeedFlyoutId} aria-labelledby={newsFeedFlyoutTitleId}>
+      <EuiFlyout
+        onClose={closeFlyout}
+        size="s"
+        id={newsFeedFlyoutId}
+        aria-labelledby={newsFeedFlyoutTitleId}
+        paddingSize="m"
+      >
         {/* HEADER */}
         <EuiFlyoutHeader hasBorder>
           <EuiTitle size="s">
