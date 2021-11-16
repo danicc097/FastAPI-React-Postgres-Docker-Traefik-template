@@ -20,6 +20,19 @@ export interface paths {
     /** Any client, including unauthorized, can request a password reset that needs admin approval. */
     post: operations["users_request_password_reset_api_users_request_password_reset__post"];
   };
+  "/api/users/notifications-by-last-read/": {
+    get: operations["users_get_feed_by_last_read_api_users_notifications_by_last_read__get"];
+  };
+  "/api/users/notifications/": {
+    get: operations["users_get_feed_api_users_notifications__get"];
+  };
+  "/api/users/check-user-has-unread-notifications/": {
+    /**
+     * Hit the server to check if the user has unread notifications.
+     * It won't update the user's ``last_notification_at`` field.
+     */
+    get: operations["users_check_user_has_unread_notifications_api_users_check_user_has_unread_notifications__get"];
+  };
   "/api/profiles/{username}/": {
     get: operations["profiles_get_profile_by_username_api_profiles__username___get"];
   };
@@ -46,6 +59,14 @@ export interface paths {
     /** Delete a password reset request with id: ``id``. */
     delete: operations["admin_delete_password_reset_request_api_admin_delete_password_reset_request__id___delete"];
   };
+  "/api/admin/create-notification/": {
+    /** Create a new notification for selected user roles to receive. */
+    post: operations["admin_create_notification_api_admin_create_notification__post"];
+  };
+  "/api/admin/change-user-role/": {
+    /** Change role of user */
+    post: operations["admin_change_user_role_api_admin_change_user_role__post"];
+  };
 }
 
 export interface components {
@@ -54,6 +75,12 @@ export interface components {
     AccessToken: {
       access_token: string;
       token_type: string;
+    };
+    Body_admin_change_user_role_api_admin_change_user_role__post: {
+      role_update: components["schemas"]["RoleUpdate"];
+    };
+    Body_admin_create_notification_api_admin_create_notification__post: {
+      notification: components["schemas"]["GlobalNotificationCreate"];
     };
     Body_admin_reset_user_password_by_email_api_admin_reset_user_password__post: {
       email: string;
@@ -80,6 +107,30 @@ export interface components {
     };
     Body_users_update_user_by_id_api_users_me__put: {
       user_update: components["schemas"]["UserUpdate"];
+    };
+    /** Any common logic to be shared by all models goes here */
+    GlobalNotificationCreate: {
+      sender: string;
+      receiver_role: components["schemas"]["Roles"];
+      title: string;
+      body: string;
+      label: string;
+      link?: string;
+    };
+    /** Admins and authorized roles can send notifications to users based on role. */
+    GlobalNotificationFeedItem: {
+      row_number?: number;
+      event_timestamp?: string;
+      id: number;
+      created_at?: string;
+      updated_at?: string;
+      sender: string;
+      receiver_role: components["schemas"]["Roles"];
+      title: string;
+      body: string;
+      label: string;
+      link?: string;
+      event_type?: "is_update" | "is_create";
     };
     HTTPValidationError: {
       detail?: components["schemas"]["ValidationError"][];
@@ -117,6 +168,13 @@ export interface components {
       bio?: string;
       image?: string;
     };
+    /** Any common logic to be shared by all models goes here */
+    RoleUpdate: {
+      email: string;
+      role: components["schemas"]["Roles"];
+    };
+    /** An enumeration. */
+    Roles: "user" | "manager" | "admin";
     /** Email, username, and password are required for registering a new user */
     UserCreate: {
       email: string;
@@ -131,9 +189,11 @@ export interface components {
     UserPublic: {
       email?: string;
       username?: string;
-      email_verified?: boolean;
+      is_verified?: boolean;
       is_active?: boolean;
       is_superuser?: boolean;
+      role?: components["schemas"]["Roles"];
+      last_notification_at?: string;
       created_at?: string;
       updated_at?: string;
       id: number;
@@ -249,6 +309,54 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["Body_users_request_password_reset_api_users_request_password_reset__post"];
+      };
+    };
+  };
+  users_get_feed_by_last_read_api_users_notifications_by_last_read__get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
+        };
+      };
+    };
+  };
+  users_get_feed_api_users_notifications__get: {
+    parameters: {
+      query: {
+        /** Number of notifications to retrieve */
+        page_chunk_size?: number;
+        /** Used to determine the timestamp at which to begin querying for notification feed items. */
+        starting_date?: string;
+      };
+    };
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  /**
+   * Hit the server to check if the user has unread notifications.
+   * It won't update the user's ``last_notification_at`` field.
+   */
+  users_check_user_has_unread_notifications_api_users_check_user_has_unread_notifications__get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": boolean;
+        };
       };
     };
   };
@@ -390,6 +498,50 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
         };
+      };
+    };
+  };
+  /** Create a new notification for selected user roles to receive. */
+  admin_create_notification_api_admin_create_notification__post: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Body_admin_create_notification_api_admin_create_notification__post"];
+      };
+    };
+  };
+  /** Change role of user */
+  admin_change_user_role_api_admin_change_user_role__post: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["UserPublic"];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Body_admin_change_user_role_api_admin_change_user_role__post"];
       };
     };
   };

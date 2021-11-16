@@ -90,21 +90,18 @@ const apiClient =
     try {
       const res = await methodFunction(urlPath, data)
       dispatch({ type: SUCCESS, data: res.data })
-      return onSuccess({ type: SUCCESS, ...res }) // return the given SUCCESS action type by default
+      // calls the default onSuccess if not overwritten
+      return onSuccess({ type: SUCCESS, ...res })
     } catch (error: any) {
       // errors have the same structure but are returned as an error object
       console.log('ERROR in apiClient: ', error?.response?.data)
-
-      // if (error.response?.data?.detail.includes('Not Found')) {
-      //   // sleep 3 seconds
-      //   await new Promise((resolve) => setTimeout(resolve, 5000))
-      // }
 
       dispatch({
         type: FAILURE,
         error: error?.response?.data?.detail ? error.response.data : error,
       })
 
+      // calls the default onFailure if not overwritten
       return onFailure({ type: FAILURE, status: error.status, error: error.response })
     }
   }

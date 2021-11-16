@@ -58,8 +58,6 @@ services:
     container_name: frontend_myapp_prod
     networks:
       - traefik-net
-    # volumes:
-    #   - ./frontend/:/frontend/
     # won't get injected in build, use Dockerfile.prod for 'process.env' vars
     # env_file:
     # - ./frontend/.env.production
@@ -71,7 +69,7 @@ services:
       # Explicitly tell Traefik to expose this container
       - traefik.enable=true
       - traefik.http.routers.myappreact-prod.rule=Host(`myapp-frontend.prod.localhost`)
-      # we're using nginx in the Dockerfile, therefore it's not port 3000 anymore -serving at 80
+      # we're using nginx in the Dockerfile -> 80
       - traefik.port=${FRONTEND_PORT_PROD}
       - traefik.docker.network=traefik-net
       - traefik.http.routers.myappreact-prod.entrypoints=websecure

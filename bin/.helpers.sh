@@ -10,7 +10,7 @@ function docker_compose_in_env {
   REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
   ENV="$(get_env_suffix "$1")"
   COMPOSE_COMMAND=$(get_compose_command "$2")
-  are_you_sure "Do you want to run docker-compose $COMPOSE_COMMAND in the $ENV environment?"
+  _confirm "Do you want to run docker-compose $COMPOSE_COMMAND in the $ENV environment?"
 
   case $ENV in
   dev | e2e | prod)
@@ -68,7 +68,7 @@ function err {
   echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
-function are_you_sure {
+function _confirm {
   local _prompt _response
 
   if [ "$1" ]; then _prompt="$1"; else _prompt="Are you sure"; fi

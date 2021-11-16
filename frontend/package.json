@@ -15,7 +15,7 @@
     "@babel/core": "^7.14.6",
     "@babel/eslint-parser": "^7.14.7",
     "@elastic/datemath": "^5.0.3",
-    "@elastic/eui": "~38.1.0",
+    "@elastic/eui": "41.0.0",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.15",
@@ -96,7 +96,7 @@
     "lint": "eslint --config ./.eslintrc.json --ignore-path .gitignore --ext .js,.jsx,.ts,.tsx ./src",
     "lint:fix": "eslint --config ./.eslintrc.json --ext .js,.jsx,.ts,.tsx --fix ./src",
     "serve": "yarn dlx serve -s build",
-    "start": "react-scripts start",
+    "start": "TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling react-scripts start",
     "test": "react-scripts test --setupFiles ./src/setupTests.js",
     "test:nowatch": "react-scripts test --setupFiles ./src/setupTests.js --watchAll=false"
   },

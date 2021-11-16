@@ -1,5 +1,6 @@
 import secrets
 import string
+from datetime import datetime
 from typing import List, Mapping, Optional, Set, Union, cast
 
 import loguru
@@ -12,20 +13,32 @@ from starlette.status import (
 )
 
 from app.db.repositories.base import BaseRepository
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.profiles import ProfilesRepository
 from app.db.repositories.pwd_reset_req import UserPwdReqRepository
+from app.models.feed import GlobalNotificationFeedItem
+from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
-from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
+from app.models.user import (
+    Roles,
+    RoleUpdate,
+    UserCreate,
+    UserInDB,
+    UserPublic,
+    UserUpdate,
+)
 from app.services import auth_service
 
 GET_USER_BY_EMAIL_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE email = :email;
 """
 
 GET_USER_BY_USERNAME_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE username = :username;
 """
@@ -33,23 +46,23 @@ GET_USER_BY_USERNAME_QUERY = """
 REGISTER_NEW_USER_QUERY = """
     INSERT INTO users (username, email, password, salt)
     VALUES (:username, :email, :password, :salt)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 REGISTER_ADMIN_QUERY = """
-    INSERT INTO users (username, email, password, salt, is_superuser, email_verified)
+    INSERT INTO users (username, email, password, salt, is_superuser, is_verified)
     VALUES (:username, :email, :password, :salt, TRUE, TRUE)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 REGISTER_VERIFIED_USER_QUERY = """
-    INSERT INTO users (username, email, password, salt, email_verified)
+    INSERT INTO users (username, email, password, salt, is_verified)
     VALUES (:username, :email, :password, :salt, TRUE)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 GET_USER_BY_ID_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
     WHERE id = :id;
 """
@@ -61,25 +74,25 @@ UPDATE_USER_BY_ID_QUERY = """
         username     = :username,
         email        = :email
     WHERE id = :id
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 LIST_ALL_USERS_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users;
 """
 
 LIST_ALL_NON_VERIFIED_USERS_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT *
     FROM users
-    WHERE email_verified = 'false';
+    WHERE is_verified = 'false';
 """
 
 VERIFY_USER_BY_EMAIL_QUERY = """
     UPDATE users
-    SET email_verified        = 'true'
+    SET is_verified        = 'true'
     WHERE email = :email
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
 """
 
 RESET_USER_PASSWORD_QUERY = """
@@ -87,7 +100,21 @@ RESET_USER_PASSWORD_QUERY = """
     SET password     = :password,
         salt         = :salt
     WHERE email = :email
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING *;
+"""
+
+UPDATE_LAST_NOTIFICATION_AT_QUERY = """
+    UPDATE users
+    SET last_notification_at = :last_notification_at
+    WHERE id = :id
+    RETURNING *;
+"""
+
+UPDATE_USER_ROLE_QUERY = """
+    UPDATE users
+    SET role = :role
+    WHERE id = :id
+    RETURNING *;
 """
 
 
@@ -109,7 +136,6 @@ class EmailAlreadyExistsError(UsersRepoException):
 class UsernameAlreadyExistsError(UsersRepoException):
     def __init__(self, msg="Username already exists.", username="", *args, **kwargs):
         super().__init__(msg, *args, **kwargs)
-        self.username = username
 
 
 class UserCreationError(UsersRepoException):
@@ -143,7 +169,9 @@ class UsersRepository(BaseRepository):
         # will also create_profile_for_user below
         self.profiles_repo = ProfilesRepository(db)
         self.user_pwd_req_repo = UserPwdReqRepository(db)
+        self.global_notif_repo = GlobalNotificationsRepository(db)
 
+    # ? Exceptions are to be raised outside
     async def get_user_by_email(
         self, *, email: EmailStr, to_public: bool = True
     ) -> Optional[Union[UserPublic, UserInDB]]:
@@ -158,6 +186,7 @@ class UsersRepository(BaseRepository):
             return await self.populate_user(user=user)
         return user
 
+    # ? Exceptions are to be raised outside
     async def get_user_by_username(
         self, *, username: str, to_public: bool = True
     ) -> Optional[Union[UserPublic, UserInDB]]:
@@ -169,6 +198,7 @@ class UsersRepository(BaseRepository):
             return await self.populate_user(user=user)
         return user
 
+    # ? Exceptions are to be raised outside
     async def get_user_by_id(self, *, user_id: int, to_public: bool = True) -> Optional[Union[UserPublic, UserInDB]]:
         user_record = await self.db.fetch_one(query=GET_USER_BY_ID_QUERY, values={"id": user_id})
         if not user_record:
@@ -187,10 +217,10 @@ class UsersRepository(BaseRepository):
         verified: bool = False,
     ) -> Optional[Union[UserPublic, UserInDB]]:
         if await self.get_user_by_email(email=new_user.email):
-            raise EmailAlreadyExistsError(email=new_user.email)
+            raise EmailAlreadyExistsError(f"User with email {new_user.email} already exists.")
 
         if await self.get_user_by_username(username=new_user.username):
-            raise UsernameAlreadyExistsError(username=new_user.username)
+            raise UsernameAlreadyExistsError(f"User with username {new_user.username} already exists.")
 
         # do not pass actual password to models
         user_password_update = self.auth_service.create_salt_and_hashed_password(plaintext_password=new_user.password)
@@ -247,13 +277,13 @@ class UsersRepository(BaseRepository):
                 update={**user_password_update, "id": user_id}, exclude={"old_password"}
             )
 
-        # TODO single query for all updates
         if user_update.email:
             if await self.get_user_by_email(email=user_update.email):
-                raise EmailAlreadyExistsError
+                raise EmailAlreadyExistsError(f"User with email {user_update.email} already exists.")
+
         if user_update.username:
             if await self.get_user_by_username(username=user_update.username):
-                raise UsernameAlreadyExistsError(username=user_update.username)
+                raise UsernameAlreadyExistsError(f"User with username {user_update.username} already exists.")
 
         updated_user = await self.db.fetch_one(
             query=UPDATE_USER_BY_ID_QUERY,
@@ -345,3 +375,40 @@ class UsersRepository(BaseRepository):
             except Exception as e:
                 pass
         return new_password
+
+    async def fetch_notifications_by_last_read(
+        self, *, user_id: int, role: Roles, last_notification_at: datetime, now: datetime
+    ) -> List[GlobalNotificationFeedItem]:
+        """ """
+        async with self.db.transaction():
+            notifications = await self.global_notif_repo.fetch_notification_feed(
+                last_notification_at=last_notification_at,
+                role=role,
+                by_last_read=True,
+            )
+            await self.db.execute(
+                query=UPDATE_LAST_NOTIFICATION_AT_QUERY,
+                values={"id": user_id, "last_notification_at": now},
+            )
+            return notifications
+
+    async def fetch_notifications_by_date(
+        self, *, role: Roles, starting_date: datetime, page_chunk_size: int
+    ) -> List[GlobalNotificationFeedItem]:
+        """
+        Fetch arbitrarily paginated notifications without updating the user's ``last_notification_at`` field.
+        """
+        return await self.global_notif_repo.fetch_notification_feed(
+            starting_date=starting_date,
+            page_chunk_size=page_chunk_size,
+            role=role,
+        )
+
+    async def update_user_role(self, *, role_update: RoleUpdate) -> None:
+        user = await self.get_user_by_email(email=role_update.email, to_public=False)
+        if not user:
+            raise UserNotFoundError
+        await self.db.execute(
+            query=UPDATE_USER_ROLE_QUERY,
+            values={"id": user.id, "role": role_update.role},
+        )

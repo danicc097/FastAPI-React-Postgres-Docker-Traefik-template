@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { shallowEqual } from 'react-redux'
-import { AdminActions } from 'src/redux/admin'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
+import { AdminActionCreators } from 'src/redux/modules/admin/admin'
 
 export const useAllUsers = () => {
   const dispatch = useAppDispatch()
@@ -12,12 +12,12 @@ export const useAllUsers = () => {
 
   useEffect(() => {
     if (isAdmin && allUsers === undefined) {
-      return dispatch(AdminActions.fetchAllUsers())
+      return dispatch(AdminActionCreators.fetchAllUsers())
     }
-  }, [isAdmin, dispatch, AdminActions.fetchAllUsers])
+  }, [isAdmin, dispatch, AdminActionCreators.fetchAllUsers])
 
   const fetchAllUsers = () => {
-    return dispatch(AdminActions.fetchAllUsers())
+    return dispatch(AdminActionCreators.fetchAllUsers())
   }
 
   return {

@@ -7,11 +7,11 @@ from app.models.user import UserInDB
 CREATE_PROFILE_FOR_USER_QUERY = """
     INSERT INTO profiles (full_name, phone_number, bio, image, user_id)
     VALUES (:full_name, :phone_number, :bio, :image, :user_id)
-    RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at;
+    RETURNING *;
 """
 
 GET_PROFILE_BY_USER_ID_QUERY = """
-    SELECT id, full_name, phone_number, bio, image, user_id, created_at, updated_at
+    SELECT *
     FROM profiles
     WHERE user_id = :user_id;
 """
@@ -40,7 +40,7 @@ UPDATE_PROFILE_QUERY = """
         bio          = :bio,
         image        = :image
     WHERE user_id = :user_id
-    RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at;
+    RETURNING *;
 """
 
 ###############################################################################

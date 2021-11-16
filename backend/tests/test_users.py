@@ -231,10 +231,6 @@ class TestUserUpdate:
         (
             ("old_password", "ValidPassword123", "test_user6"),
             ("email", "thisisanontakenemail@me.io", "test_user6"),
-            # TODO this is probably not the reason
-            # if we use test_user6 again, it attempts to create it because
-            # user_fixture_helper makes use of get_user_by_email and sees no
-            # user matching the email we just changed
             ("username", "this_is_not_taken", "test_user7"),
         ),
         indirect=["user_fixture"],

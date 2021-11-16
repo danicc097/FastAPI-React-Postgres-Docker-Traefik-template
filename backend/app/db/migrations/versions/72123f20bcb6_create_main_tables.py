@@ -11,6 +11,7 @@ from typing import Tuple
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.sql.sqltypes import DateTime
 
 # we're appending the app directory to our path here so that we can import config easily
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[4]))
@@ -18,6 +19,7 @@ sys.path.append(str(pathlib.Path(__file__).resolve().parents[4]))
 from app.db.migrations.utils import (  # noqa: E402
     create_updated_at_trigger,
     timestamps,
+    utcnow,
 )
 
 # revision identifiers, used by Alembic
@@ -33,11 +35,13 @@ def create_users_table() -> None:
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("username", sa.Text, unique=True, nullable=False, index=True),
         sa.Column("email", sa.Text, unique=True, nullable=False, index=True),
-        sa.Column("email_verified", sa.Boolean, nullable=False, server_default="False"),
+        sa.Column("role", sa.String(255), nullable=False, index=True, server_default="user"),
+        sa.Column("is_verified", sa.Boolean, nullable=False, server_default="False"),
         sa.Column("salt", sa.Text, nullable=False),
         sa.Column("password", sa.Text, nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="True"),
         sa.Column("is_superuser", sa.Boolean(), nullable=False, server_default="False"),
+        sa.Column("last_notification_at", DateTime, server_default=utcnow(), nullable=False, index=True),
         *timestamps(),
     )
     op.execute(

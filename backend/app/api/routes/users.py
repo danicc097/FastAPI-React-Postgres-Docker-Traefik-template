@@ -1,8 +1,9 @@
 import logging
+from datetime import datetime, timedelta
 from logging.config import dictConfig
-from typing import Optional, cast
+from typing import List, Optional, cast
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from starlette.status import (
@@ -23,18 +24,15 @@ from app.api.dependencies.users import (
     verify_user_is_admin,
 )
 from app.api.routes.utils.errors import exception_handler
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.pwd_reset_req import (
     UserAlreadyRequestedError,
     UserPwdReqRepository,
 )
-from app.db.repositories.users import (
-    EmailAlreadyExistsError,
-    InvalidUpdateError,
-    UserCreationError,
-    UsernameAlreadyExistsError,
-    UsersRepoException,
-    UsersRepository,
-)
+from app.db.repositories.users import UsersRepository
+from app.models.feed import GlobalNotificationFeedItem
 from app.models.pwd_reset_req import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
@@ -172,3 +170,66 @@ async def request_password_reset(
     except Exception as e:
         exception_handler(e)
     return pwd_reset_req
+
+
+@router.get(
+    "/notifications-by-last-read/",
+    response_model=List[GlobalNotificationFeedItem],
+    name="users:get-feed-by-last-read",
+    dependencies=[Depends(get_current_active_user)],
+)
+async def get_notification_feed_for_user_by_last_read(
+    user: UserPublic = Depends(get_current_active_user),
+    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+) -> List[GlobalNotificationFeedItem]:
+    return await users_repo.fetch_notifications_by_last_read(
+        user_id=user.id,
+        last_notification_at=user.last_notification_at,
+        role=user.role,
+        now=datetime.utcnow(),
+    )
+
+
+@router.get(
+    "/notifications/",
+    response_model=List[GlobalNotificationFeedItem],
+    name="users:get-feed",
+    dependencies=[Depends(get_current_active_user)],
+)
+async def get_notification_feed_for_user_by_date(
+    # add some validation and metadata with Query
+    page_chunk_size: int = Query(
+        GlobalNotificationsRepository.page_chunk_size,
+        ge=1,
+        le=50,
+        description="Number of notifications to retrieve",
+    ),
+    starting_date: datetime = Query(
+        datetime.utcnow() + timedelta(minutes=10),
+        description="Used to determine the timestamp at which to begin querying for notification feed items.",
+    ),
+    user: UserPublic = Depends(get_current_active_user),
+    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+) -> List[GlobalNotificationFeedItem]:
+    return await users_repo.fetch_notifications_by_date(
+        role=user.role,
+        starting_date=starting_date,
+        page_chunk_size=page_chunk_size,
+    )
+
+
+@router.get(
+    "/check-user-has-unread-notifications/",
+    response_model=bool,
+    name="users:check-user-has-unread-notifications",
+    dependencies=[Depends(get_current_active_user)],
+)
+async def check_has_new_notifications(
+    user: UserPublic = Depends(get_current_active_user),
+    global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
+) -> bool:
+    """
+    Hit the server to check if the user has unread notifications.
+    It won't update the user's ``last_notification_at`` field.
+    """
+    return await global_notif_repo.has_new_notifications(last_notification_at=user.last_notification_at, role=user.role)

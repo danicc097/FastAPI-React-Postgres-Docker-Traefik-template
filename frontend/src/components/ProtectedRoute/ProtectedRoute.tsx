@@ -1,7 +1,7 @@
 import React, { ElementType } from 'react'
 import { EuiLoadingSpinner } from '@elastic/eui'
 import { useProtectedRoute } from 'src/hooks/auth/useProtectedRoute'
-import LoginPage from '../LoginPage/LoginPage'
+import LoginPage from '../../views/Login/LoginPage/LoginPage'
 import PermissionsNeeded from '../PermissionsNeeded/PermissionsNeeded'
 
 type ProtectedRoutePropTypes = {
@@ -29,6 +29,7 @@ export default function ProtectedRoute({
   }
 
   const element = <Component {...props} />
+
   if (adminRoute) {
     return <PermissionsNeeded element={element} isAllowed={isAdmin} adminRoute={true}></PermissionsNeeded>
   } else if (verifiedUserRoute) {

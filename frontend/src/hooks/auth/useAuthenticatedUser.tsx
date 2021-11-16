@@ -1,7 +1,7 @@
 // centralize authentication logic as well
 
 import { shallowEqual } from 'react-redux'
-import { AuthActions, AuthActionsParamsType } from 'src/redux/auth'
+import { AuthActionCreators, AuthActionsParamsType } from '../../redux/modules/auth/auth'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
 export const useAuthenticatedUser = () => {
@@ -15,20 +15,20 @@ export const useAuthenticatedUser = () => {
   const userLoaded = useAppSelector((state) => state.auth.userLoaded)
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
   const isAdmin = useAppSelector((state) => state.auth.user.is_superuser)
-  const isVerifiedUser = useAppSelector((state) => state.auth.user.email_verified)
+  const isVerifiedUser = useAppSelector((state) => state.auth.user.is_verified)
 
   const user = useAppSelector((state) => state.auth.user, shallowEqual)
 
   // wrappers for redux actions (only the ones meant to be used inside a component)
   // no need to use connect by using this approach
-  const logUserOut = () => dispatch(AuthActions.logUserOut())
+  const logUserOut = () => dispatch(AuthActionCreators.logUserOut())
 
   const registerNewUser = ({ username, email, password }: AuthActionsParamsType) => {
-    return dispatch(AuthActions.registerNewUser({ username, email, password }))
+    return dispatch(AuthActionCreators.registerNewUser({ username, email, password }))
   }
 
   const requestUserLogin = ({ email, password }: AuthActionsParamsType) => {
-    return dispatch(AuthActions.requestUserLogin({ email, password }))
+    return dispatch(AuthActionCreators.requestUserLogin({ email, password }))
   }
 
   // use all this functionality anywhere

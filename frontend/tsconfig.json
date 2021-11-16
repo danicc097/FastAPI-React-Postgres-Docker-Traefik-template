@@ -23,5 +23,5 @@
     "noEmitOnError": true,
     "types": ["node", "webpack-env", "jest", "react", "react-dom", "styled-components", "react-redux"]
   },
-  "include": ["src"]
+  "include": ["src", "schema_override.d.ts"]
 }

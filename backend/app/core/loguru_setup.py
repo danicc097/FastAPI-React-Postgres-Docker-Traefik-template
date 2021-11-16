@@ -10,7 +10,7 @@ from loguru import logger
 from loguru._logger import Logger
 from pydantic import BaseSettings
 
-from app.core.config import APP_ENV, is_cicd
+from app.core.config import APP_ENV, is_cicd, is_testing
 
 # see https://github.com/tiangolo/fastapi/issues/2019
 
@@ -47,7 +47,7 @@ class LoggingSettings(BaseSettings):
         "<level>{message}</level>"
     )
     filepath: Optional[Path] = None
-    if is_cicd():
+    if is_cicd() or is_testing():
         pass
     elif APP_ENV:
         filepath = Path(f"./logs/{APP_ENV}/myapp-logs.log")

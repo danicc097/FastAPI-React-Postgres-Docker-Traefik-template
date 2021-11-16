@@ -7,6 +7,12 @@ export const users: Required<MergeObjects<Readonly<usersType>, updatableUsersTyp
     password: '12341234',
   },
   // required sync with initial_data for e2e
+  manager: {
+    username: 'manager',
+    email: 'manager@myapp.com',
+    password: '12341234',
+  },
+  // required sync with initial_data for e2e
   verified: {
     username: 'verified',
     email: 'verified@myapp.com',
