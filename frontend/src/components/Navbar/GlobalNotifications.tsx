@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom'
 import '@elastic/eui/dist/eui_theme_amsterdam_dark.css'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import {
   EuiAvatar,
@@ -103,6 +103,19 @@ export default function Notifications() {
   }
 
   const bellButtonNotificationColor: any = 'lightgreen' // bad eui typing
+
+  // animate moving 45 degrees to right, then going back to 0 degrees and repeating -45 degrees to the left side
+  // infinitely based on hasNewNotifications
+  const bellIconMotion = (
+    <motion.div
+      animate={{ rotate: hasNewNotifications ? [0, 45, -45, 25, -25, 0] : 0 }}
+      // repeat: Infinity only if hasNewNotifications
+      transition={{ duration: 2.5, ...(hasNewNotifications ? { repeat: Infinity } : {}) }}
+    >
+      <EuiIcon type="bell" />
+    </motion.div>
+  )
+
   const bellButton = (
     <EuiHeaderSectionItemButton
       aria-controls="headerFlyoutNewsFeed"
@@ -113,18 +126,21 @@ export default function Notifications() {
       notification={hasNewNotifications}
       notificationColor={bellButtonNotificationColor}
     >
-      <EuiIcon type="bell" />
+      {bellIconMotion}
     </EuiHeaderSectionItemButton>
   )
 
   const flyout = (
     <EuiPortal>
       <EuiFlyout onClose={closeFlyout} size="s" id={newsFeedFlyoutId} aria-labelledby={newsFeedFlyoutTitleId}>
+        {/* HEADER */}
         <EuiFlyoutHeader hasBorder>
           <EuiTitle size="s">
             <h2 id={newsFeedFlyoutTitleId}>News</h2>
           </EuiTitle>
         </EuiFlyoutHeader>
+
+        {/* BODY */}
         <EuiFlyoutBody>
           {isLoading ? (
             <InfiniteSpinner size="xl" />
@@ -140,7 +156,14 @@ export default function Notifications() {
               />
             ))
           )}
+          {globalNotificationsAlerts.length === 0 ? (
+            <EuiText size="s">
+              <p>No new notifications</p>
+            </EuiText>
+          ) : null}
         </EuiFlyoutBody>
+
+        {/* FOOTER */}
         <EuiFlyoutFooter>
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
             <EuiFlexItem grow={false}>
@@ -148,13 +171,15 @@ export default function Notifications() {
                 Close
               </EuiButtonEmpty>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <EuiText color="subdued" size="s">
-                <EuiButton size="s" fill>
-                  Load more
-                </EuiButton>
-              </EuiText>
-            </EuiFlexItem>
+            {globalNotificationsAlerts.length === 0 ?? (
+              <EuiFlexItem grow={false}>
+                <EuiText color="subdued" size="s">
+                  <EuiButton size="s" fill>
+                    Load more
+                  </EuiButton>
+                </EuiText>
+              </EuiFlexItem>
+            )}
           </EuiFlexGroup>
         </EuiFlyoutFooter>
       </EuiFlyout>

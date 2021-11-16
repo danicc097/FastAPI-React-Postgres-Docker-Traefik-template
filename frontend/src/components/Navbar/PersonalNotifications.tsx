@@ -34,6 +34,7 @@ import {
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
 import moment from 'moment'
+import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
 
 export default function PersonalNotifications() {
   const [isPopoverVisible, setIsPopoverVisible] = useState(false)
@@ -130,29 +131,39 @@ export default function PersonalNotifications() {
       button={cheerButton}
       isOpen={isPopoverVisible}
       closePopover={closePopover}
-      panelPaddingSize="none"
+      panelPaddingSize="s"
     >
       <EuiPopoverTitle paddingSize="s">Reminders</EuiPopoverTitle>
       <div style={{ maxHeight: '40vh', overflowY: 'auto', padding: 4 }}>
         <EuiSpacer size="s" />
-        {globalNotificationsAlerts.map((alert, i) => (
-          <EuiHeaderAlert
-            key={`alert-${i}`}
-            title={alert.title}
-            action={alert.action}
-            text={alert.text}
-            date={alert.date}
-            badge={alert.badge}
-          />
-        ))}
+        {isLoading ? (
+          <InfiniteSpinner size="xl" />
+        ) : (
+          globalNotificationsAlerts.map((alert, i) => (
+            <EuiHeaderAlert
+              key={`alert-${i}`}
+              title={alert.title}
+              action={alert.action}
+              text={alert.text}
+              date={alert.date}
+              badge={alert.badge}
+            />
+          ))
+        )}
       </div>
-      <EuiPopoverFooter paddingSize="s">
-        <EuiText color="subdued" size="s">
-          <EuiButtonEmpty iconType="refresh" onClick={null} size="m">
-            Load more
-          </EuiButtonEmpty>
+      {globalNotificationsAlerts.length === 0 ? (
+        <EuiText size="relative">
+          <p>No new notifications</p>
         </EuiText>
-      </EuiPopoverFooter>
+      ) : (
+        <EuiPopoverFooter paddingSize="s">
+          <EuiText color="subdued" size="s">
+            <EuiButtonEmpty iconType="refresh" onClick={null} size="m">
+              Load more
+            </EuiButtonEmpty>
+          </EuiText>
+        </EuiPopoverFooter>
+      )}
     </EuiPopover>
   )
 
