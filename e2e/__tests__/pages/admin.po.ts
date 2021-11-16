@@ -1,24 +1,11 @@
 import { ElementHandle } from 'puppeteer'
 import BasePO from './base.po'
 
-class AdminPO extends BasePO {
-  private readonly $PasswordResetRequestsAccordion = '.PasswordResetRequestsAccordion__button'
-  private readonly $UnverifiedUsersAccordion = '.UnverifiedUsersAccordion__button'
-  private readonly $PasswordResetAccordion = '.PasswordResetAccordion__button'
-
+export class UnverifiedUsersPO extends BasePO {
   private readonly $VerifyUserButton = "[data-test-subj='verify-users-submit']"
-  private readonly $EnabledPasswordResetFormButton = "[data-test-subj='passwordResetForm__submit']:not([disabled])"
-
-  private readonly $xPasswordResetRequestsRow = '//*[@data-test-subj="passwordResetTable__row"]'
 
   async go() {
-    await this.navigate('/admin')
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-
-  async openUnverifiedUsersAccordion() {
-    await this.waitForVisibleSelectorAndClick(this.$UnverifiedUsersAccordion)
+    await this.navigate('/admin/unverified-users')
   }
 
   async selectFromUnverifiedUsersTable(email: string) {
@@ -29,10 +16,13 @@ class AdminPO extends BasePO {
     // button is hidden by default and shown on row selection
     await this.waitForVisibleSelectorAndClick(this.$VerifyUserButton)
   }
-  //////////////////////////////////////////////////////////////////////////////
+}
 
-  async openPasswordResetAccordion() {
-    await this.waitForVisibleSelectorAndClick(this.$PasswordResetAccordion)
+export class PasswordResetPO extends BasePO {
+  private readonly $EnabledPasswordResetFormButton = "[data-test-subj='passwordResetForm__submit']:not([disabled])"
+
+  async go() {
+    await this.navigate('/admin/password-reset')
   }
 
   async selectFromPasswordResetTable(email: string) {
@@ -42,11 +32,13 @@ class AdminPO extends BasePO {
   async clickPasswordResetButton() {
     await this.waitForVisibleSelectorAndClick(this.$EnabledPasswordResetFormButton)
   }
+}
 
-  //////////////////////////////////////////////////////////////////////////////
+export class PasswordResetRequestsPO extends BasePO {
+  private readonly $xPasswordResetRequestsRow = '//*[@data-test-subj="passwordResetTable__row"]'
 
-  async openPasswordResetRequestsAccordion() {
-    await this.waitForVisibleSelectorAndClick(this.$PasswordResetRequestsAccordion)
+  async go() {
+    await this.navigate('/admin/password-reset-requests')
   }
 
   // We must rely on XPaths to get text content
@@ -70,5 +62,3 @@ class AdminPO extends BasePO {
     }
   }
 }
-
-export default new AdminPO()

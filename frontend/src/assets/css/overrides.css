@@ -10,9 +10,9 @@ a:focus {
 }
 
 /* disable scrollbar */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   display: none !important;
-}
+} */
 
 .hide-scrollbar {
   scrollbar-width: none !important; /* Firefox 64 */

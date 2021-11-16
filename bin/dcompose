@@ -1,7 +1,8 @@
 #!/bin/bash
 
 #
-# Run docker-compose in the given environment.
+# Run docker-compose commands in the given environment.
+# Example: dcompose e2e up
 #
 
 set -e

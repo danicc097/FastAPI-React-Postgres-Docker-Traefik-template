@@ -1,4 +1,4 @@
-declare type userType = 'admin' | 'verified' | 'unverified' | 'newUser' | 'unregisteredUser' | 'badUser'
+declare type userType = 'admin' | 'manager' | 'verified' | 'unverified' | 'newUser' | 'unregisteredUser' | 'badUser'
 
 declare type updatableUserType = 'profileTestUser' | 'toBeVerified' | 'passwordResetTestUser' | 'passwordResetTestUser2'
 

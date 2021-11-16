@@ -4,16 +4,9 @@ import { render as rtlRender } from '@testing-library/react'
 import { Provider } from 'react-redux'
 
 import configureReduxStore from '../redux/store' // overridden
-import { initialStateType } from 'src/redux/initialState'
 import { applyMiddleware, compose, createStore } from 'redux'
 import rootReducer from 'src/redux/rootReducer'
 import thunkMiddleware from 'redux-thunk'
-
-type renderTypes = {
-  initialState?: initialStateType
-  store?: ReturnType<typeof configureReduxStore>
-  [key: string]: any
-}
 
 const middlewareEnhancer = applyMiddleware(thunkMiddleware)
 const composedEnhancers = compose(middlewareEnhancer)

@@ -17,12 +17,17 @@ import {
   EuiFlexItem,
   EuiLink,
   EuiHorizontalRule,
+  htmlIdGenerator,
 } from '@elastic/eui'
 import { Link, useNavigate } from 'react-router-dom'
 import loginIcon from 'src/assets/img/loginIcon.svg'
 import styled from 'styled-components'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import UserAvatar from '../UserAvatar/UserAvatar'
+import CollapsibleNav from './CollapsibleNav'
+import Notifications from './PersonalNotifications'
+import GlobalNotifications from 'src/components/Navbar/GlobalNotifications'
+import PersonalNotifications from './PersonalNotifications'
 
 const LogoSection = styled(EuiHeaderLink)`
   &&& {
@@ -34,6 +39,7 @@ const StyledEuiHeader = styled(EuiHeader)`
   &&& {
     width: 100%;
     top: 0px;
+    z-index: 1000;
     left: 0px;
     right: 0px;
     margin-top: 0px;
@@ -125,48 +131,47 @@ export default function Navbar() {
   }
 
   return (
-    <StyledEuiHeader>
-      <EuiHeaderSection>
-        <EuiHeaderSectionItem border="right">
-          <LogoSection href="/">
-            <EuiIcon type="training" color="#1E90FF" size="l" /> My App
-          </LogoSection>
-        </EuiHeaderSectionItem>
-        <EuiHeaderSectionItem border="right">
-          <EuiHeaderLinks aria-label="app navigation links">
-            <EuiHeaderLink
-              iconType="help"
-              onClick={() => {
-                navigate('/help')
-              }}
-            >
-              Help
-            </EuiHeaderLink>
-            {user?.profile && user?.is_superuser ? (
+    <StyledEuiHeader
+      sections={[
+        {
+          items: [
+            user.is_verified ? <CollapsibleNav user={user} /> : null,
+            ,
+            <LogoSection href="/" key={0}>
+              <EuiIcon type="training" color="#1E90FF" size="l" /> My App
+            </LogoSection>,
+            // allow responsive grouping with EuiHeaderLinks
+            <EuiHeaderLinks aria-label="app navigation links" key={1}>
               <EuiHeaderLink
-                iconType="user"
+                iconType="help"
                 onClick={() => {
-                  navigate('/admin')
+                  navigate('/help')
                 }}
               >
-                Admin panel
+                Help
               </EuiHeaderLink>
-            ) : null}
-          </EuiHeaderLinks>
-        </EuiHeaderSectionItem>
-      </EuiHeaderSection>
-      <EuiHeaderSection>
-        <EuiPopover
-          id="avatar-menu"
-          isOpen={avatarMenuOpen}
-          closePopover={closeAvatarMenu}
-          anchorPosition="downRight"
-          button={avatarButton}
-          panelPaddingSize="m"
-        >
-          {renderAvatarMenu()}
-        </EuiPopover>
-      </EuiHeaderSection>
-    </StyledEuiHeader>
+            </EuiHeaderLinks>,
+          ],
+          borders: 'right',
+        },
+        {
+          items: [
+            user.is_verified ? <GlobalNotifications /> : null,
+            user.is_verified ? <PersonalNotifications /> : null,
+            <EuiPopover
+              id="avatar-menu"
+              key={3}
+              isOpen={avatarMenuOpen}
+              closePopover={closeAvatarMenu}
+              anchorPosition="downRight"
+              button={avatarButton}
+              panelPaddingSize="m"
+            >
+              {renderAvatarMenu()}
+            </EuiPopover>,
+          ],
+        },
+      ]}
+    ></StyledEuiHeader>
   )
 }

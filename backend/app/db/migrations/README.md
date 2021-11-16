@@ -37,25 +37,26 @@ Make sure to dump data only with ``pg_dump``, not the schema.
 
 1. Create a new revision.
 
-  ```bash
-  alembic revision -m "create user_skills"
-  ```
+    ```bash
+    alembic revision -m "create user_skills"
+    ```
 
 2. Edit the created migration file to upgrade and downgrade
-
 3. Run `alembic upgrade head` to apply the changes!
 
 **NOTES:** (Only valid for multiple revision setup)
-Want to ditch the latest revision and restore a backup made with a new revision?
-Simply downgrade the revision to the desired id and restore. If columns/tables were renamed, a manual update to the dump is needed. Apart from that, any errors will be shown, e.g. if the old revision doesn't contain a table:
+_Want to ditch the latest revision and restore a backup made with an old revision?_
+Simply downgrade the revision to the desired id and restore.
+If columns/tables were renamed, a manual update to the dump is needed.
+Any other errors will be shown as well, e.g. if the old revision doesn't contain a table, it won't restore that table:
 
 ```bash
 ERROR:  relation "public.user_skills_id_seq" does not exist
 ```
 
-However, the rest of the data will be restored normally.
+...however, the rest of the data will be restored normally.
 
 ## Making changes while in development
 
-- Imagine we want to change the primary key of a table to be an incremental integer. Simply backup, edit the migration script wherever the table is defined and add a new ``sa.Column("id", sa.Integer, primary_key=True)``, removing ``primary_key=True`` from the old column.
+- Imagine we want to change the primary key of a table to be an incremental integer instead of `some_column`. Simply backup, edit the migration script wherever the table is defined and add a new ``sa.Column("id", sa.Integer, primary_key=True)``, removing ``primary_key=True`` from `some_column`.
 Restore the database and new ids will be assigned. No need for a new revision.

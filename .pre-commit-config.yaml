@@ -55,19 +55,10 @@ repos:
 
   - repo: local
     hooks:
-      # # requires dev compose up and running
-      # - id: run-tests-backend
-      #   files: ^backend/
-      #   name: run-tests-backend
-      #   entry: backend/scripts/run-tests.sh -n 4 --dist loadscope
-      #   language: script
-      #   types: [text]
-      #   pass_filenames: false
-
       - id: run-eslint-frontend
         files: ^frontend/
         name: run-eslint-frontend
-        entry: bash -c 'cd frontend && npm run lint'
+        entry: bash -c 'cd frontend && yarn lint'
         language: system
         types: [text]
         pass_filenames: false
@@ -79,11 +70,3 @@ repos:
         types: [text]
         pass_filenames: false
         always_run: true
-
-      # - id: run-tests-frontend
-      #   files: ^frontend/
-      #   name: run-tests-frontend
-      #   entry: bash -c 'cd frontend && yarn test:nowatch'
-      #   language: system
-      #   types: [text]
-      #   pass_filenames: false

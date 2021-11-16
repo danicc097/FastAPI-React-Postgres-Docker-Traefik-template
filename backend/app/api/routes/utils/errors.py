@@ -7,6 +7,7 @@ from starlette.status import (
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
+import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
 
@@ -25,6 +26,8 @@ def exception_handler(e: Exception) -> HTTPException:
         raise users_repo_exception_to_response(e) from e
     if isinstance(e, pwd_reset_req_repo.UserPwdReqRepoException):
         raise pwd_reset_req_repo_exception_to_response(e) from e
+    if isinstance(e, global_notif_repo.GlobalNotificationsRepoException):
+        raise global_notifications_repo_exception_to_response(e) from e
     else:
         logger.opt(exception=True).error(e)
         raise BASE_EXCEPTION from e
@@ -37,27 +40,27 @@ def users_repo_exception_to_response(e: Exception) -> HTTPException:
     if isinstance(e, users_repo.EmailAlreadyExistsError):
         return HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail=f"User with email {e.email} already exists.",
+            detail=e.msg,
         )
     elif isinstance(e, users_repo.UsernameAlreadyExistsError):
         return HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail=f"User with username {e.username} already exists.",
+            detail=e.msg,
         )
     elif isinstance(e, users_repo.UserNotFoundError):
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
-            detail="User does not exist.",
+            detail=e.msg,
         )
     elif isinstance(e, users_repo.InvalidUpdateError):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail=e.args[0] if len(e.args) > 0 else "Invalid update.",
+            detail=e.msg,
         ) from e
     elif isinstance(e, users_repo.IncorrectPasswordError):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
-            detail="Password is invalid.",
+            detail=e.msg,
         ) from e
     else:
         logger.opt(exception=True).error(e)
@@ -71,12 +74,31 @@ def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
     if isinstance(e, pwd_reset_req_repo.RequestDoesNotExistError):
         return HTTPException(
             status_code=HTTP_404_NOT_FOUND,
-            detail="The given request does not exist.",
+            detail=e.msg,
         )
     elif isinstance(e, pwd_reset_req_repo.UserAlreadyRequestedError):
         return HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail="You have already requested a password reset.",
+            detail=e.msg,
+        )
+    else:
+        logger.opt(exception=True).error(e)
+        return BASE_EXCEPTION
+
+
+def global_notifications_repo_exception_to_response(e: Exception) -> HTTPException:
+    """
+    Map ``GlobalNotificationsRepoException`` to HTTP exceptions.
+    """
+    if isinstance(e, global_notif_repo.InvalidGlobalNotificationError):
+        return HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=e.msg,
+        )
+    if isinstance(e, global_notif_repo.InvalidParametersError):
+        return HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=e.msg,
         )
     else:
         logger.opt(exception=True).error(e)

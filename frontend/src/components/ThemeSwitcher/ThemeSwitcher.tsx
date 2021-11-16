@@ -29,6 +29,7 @@ export function ThemeSwitcher({ currentTheme, setTheme, setProviderTheme }: Them
 
   // only way to have both of them in the build output. Additionally,
   // they override each other upon import, hence reloading the page is needed
+  // TODO check new theme provider from eui when its more mature
   const ThemeDark = React.lazy(() => import('src/themes/ThemeDarkAmsterdam'))
   const ThemeLight = React.lazy(() => import('src/themes/ThemeLightAmsterdam'))
 

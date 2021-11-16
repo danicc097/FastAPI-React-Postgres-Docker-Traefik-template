@@ -61,17 +61,15 @@ def app(apply_migrations) -> FastAPI:
     return get_application()
 
 
-# Grab a reference to our database when needed
 @pytest.fixture
 def db(app: FastAPI) -> Database:
     """
-    Current app's ``Database`` object.
-    NOTE: use app.state._db instead in a test else it will be None.
+    Current app's ``Database`` object to be used in other fixtures.
+    NOTE: use app.state._db in a test instead, else it will be ``None``.
     """
     return app.state._db
 
 
-# Make requests in our tests
 # TODO FIX: seems to override clients when we use create_authorized_client
 # multiple times in the same test function
 # NOTES on how to fix:
@@ -224,57 +222,57 @@ async def user_fixture_helper(
 # * map usernames to keys for convenience
 TEST_USERS: Dict[str, UserCreate] = {
     "test_user_db": UserCreate(
-        email="user_db@myapp.io",
+        email="user_db@myapp.com",
         username="test_user_db",
         password="initialPassword",
     ),
     "test_admin_user": UserCreate(
-        email="admin@myapp.io",
+        email="admin@myapp.com",
         username="test_admin_user",
         password="initialPassword",
     ),
     "test_unverified_user": UserCreate(
-        email="unverified@myapp.io",
+        email="unverified@myapp.com",
         username="test_unverified_user",
         password="initialPassword",
     ),
     "test_unverified_user2": UserCreate(
-        email="unverified2@myapp.io",
+        email="unverified2@myapp.com",
         username="test_unverified_user2",
         password="initialPassword",
     ),
     "test_user": UserCreate(
-        email="user@myapp.io",
+        email="user@myapp.com",
         username="test_user",
         password="initialPassword",
     ),
     "test_user2": UserCreate(
-        email="user2@myapp.io",
+        email="user2@myapp.com",
         username="test_user2",
         password="initialPassword",
     ),
     "test_user3": UserCreate(
-        email="user3@myapp.io",
+        email="user3@myapp.com",
         username="test_user3",
         password="initialPassword",
     ),
     "test_user4": UserCreate(
-        email="user4@myapp.io",
+        email="user4@myapp.com",
         username="test_user4",
         password="initialPassword",
     ),
     "test_user5": UserCreate(
-        email="user5@myapp.io",
+        email="user5@myapp.com",
         username="test_user5",
         password="initialPassword",
     ),
     "test_user6": UserCreate(
-        email="user6@myapp.io",
+        email="user6@myapp.com",
         username="test_user6",
         password="initialPassword",
     ),
     "test_user7": UserCreate(
-        email="user7@myapp.io",
+        email="user7@myapp.com",
         username="test_user7",
         password="initialPassword",
     ),

@@ -7,14 +7,15 @@
   "eslint.nodePath": "frontend/.yarn/sdks",
   "prettier.prettierPath": "frontend/.yarn/sdks/prettier/index.js",
   "typescript.tsdk": "frontend/.yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
 
   // backend
   "python.analysis.extraPaths": ["backend"],
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.useLibraryCodeForTypes": true,
   "python.autoComplete.extraPaths": ["backend"],
   "python.linting.pylintArgs": ["--init-hook='import sys; sys.path.append(\"/workspace\")'"],
   "python.defaultInterpreterPath": "backend/.venv/bin/python",
-  "python.pythonPath": "backend/.venv/bin/python",
   "python.linting.flake8Path": "backend/.venv/bin/flake8",
   "python.sortImports.path": "backend/.venv/bin/isort",
   "python.linting.mypyEnabled": true,
@@ -34,5 +35,6 @@
   "terminal.integrated.env.linux": {
     "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/"
   },
-  "python.formatting.provider": "black"
+  "python.formatting.provider": "black",
+  "cSpell.words": ["ondelete"]
 }

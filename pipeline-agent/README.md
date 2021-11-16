@@ -1,6 +1,8 @@
 # Azure Pipelines agent
 
-Edit ``run-agent.sh`` as deemed fit.
+1. Build agent with ```build-agent.sh``.
+
+2. Edit ``run-agent.sh`` as deemed fit.
 
 ## References
 

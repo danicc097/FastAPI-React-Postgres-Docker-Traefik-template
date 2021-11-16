@@ -39,7 +39,7 @@ async def verify_user_is_admin(
 async def verify_email_is_verified(
     current_user: UserInDB = Depends(get_current_active_user),
 ):
-    if not current_user.email_verified:
+    if not current_user.is_verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Current user is not verified. An administrator will approve your account soon.",

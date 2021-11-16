@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#
+# Run E2E tests in the "e2e" environment.
+#
+
 set -e
 
 # RED='\033[0;31m'
@@ -7,13 +11,16 @@ set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
-until [ "$(docker exec backend_myapp_"$1" /bin/bash -c 'echo ready')" = "ready" ]; do
+ENV="e2e"
+
+until [ "$(docker exec backend_myapp_"$ENV" /bin/bash -c 'echo ready')" = "ready" ]; do
   printf 'waiting for E2E container for start...\n'
   sleep 5
 done
 
-until [ "$(curl -s -k -o /dev/null -w "%{http_code}" "https://myapp-frontend.testing.localhost")" == "200" ] &&
-  [ "$(curl -s -k -o /dev/null -w "%{http_code}" "https://myapp-backend.testing.localhost/docs")" == "200" ]; do
+# in case of cert error, run mkcert again as per README
+until [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-frontend.testing.localhost")" == "200" ] &&
+  [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-backend.testing.localhost/docs")" == "200" ]; do
   printf 'Waiting for services to start...\n'
   sleep 5
 done
@@ -22,16 +29,8 @@ BIN_DIR="$(
   cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit
   pwd -P
 )"
-# cd "$BIN_DIR"/../e2e/scripts || exit
-# /bin/sh initial-build-e2e.sh backend_myapp_"$1"
+
+"$BIN_DIR"/initial-data "$ENV"
 
 cd "$BIN_DIR"/../e2e || exit
 npm run test-local:headless
-
-# if docker exec puppeteer_myapp_"$1" /bin/sh -c 'npm run test ; exit $?'; then
-#   echo -e "${GREEN}\nE2E tests passed\n"
-#   exit 0
-# else
-#   echo -e "${RED}\nE2E tests failed\n"
-#   exit 1
-# fi

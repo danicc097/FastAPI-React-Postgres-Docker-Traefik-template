@@ -10,10 +10,14 @@ from databases import Database
 from loguru import logger
 
 from app.core.config import DATABASE_URL, is_testing
+from app.db.repositories.global_notifications import (
+    GlobalNotificationsRepository,
+)
 from app.db.repositories.pwd_reset_req import UserPwdReqRepository
 from app.db.repositories.users import UsersRepository
+from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import PasswordResetRequestCreate
-from app.models.user import UserCreate
+from app.models.user import Roles, RoleUpdate, UserCreate
 
 
 async def init_database():
@@ -60,3 +64,21 @@ async def create_password_reset_request(database: Database, request: PasswordRes
         return None
     except Exception as e:
         return f"PASSWORD RESET REQUEST ERROR FOR {request.email}: \n{e}"
+
+
+async def change_user_role(database: Database, role_update: RoleUpdate) -> Optional[str]:
+    user_repo = UsersRepository(database)
+    try:
+        await user_repo.update_user_role(role_update=role_update)
+    except Exception as e:
+        return f"UPDATING USER ROLE ERROR FOR {role_update.email}: \n{e}"
+    return None
+
+
+async def create_global_notification(database: Database, notification: GlobalNotificationCreate) -> Optional[str]:
+    global_notifications_repo = GlobalNotificationsRepository(database)
+    try:
+        await global_notifications_repo.create_notification(notification=notification)
+    except Exception as e:
+        return f"COULD NOT CREATE GLOBAL NOTIFICATION: \n{e}"
+    return None

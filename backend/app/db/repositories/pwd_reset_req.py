@@ -14,20 +14,20 @@ from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate
 from app.models.pwd_reset_req import PasswordResetRequest
 
-CREATE_PASSWORD_RESET_REQUEST = """
+CREATE_PASSWORD_RESET_REQUEST_QUERY = """
     INSERT INTO pwd_reset_req (email, message)
     VALUES (:email, :message)
-    RETURNING id, email, message, created_at, updated_at;
+    RETURNING *;
 """
 
-DELETE_PASSWORD_RESET_REQUEST = """
+DELETE_PASSWORD_RESET_REQUEST_QUERY = """
     DELETE FROM pwd_reset_req
     WHERE id = :id
-    RETURNING id, email, message, created_at, updated_at;
+    RETURNING *;
 """
 
 LIST_ALL_PASSWORD_REQUEST_USERS_QUERY = """
-    SELECT id, email, message, created_at, updated_at
+    SELECT *
     FROM pwd_reset_req
 """
 
@@ -62,7 +62,7 @@ class UserPwdReqRepository(BaseRepository):
     async def create_password_reset_request(self, *, email: EmailStr, message: str) -> Optional[PasswordResetRequest]:
         try:
             password_reset_request = await self.db.fetch_one(
-                query=CREATE_PASSWORD_RESET_REQUEST,
+                query=CREATE_PASSWORD_RESET_REQUEST_QUERY,
                 values={
                     "email": email,
                     "message": message,
@@ -84,7 +84,7 @@ class UserPwdReqRepository(BaseRepository):
         # run in transaction to rollback if somehow the wrong id is deleted
         async with self.db.transaction():
             deleted_request = await self.db.fetch_one(
-                query=DELETE_PASSWORD_RESET_REQUEST,
+                query=DELETE_PASSWORD_RESET_REQUEST_QUERY,
                 values={
                     "id": id,
                 },

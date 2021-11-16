@@ -2,7 +2,8 @@
 
 [![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
 
-#### Table of contents  <!-- omit in toc -->
+## Table of contents  <!-- omit in toc -->
+
 - [FastAPI-React-Postgres-Docker-Traefik-template](#fastapi-react-postgres-docker-traefik-template)
   - [Dev setup](#dev-setup)
     - [Root dir setup](#root-dir-setup)
@@ -23,6 +24,7 @@
     - [E2E testing](#e2e-testing)
 
 ## Dev setup
+
 ### Root dir setup
 
 Create ``.env`` from template.
@@ -35,7 +37,7 @@ pipenv install --dev
 mkdir logs
 # ensure container user id is the same
 # now _only_ the container user will be able to write to logs
-sudo chown 1500:1500 logs/
+sudo chown --recursive 1500:1500 logs/
 ```
 
 Create ``.env`` from template.
@@ -44,7 +46,7 @@ Create ``.env`` from template.
 
 ```bash
 cd frontend && yarn
-
+sudo npm -g install openapi-typescript # precommit hook
 ```
 
 Create ``.env.development`` and ``.env.production`` from template. Ensure ports are matched in root folder's ``.env`` for compose file's correct env injection.
@@ -122,12 +124,10 @@ ENV PERSISTENT_ENV_VAR $ENV_VAR
 
 ### Environment files
 
-- ``.env`` in the root folder is read automatically by compose files and are available as ``${ENV_VAR}``. Note for CI there's no root ``.env.ci`` to be checked out by azure. They're defined inside ``variables`` instead.
+- ``.env`` in the root folder is read automatically by compose files and are available as ``${ENV_VAR}``. Note for CI there's no root ``.env.ci`` to be checked out by azure. They're defined inside ``variables`` instead in ``azure-pipelines.yml``.
   Env vars inside the root env are only useful for stuff read via ``os.environ``, but we must have a .env{.ci, .e2e} for backend (``app.core.config``) regardless of environment. Setting os.environ is not enough.
   Apart from that, frontend ``.env.*`` files defined by CRA (see link below) are required.
-  E.g. ``FRONTEND_PORT_E2E`` in ``.env`` and ``frontend/.env.development`` must match so that Traefik exposes the correct port.
-
-  Regarding priority when using CRA: [Check this](https://create-react-app.dev/docs/adding-custom-environment-variables#adding-development-environment-variables-in-env)
+  E.g. ``FRONTEND_PORT_E2E`` in ``.env`` must match ``PORT`` in ``frontend/.env.development`` so that Traefik exposes the correct port for E2E tests after we ``yarn start``, which uses ``PORT`` from the environment. Regarding priority of environment files when using CRA: [Check this](https://create-react-app.dev/docs/adding-custom-environment-variables#adding-development-environment-variables-in-env)
 
 ### Backend tests suddenly fail
 

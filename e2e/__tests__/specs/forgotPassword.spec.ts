@@ -5,7 +5,7 @@ beforeEach(async () => {
   // submit button will be disabled once sent, reload first
   await forgotPasswordPo.go()
 
-  await page.waitForNetworkIdle()
+  // await page.waitForNetworkIdle()
 })
 
 // afterAll(async () => {
@@ -20,7 +20,7 @@ describe('Test forgot password form', () => {
   it.each`
     email                              | message          | error
     ${users['verified'].email}         | ${'please help'} | ${''}
-    ${users['verified'].email}         | ${'please help'} | ${'already requested'}
+    ${users['verified'].email}         | ${'please help'} | ${'already exists'}
     ${users['unregisteredUser'].email} | ${'please help'} | ${'not found'}
   `(
     'should display an appropiate error in a callout message box',

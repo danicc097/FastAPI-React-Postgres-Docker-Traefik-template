@@ -72,30 +72,11 @@ services:
       - traefik.enable=true
       - traefik.http.routers.myapp-react-e2e.rule=Host(`myapp-frontend.testing.localhost`)
       # we're NOT using nginx in dev Dockerfile, NOT 80
-      # - traefik.port=${FRONTEND_PORT_E2E}
+      - traefik.port=${FRONTEND_PORT_E2E}
       - traefik.docker.network=traefik-net
       - traefik.http.routers.myapp-react-e2e.entrypoints=websecure
       - traefik.http.routers.myapp-react-e2e.tls=true
       - traefik.http.services.myapp-react-e2e.loadbalancer.server.port=${FRONTEND_PORT_E2E}
-
-  # myapp_puppeteer:
-  #   container_name: puppeteer_myapp_e2e
-  #   network_mode: "host" # else it won't resolve services proxied by traefik
-  #   # networks:
-  #   #   - traefik-net
-  #   build:
-  #     context: ./e2e
-  #     dockerfile: Dockerfile
-  #     args:
-  #       - HEADLESS=true
-  #       - FRONTEND_URL=https://myapp-frontend.testing.localhost
-  #   # careful with editing files while tests run
-  #   volumes:
-  #     - ./e2e/:/e2e/
-  #   command: tail -F anything # will stay up until we explicitly run tests
-  #   depends_on:
-  #     - myapp_frontend_e2e
-  #     - myapp_server_e2e
 
 networks:
   traefik-net:

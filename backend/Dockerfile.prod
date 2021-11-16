@@ -1,12 +1,9 @@
 
-# TODO https://stackoverflow.com/questions/37089162/docker-compose-volume-mount-before-run
-# apt-get for slim
 FROM python:3.9.5-slim-buster
 
 WORKDIR /backend
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONBUFFERED=1
-# ENV PORT=$PORT
 
 COPY ./Pipfile /backend/Pipfile
 COPY ./Pipfile.lock /backend/Pipfile.lock
