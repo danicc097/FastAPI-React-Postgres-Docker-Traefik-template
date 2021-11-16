@@ -393,13 +393,14 @@ class UsersRepository(BaseRepository):
             return notifications
 
     async def fetch_notifications_by_date(
-        self, *, role: Roles, starting_date: datetime
+        self, *, role: Roles, starting_date: datetime, page_chunk_size: int
     ) -> List[GlobalNotificationFeedItem]:
         """
         Fetch arbitrarily paginated notifications without updating the user's ``last_notification_at`` field.
         """
         return await self.global_notif_repo.fetch_notification_feed(
             starting_date=starting_date,
+            page_chunk_size=page_chunk_size,
             role=role,
         )
 

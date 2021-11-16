@@ -4,10 +4,10 @@ import sys
 from typing import Dict
 
 from loguru import logger
-from app.models.global_notifications import GlobalNotificationCreate
 
+from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import PasswordResetRequestCreate
-from app.models.user import RoleUpdate, Roles, UserCreate
+from app.models.user import Roles, RoleUpdate, UserCreate
 from initial_data.utils import (
     change_user_role,
     create_global_notification,
@@ -112,18 +112,18 @@ async def main():
     ##################################################
     # GLOBAL NOTIFICATIONS
     ##################################################
+    for i in range(20):
+        notification = GlobalNotificationCreate(
+            sender=USERS["admin"].email,
+            receiver_role=Roles.user.value,
+            title=f"Test notification {i}",
+            body=f"This is test notification {i}",
+            label=f"Test label {i}",
+            link="https://www.google.com",
+        )
 
-    notification = GlobalNotificationCreate(
-        sender=USERS["admin"].email,
-        receiver_role=Roles.user.value,
-        title=f"Test notification {i}",
-        body=f"This is test notification {i}",
-        label=f"Test label {i}",
-        link="https://www.google.com",
-    )
-
-    err = await create_global_notification(database, notification)
-    logger.info(f"Created global notification {notification.title}") if not err else logger.exception(err)
+        err = await create_global_notification(database, notification)
+        logger.info(f"Created global notification {notification.title}") if not err else logger.exception(err)
 
 
 if __name__ == "__main__":

@@ -95,6 +95,11 @@ def global_notifications_repo_exception_to_response(e: Exception) -> HTTPExcepti
             status_code=HTTP_400_BAD_REQUEST,
             detail=e.msg,
         )
+    if isinstance(e, global_notif_repo.InvalidParametersError):
+        return HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=e.msg,
+        )
     else:
         logger.opt(exception=True).error(e)
         return BASE_EXCEPTION

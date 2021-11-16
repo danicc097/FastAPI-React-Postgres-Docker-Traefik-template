@@ -133,13 +133,13 @@ export default function Navbar() {
       sections={[
         {
           items: [
-            user.is_verified ? <CollapsibleNav key={0} user={user} /> : null,
+            user.is_verified ? <CollapsibleNav user={user} /> : null,
             ,
             <LogoSection href="/" key={0}>
               <EuiIcon type="training" color="#1E90FF" size="l" /> My App
             </LogoSection>,
             // allow responsive grouping with EuiHeaderLinks
-            <EuiHeaderLinks aria-label="app navigation links" key={0}>
+            <EuiHeaderLinks aria-label="app navigation links" key={1}>
               <EuiHeaderLink
                 iconType="help"
                 onClick={() => {
@@ -154,10 +154,10 @@ export default function Navbar() {
         },
         {
           items: [
-            user.is_verified ? <Notifications key={0} /> : null,
+            user.is_verified ? <Notifications /> : null,
             <EuiPopover
               id="avatar-menu"
-              key={0}
+              key={3}
               isOpen={avatarMenuOpen}
               closePopover={closeAvatarMenu}
               anchorPosition="downRight"

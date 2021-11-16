@@ -137,7 +137,7 @@ export type AuthActionsParamsType = {
 }
 
 // make optional properties to allow easier usage of actions inside other actions in this file.
-type AuthActionsType = {
+type ActionCreatorsType = {
   requestUserLogin: ({ email, password }: AuthActionsParamsType) => any
   fetchUserFromToken: () => any
   logUserOut: () => any
@@ -145,7 +145,7 @@ type AuthActionsType = {
   requestPasswordReset: ({ email, message }: AuthActionsParamsType) => any
 }
 
-export const AuthActionCreators: Partial<AuthActionsType> = {}
+export const AuthActionCreators: Partial<ActionCreatorsType> = {}
 
 // make our action creators return asynchronous functions to take advantage
 // of fastAPI async capabilities.

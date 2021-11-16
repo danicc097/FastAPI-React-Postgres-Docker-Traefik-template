@@ -172,7 +172,7 @@ type AdminActionsParamsType = {
   request?: schema['PasswordResetRequest']
 }
 
-type AdminActionsType = {
+type ActionCreatorsType = {
   fetchAllUsers: () => any
   fetchAllNonVerifiedUsers: () => any
   verifyUsers: ({ userEmails }: AdminActionsParamsType) => any
@@ -190,7 +190,7 @@ type AdminActionsType = {
   removeResetPasswordRequestFromStore: ({ email }: AdminActionsParamsType) => any
 }
 
-export const AdminActionCreators: Partial<AdminActionsType> = {}
+export const AdminActionCreators: Partial<ActionCreatorsType> = {}
 
 AdminActionCreators.fetchAllUsers = () => {
   return async (dispatch: AppDispatch) => {

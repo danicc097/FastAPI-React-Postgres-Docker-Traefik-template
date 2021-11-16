@@ -5,14 +5,10 @@ import { AppDispatch } from '../../store'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { schema } from 'src/types/schema_override'
 
-type GlobalNotificationsFeedDataType = {
-  globalNotification: Array<schema['GlobalNotificationFeedItem']>
-}
-
 type initialStateType = {
   feed: {
     globalNotifications: {
-      data?: GlobalNotificationsFeedDataType | GenObjType<null>
+      data?: Array<schema['GlobalNotificationFeedItem']> | []
       canLoadMore: boolean
       hasNewNotifications: boolean
       isLoading: boolean
@@ -24,7 +20,7 @@ type initialStateType = {
 const initialState: initialStateType = {
   feed: {
     globalNotifications: {
-      data: null,
+      data: [],
       canLoadMore: false,
       hasNewNotifications: false,
       isLoading: false,
@@ -37,6 +33,10 @@ export enum GlobalNotificationsActionType {
   FETCH_NOTIFICATIONS = 'globalNotifications/FETCH_NOTIFICATIONS',
   FETCH_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_NOTIFICATIONS_SUCCESS',
   FETCH_NOTIFICATIONS_FAILURE = 'globalNotifications/FETCH_NOTIFICATIONS_FAILURE',
+
+  FETCH_HAS_NEW_NOTIFICATIONS = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS',
+  FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS',
+  FETCH_HAS_NEW_NOTIFICATIONS_FAILURE = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS_FAILURE',
 
   CLEAR_NOTIFICATIONS = 'globalNotifications/CLEAR_NOTIFICATIONS',
 
@@ -54,7 +54,11 @@ export default function globalNotificationsReducer(
         ...state,
         canLoadMore: action.canLoadMore,
       }
-
+    case GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS:
+      return {
+        ...state,
+        hasNewNotifications: action.hasNewNotifications,
+      }
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS:
       return {
         ...state,
@@ -65,11 +69,7 @@ export default function globalNotificationsReducer(
         ...state,
         isLoading: false,
         error: null,
-        data: {
-          ...state.data,
-          // acccumulate retrieved feed items
-          globalNotification: [...(state.data.globalNotification || []), ...action.data],
-        },
+        data: [...(state.data || []), ...action.data],
       }
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE:
       return {
@@ -80,10 +80,7 @@ export default function globalNotificationsReducer(
     case GlobalNotificationsActionType.CLEAR_NOTIFICATIONS:
       return {
         ...state,
-        data: {
-          ...state.data,
-          cleaning: null,
-        },
+        data: [],
       }
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
@@ -93,20 +90,25 @@ export default function globalNotificationsReducer(
   }
 }
 
-type FeedActionsType = {
-  clearFeedItems?: () => any
-  fetchCleaningFeedItems?: (starting_date?: Date, page_chunk_size?: number) => any
+type ActionCreatorsType = {
+  clearFeedItemsFromStore: () => any
+  fetchFeedItems: (starting_date?: Date) => any
+  fetchFeedItemsByLastRead: () => any
+  updateHasNewNotifications: () => any
 }
 
-export const GlobalNotificationsActionCreators: FeedActionsType = {}
+export const GlobalNotificationsActionCreators: Partial<ActionCreatorsType> = {}
 
-GlobalNotificationsActionCreators.clearFeedItems = () => ({ type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS })
+GlobalNotificationsActionCreators.clearFeedItemsFromStore = () => ({
+  type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS,
+})
 
-GlobalNotificationsActionCreators.fetchCleaningFeedItems = (starting_date = new Date(), page_chunk_size = 20) => {
+GlobalNotificationsActionCreators.fetchFeedItems = (starting_date = new Date(moment().utc().format())) => {
+  const PAGE_CHUNK_SIZE = 10
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
-        url: '/feed/cleanings/',
+        url: '/users/notifications/', // /notifications-by-last-read/
         method: 'get',
         types: {
           REQUEST: GlobalNotificationsActionType.FETCH_NOTIFICATIONS,
@@ -117,15 +119,72 @@ GlobalNotificationsActionCreators.fetchCleaningFeedItems = (starting_date = new 
           data: {},
           // endpoint is expecting them as query parameters, not data
           params: {
-            starting_date: moment(starting_date).format(),
-            page_chunk_size,
+            starting_date: starting_date.toISOString(),
+            page_chunk_size: PAGE_CHUNK_SIZE,
           },
         },
         onSuccess: (res) => {
           dispatch({
             type: GlobalNotificationsActionType.SET_CAN_LOAD_MORE_NOTIFICATIONS,
             // assume that there are more items if we receive the max chunk size
-            canLoadMore: Boolean(res?.data?.length === page_chunk_size),
+            canLoadMore: Boolean(res?.data?.length === PAGE_CHUNK_SIZE),
+          })
+          return { success: true, status: res.status, data: res.data }
+        },
+      }),
+    )
+  }
+}
+
+GlobalNotificationsActionCreators.fetchFeedItemsByLastRead = () => {
+  const PAGE_CHUNK_SIZE = 10
+  return async (dispatch: AppDispatch) => {
+    return dispatch(
+      apiClient({
+        url: '/users/notifications-by-last-read/',
+        method: 'get',
+        types: {
+          REQUEST: GlobalNotificationsActionType.FETCH_NOTIFICATIONS,
+          SUCCESS: GlobalNotificationsActionType.FETCH_NOTIFICATIONS_SUCCESS,
+          FAILURE: GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE,
+        },
+        options: {
+          data: {},
+          params: {},
+        },
+        onSuccess: (res) => {
+          dispatch({
+            type: GlobalNotificationsActionType.SET_CAN_LOAD_MORE_NOTIFICATIONS,
+            // assume that there are more items if we receive the max chunk size
+            canLoadMore: Boolean(res?.data?.length === PAGE_CHUNK_SIZE),
+          })
+          return { success: true, status: res.status, data: res.data }
+        },
+      }),
+    )
+  }
+}
+
+GlobalNotificationsActionCreators.updateHasNewNotifications = () => {
+  return async (dispatch: AppDispatch) => {
+    return dispatch(
+      apiClient({
+        url: '/users/check-user-has-unread-notifications/',
+        method: 'get',
+        types: {
+          REQUEST: GlobalNotificationsActionType.FETCH_HAS_NEW_NOTIFICATIONS,
+          SUCCESS: GlobalNotificationsActionType.FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS,
+          FAILURE: GlobalNotificationsActionType.FETCH_HAS_NEW_NOTIFICATIONS_FAILURE,
+        },
+        options: {
+          data: {},
+          params: {},
+        },
+        onSuccess: (res) => {
+          console.log(`res.data`, res.data)
+          dispatch({
+            type: GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS,
+            hasNewNotifications: res.data, // boolean returned by backend
           })
           return { success: true, status: res.status, data: res.data }
         },

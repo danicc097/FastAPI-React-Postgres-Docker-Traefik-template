@@ -72,11 +72,11 @@ export type UserUpdateActionsParamsType = {
 }
 
 // make optional properties to allow easier usage of actions inside other actions in this file.
-type UserUpdateActionsType = {
+type ActionCreatorsType = {
   requestUserUpdate: ({ email, username, password, old_password }: UserUpdateActionsParamsType) => any
 }
 
-export const UserUpdateActionCreators: Partial<UserUpdateActionsType> = {}
+export const UserUpdateActionCreators: Partial<ActionCreatorsType> = {}
 
 UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_password }) => {
   return async (dispatch: AppDispatch) => {

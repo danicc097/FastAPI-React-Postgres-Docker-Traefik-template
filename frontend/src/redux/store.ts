@@ -48,4 +48,5 @@ export type RootState = ReturnType<typeof store.getState>
 
 // no idea what this is for.
 // A thunk is a function that wraps an expression to delay its evaluation
+// e.g. ``let fooThunk = () => 1 + 2``
 export type AppThunk<ReturnType = void> = ThunkAction<ReturnType, RootState, unknown, Action<string>>

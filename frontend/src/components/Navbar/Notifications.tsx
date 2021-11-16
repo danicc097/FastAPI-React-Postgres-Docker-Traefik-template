@@ -31,6 +31,7 @@ import {
   EuiTitle,
 } from '@elastic/eui'
 import { useGeneratedHtmlId } from '@elastic/eui'
+import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
 
 export default function Notifications() {
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false)
@@ -40,6 +41,9 @@ export default function Notifications() {
     prefix: 'newsFeedFlyoutTitle',
   })
   const newsFeedPopoverId = useGeneratedHtmlId({ prefix: 'newsFeedPopover' })
+
+  const { hasNewNotifications } = useGlobalNotificationsFeed()
+
   const alerts = [
     {
       title: 'Control access to features',
@@ -125,6 +129,7 @@ export default function Notifications() {
     setIsPopoverVisible(!isPopoverVisible)
   }
 
+  const bellButtonNotificationColor: any = 'lightgreen' // bad eui typing
   const bellButton = (
     <EuiHeaderSectionItemButton
       aria-controls="headerFlyoutNewsFeed"
@@ -132,11 +137,13 @@ export default function Notifications() {
       aria-haspopup="true"
       aria-label={'Alerts feed: Updates available'}
       onClick={() => showFlyout()}
-      notification={true}
+      notification={hasNewNotifications}
+      notificationColor={bellButtonNotificationColor}
     >
       <EuiIcon type="bell" />
     </EuiHeaderSectionItemButton>
   )
+  const cheerButtonNotificationColor: any = 'orange' // bad eui typing
 
   const cheerButton = (
     <EuiHeaderSectionItemButton
@@ -145,10 +152,10 @@ export default function Notifications() {
       aria-haspopup="true"
       aria-label={"News feed: Updates available'"}
       onClick={showPopover}
-      notification={true}
-      notificationColor="accent"
+      notification={hasNewNotifications}
+      notificationColor={cheerButtonNotificationColor}
     >
-      <EuiIcon type="cheer" />
+      <EuiIcon type="calendar" />
     </EuiHeaderSectionItemButton>
   )
 
@@ -157,7 +164,7 @@ export default function Notifications() {
       <EuiFlyout onClose={closeFlyout} size="s" id={newsFeedFlyoutId} aria-labelledby={newsFeedFlyoutTitleId}>
         <EuiFlyoutHeader hasBorder>
           <EuiTitle size="s">
-            <h2 id={newsFeedFlyoutTitleId}>What&apos;s new</h2>
+            <h2 id={newsFeedFlyoutTitleId}>News</h2>
           </EuiTitle>
         </EuiFlyoutHeader>
         <EuiFlyoutBody>
@@ -202,7 +209,7 @@ export default function Notifications() {
       closePopover={closePopover}
       panelPaddingSize="none"
     >
-      <EuiPopoverTitle paddingSize="s">What&apos;s new</EuiPopoverTitle>
+      <EuiPopoverTitle paddingSize="s">Reminders</EuiPopoverTitle>
       <div style={{ maxHeight: '40vh', overflowY: 'auto', padding: 4 }}>
         <EuiSpacer size="s" />
         {alerts.map((alert, i) => (

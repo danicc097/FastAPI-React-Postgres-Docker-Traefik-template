@@ -8,7 +8,7 @@ from sqlalchemy.types import DateTime
 
 
 class utcnow(expression.FunctionElement):
-    type = DateTime()
+    type = DateTime().with_variant(DateTime, "postgresql")
 
 
 @compiles(utcnow, "postgresql")

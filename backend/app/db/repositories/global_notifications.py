@@ -134,9 +134,9 @@ class InvalidGlobalNotificationError(GlobalNotificationsRepoException):
         super().__init__(msg, *args, **kwargs)
 
 
-# class RequestDoesNotExistError(GlobalNotificationsRepoException):
-#     def __init__(self, msg="The given password reset request does not exist.", *args, **kwargs):
-#         super().__init__(msg, *args, **kwargs)
+class InvalidParametersError(GlobalNotificationsRepoException):
+    def __init__(self, msg="", *args, **kwargs):
+        super().__init__(msg, *args, **kwargs)
 
 
 ###############################################################
@@ -174,6 +174,7 @@ class GlobalNotificationsRepository(BaseRepository):
         self,
         *,
         last_notification_at: datetime = None,
+        page_chunk_size: int = None,
         starting_date: datetime = None,
         role: Roles = Roles.user,
         by_last_read: bool = False,
@@ -181,30 +182,34 @@ class GlobalNotificationsRepository(BaseRepository):
         """
         Fetch the notification feed for a given role.
         """
-        logger.critical(f"Role is {role.value}")
-        if by_last_read:
+        if by_last_read and last_notification_at is not None:
             date_condition = "> :last_notification_at"
-            return [
+            notifications = [
                 GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
                     get_notifications_query(date_condition),
                     values={
-                        "last_notification_at": last_notification_at,
-                        "page_chunk_size": self.page_chunk_size,
+                        "last_notification_at": last_notification_at.replace(tzinfo=None),
+                        "page_chunk_size": page_chunk_size or self.page_chunk_size,
                         "role": role.value,
                     },
                 )
             ]
-        else:
+            return notifications
+        elif not by_last_read and starting_date is not None:
             date_condition = "< :starting_date"
-            return [
+            notifications = [
                 GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
                     get_notifications_query(date_condition),
                     values={
-                        "starting_date": starting_date,
-                        "page_chunk_size": self.page_chunk_size,
+                        "starting_date": starting_date.replace(tzinfo=None),
+                        "page_chunk_size": page_chunk_size or self.page_chunk_size,
                         "role": role.value,
                     },
                 )
             ]
+            logger.critical(f"{notifications=}")
+            return notifications
+        else:
+            raise InvalidParametersError("Either last_notification_at or starting_date must be provided")

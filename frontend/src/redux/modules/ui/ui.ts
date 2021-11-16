@@ -43,13 +43,13 @@ export default function uiReducer(
   }
 }
 
-type UiActionsType = {
+type ActionCreatorsType = {
   addToast: (toast: Toast) => any
   removeToast: (toast: Toast) => any
   removeToastById: (toastId: string) => any
 }
 
-export const UiActionCreators: Partial<UiActionsType> = {}
+export const UiActionCreators: Partial<ActionCreatorsType> = {}
 
 UiActionCreators.addToast = (toast) => {
   return async (dispatch: AppDispatch, getState: () => initialStateType) => {

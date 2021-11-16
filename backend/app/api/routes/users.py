@@ -172,8 +172,8 @@ async def request_password_reset(
     return pwd_reset_req
 
 
-@router.post(
-    "/notifications/",
+@router.get(
+    "/notifications-by-last-read/",
     response_model=List[GlobalNotificationFeedItem],
     name="users:get-feed-by-last-read",
     dependencies=[Depends(get_current_active_user)],
@@ -198,12 +198,12 @@ async def get_notification_feed_for_user_by_last_read(
 )
 async def get_notification_feed_for_user_by_date(
     # add some validation and metadata with Query
-    # page_chunk_size: int = Query(
-    #     GlobalNotificationsRepository.page_chunk_size,
-    #     ge=1,
-    #     le=50,
-    #     description="Number of notifications to retrieve",
-    # ),
+    page_chunk_size: int = Query(
+        GlobalNotificationsRepository.page_chunk_size,
+        ge=1,
+        le=50,
+        description="Number of notifications to retrieve",
+    ),
     starting_date: datetime = Query(
         datetime.utcnow() + timedelta(minutes=10),
         description="Used to determine the timestamp at which to begin querying for notification feed items.",
@@ -214,11 +214,12 @@ async def get_notification_feed_for_user_by_date(
     return await users_repo.fetch_notifications_by_date(
         role=user.role,
         starting_date=starting_date,
+        page_chunk_size=page_chunk_size,
     )
 
 
 @router.get(
-    "/notifications-check/",
+    "/check-user-has-unread-notifications/",
     response_model=bool,
     name="users:check-user-has-unread-notifications",
     dependencies=[Depends(get_current_active_user)],

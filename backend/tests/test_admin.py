@@ -330,7 +330,7 @@ class TestAdminGlobalNotifications:
         db: Database,
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:get-feed-by-last-read"))
+        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         global_notification_repo = GlobalNotificationsRepository(db)
         assert len(res.json()) == global_notification_repo.page_chunk_size
@@ -350,7 +350,7 @@ class TestAdminGlobalNotifications:
         test_user: UserPublic,
     ) -> None:
         # this will fail if the user is created after the notification is sent
-        res = await authorized_client.post(app.url_path_for("users:get-feed-by-last-read"))
+        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 
@@ -384,7 +384,7 @@ class TestAdminGlobalNotifications:
         assert res.json() is False
 
         # feed itself
-        res = await authorized_client.post(app.url_path_for("users:get-feed-by-last-read"))
+        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 

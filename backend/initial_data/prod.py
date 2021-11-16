@@ -8,7 +8,7 @@ from databases import Database
 from loguru import logger
 
 from app.core.config import ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_USERNAME
-from app.models.user import RoleUpdate, Roles, UserCreate
+from app.models.user import Roles, RoleUpdate, UserCreate
 from initial_data.utils import change_user_role, create_user, init_database
 
 # injected from .env with starlette config
