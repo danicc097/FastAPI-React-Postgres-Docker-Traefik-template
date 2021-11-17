@@ -118,7 +118,6 @@ class TestAdminUserModification:
         test_unverified_user2,
         test_admin_user: UserInDB,
     ) -> None:
-        # async with app.state._db.transaction(force_rollback=True):
         res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))
         assert res.status_code == HTTP_200_OK
         unverified_user_emails = [UserPublic(**user).email for user in res.json()]
@@ -310,6 +309,33 @@ class TestAdminGlobalNotifications:
         logger.critical(f"query: {query}")
         n_notifications = await db.fetch_val(query)
         assert n_notifications == self.n_notifications_start
+
+    async def test_admin_can_delete_a_notification(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: UserInDB,
+        test_user: UserPublic,
+        db: Database,
+    ) -> None:
+        global_notification_repo = GlobalNotificationsRepository(db)
+        async with global_notification_repo.db.transaction(force_rollback=True):
+            # get the last one
+            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Roles.user.value}' ORDER BY id DESC LIMIT 1"
+            notification_id = await db.fetch_val(query)
+            assert notification_id is not None
+
+            res = await superuser_client.delete(
+                app.url_path_for("admin:delete-notification", id=notification_id),
+            )
+            assert res.status_code == HTTP_200_OK
+
+            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Roles.user.value}'"
+            n_notifications = await db.fetch_val(query)
+
+            assert n_notifications == self.n_notifications_start - 1
 
     async def test_user_receives_has_new_notification_alert(
         self,

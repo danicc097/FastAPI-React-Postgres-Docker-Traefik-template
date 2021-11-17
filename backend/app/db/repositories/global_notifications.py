@@ -20,18 +20,6 @@ from app.models.global_notifications import (
 from app.models.profile import ProfileCreate
 from app.models.user import Roles
 
-CREATE_NOTIFICATION_QUERY = """
-INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
-VALUES (:sender, :receiver_role, :title, :body, :label, :link)
-RETURNING *;
-"""
-
-DELETE_NOTIFICATION_QUERY = """
-DELETE FROM global_notifications
-WHERE id = :id
-RETURNING *;
-"""
-
 # The OFFSET clause is going to cause your SQL query plan to read all the results
 # anyway and then discard most of it until reaching the offset count.
 # When paging through additional results, it’s less and less efficient
@@ -39,7 +27,7 @@ RETURNING *;
 # We navigate around this pitfall by using the LIMIT and WHERE clauses to implement pagination.
 
 
-def get_notifications_query(date_condition: str = "> :last_notification_at") -> str:
+def _fetch_notifications_query(date_condition: str = "> :last_notification_at") -> str:
     return f"""
     SELECT
     id,
@@ -107,6 +95,18 @@ def get_notifications_query(date_condition: str = "> :last_notification_at") -> 
     """
 
 
+CREATE_NOTIFICATION_QUERY = """
+INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
+VALUES (:sender, :receiver_role, :title, :body, :label, :link)
+RETURNING *;
+"""
+
+DELETE_NOTIFICATION_QUERY = """
+DELETE FROM global_notifications
+WHERE id = :id
+RETURNING *;
+"""
+
 CHECK_NEW_NOTIFICATIONS_QUERY = """
 SELECT
   EXISTS(
@@ -159,7 +159,16 @@ class GlobalNotificationsRepository(BaseRepository):
         return GlobalNotificationFeedItem(**new_notification)
 
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotificationFeedItem]:
-        pass
+        async with self.db.transaction():
+            deleted_notification = await self.db.fetch_one(
+                DELETE_NOTIFICATION_QUERY,
+                values={"id": id},
+            )
+            if not deleted_notification:
+                return None
+            if deleted_notification["id"] != id:
+                raise GlobalNotificationsRepoException(f"Could not delete notification with id {id}.")
+            return GlobalNotificationFeedItem(**deleted_notification)
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:
         return await self.db.fetch_val(
@@ -187,7 +196,7 @@ class GlobalNotificationsRepository(BaseRepository):
             notifications = [
                 GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
-                    get_notifications_query(date_condition),
+                    _fetch_notifications_query(date_condition),
                     values={
                         "last_notification_at": last_notification_at.replace(tzinfo=None),
                         "page_chunk_size": page_chunk_size or self.page_chunk_size,
@@ -201,7 +210,7 @@ class GlobalNotificationsRepository(BaseRepository):
             notifications = [
                 GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
-                    get_notifications_query(date_condition),
+                    _fetch_notifications_query(date_condition),
                     values={
                         "starting_date": starting_date.replace(tzinfo=None),
                         "page_chunk_size": page_chunk_size or self.page_chunk_size,

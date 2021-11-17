@@ -28,16 +28,11 @@ import { schema } from 'src/types/schema_override'
 
 export default function GlobalNotificationsModalForm() {
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const [isSwitchChecked, setIsSwitchChecked] = useState(true)
-  const [superSelectvalue, setSuperSelectValue] = useState('option_one')
+  const [receiverRole, setReceiverRole] = useState('user' as schema['Roles'])
 
   const modalFormId = useGeneratedHtmlId({ prefix: 'modalForm' })
-  const modalFormSwitchId = useGeneratedHtmlId({ prefix: 'modalFormSwitch' })
-
-  const onSwitchChange = () => setIsSwitchChecked((isSwitchChecked) => !isSwitchChecked)
 
   const closeModal = () => setIsModalVisible(false)
-
   const showModal = () => setIsModalVisible(true)
 
   const roleOptions: EuiSuperSelectProps<string>['options'] = Object.keys(ROLE_PERMISSIONS).map(
@@ -54,15 +49,8 @@ export default function GlobalNotificationsModalForm() {
       ),
     }),
   )
-  // dynamically create a form row for each field
-  // to be sent to api in form of { fieldName: fieldValue }
-  // Fields to populate:
-  //   - receiver_role: str
-  //   - title: str
-  //   - body: str
-  //   - label: str
-  //   - link?: str
-  const form = (
+
+  const modalForm = (
     <EuiForm
       id={modalFormId}
       component="form"
@@ -71,16 +59,6 @@ export default function GlobalNotificationsModalForm() {
       }}
       isInvalid={false}
     >
-      <EuiFormRow label="Receiver role" helpText="Select the role that will receive this notification.">
-        <EuiSuperSelect
-          options={roleOptions}
-          valueOfSelected={superSelectvalue}
-          onChange={(value) => onSuperSelectChange(value)}
-          itemLayoutAlign="top"
-          hasDividers
-        />
-      </EuiFormRow>
-
       <EuiFormRow label="Title">
         <EuiFieldText name="title" placeholder="Enter title" />
       </EuiFormRow>
@@ -96,25 +74,36 @@ export default function GlobalNotificationsModalForm() {
       <EuiFormRow label="Link" helpText="Provide an optional link.">
         <EuiFieldText name="link" required={false} placeholder="e.g. 'https://www.somewhere.com'" />
       </EuiFormRow>
+
+      <EuiFormRow label="Receiver role" helpText="Select the role that will receive this notification.">
+        <EuiSuperSelect
+          name="receiver_role"
+          options={roleOptions}
+          valueOfSelected={receiverRole}
+          onChange={(value) => onSuperSelectChange(value)}
+          itemLayoutAlign="top"
+          hasDividers
+        />
+      </EuiFormRow>
     </EuiForm>
   )
 
   const onSuperSelectChange = (value) => {
-    setSuperSelectValue(value)
+    setReceiverRole(value)
   }
 
   let modal
 
   if (isModalVisible) {
     modal = (
-      <EuiModal onClose={closeModal} initialFocus="[name=popswitch]">
+      <EuiModal onClose={closeModal} initialFocus="[name=title]">
         <EuiModalHeader>
           <EuiModalHeaderTitle>
             <h1>New notification</h1>
           </EuiModalHeaderTitle>
         </EuiModalHeader>
 
-        <EuiModalBody>{form}</EuiModalBody>
+        <EuiModalBody>{modalForm}</EuiModalBody>
 
         <EuiModalFooter>
           <EuiButtonEmpty onClick={closeModal}>Cancel</EuiButtonEmpty>

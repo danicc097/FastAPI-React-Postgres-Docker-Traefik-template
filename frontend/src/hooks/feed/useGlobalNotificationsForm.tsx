@@ -43,8 +43,6 @@ export function useGlobalNotificationsFeed() {
     [dispatch],
   )
 
-  // TODO delete global notifications action
-
   const fetchFeedItemsByLastRead = () => {
     dispatch(GlobalNotificationsActionCreators.clearFeedItemsFromStore()) // must get rid of current feed items
     dispatch(GlobalNotificationsActionCreators.fetchFeedItemsByLastRead())
