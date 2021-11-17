@@ -1,9 +1,7 @@
-import ReactDOM from 'react-dom'
 import '@elastic/eui/dist/eui_theme_amsterdam_dark.css'
 import React, { useEffect, useState } from 'react'
 
 import {
-  EuiAvatar,
   EuiBadge,
   EuiButton,
   EuiButtonEmpty,
@@ -18,7 +16,6 @@ import {
   EuiHeaderSectionItemButton,
   EuiIcon,
   EuiLink,
-  EuiLoadingSpinner,
   EuiPortal,
   EuiText,
   EuiTitle,
@@ -29,6 +26,8 @@ import moment from 'moment'
 import { motion } from 'framer-motion'
 import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
 import styled from 'styled-components'
+import ComponentPermissions from 'src/components/Permissions/ComponentPermissions'
+import { schema } from 'src/types/schema_override'
 
 const Center = styled.div`
   align-self: center;
@@ -37,7 +36,10 @@ const Center = styled.div`
   }
 `
 
-export default function Notifications() {
+type GlobalNotificationsProps = {
+  user: schema['UserPublic']
+}
+export default function GlobalNotifications({ user }: GlobalNotificationsProps) {
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false)
   const newsFeedFlyoutId = useGeneratedHtmlId({ prefix: 'newsFeedFlyout' })
   const newsFeedFlyoutTitleId = useGeneratedHtmlId({
@@ -47,10 +49,10 @@ export default function Notifications() {
   const {
     hasNewNotifications,
     fetchFeedItemsByLastRead,
-    globalNotificationsFeedItems,
-    globalNotificationsUnreadItems,
+    feedItems: globalNotificationsFeedItems,
+    unreadItems: globalNotificationsUnreadItems,
     isLoading,
-    error,
+    errorList: globalNotificationsErrorList,
     fetchFeedItems,
   } = useGlobalNotificationsFeed()
 
@@ -143,6 +145,12 @@ export default function Notifications() {
     </EuiHeaderSectionItemButton>
   )
 
+  const addNewNotificationButton = (
+    <EuiButton size="m" color="success" onClick={() => null}>
+      Add notification
+    </EuiButton>
+  )
+
   const flyout = (
     <EuiPortal>
       <EuiFlyout
@@ -175,7 +183,11 @@ export default function Notifications() {
               />
             ))
           )}
-          {globalNotificationsAlerts.length === 0 ? (
+          {globalNotificationsErrorList.length !== 0 ? (
+            <EuiText>
+              <p>{globalNotificationsErrorList}</p>
+            </EuiText>
+          ) : globalNotificationsAlerts.length === 0 ? (
             <EuiText size="s">
               <p>No new notifications</p>
             </EuiText>
@@ -190,15 +202,15 @@ export default function Notifications() {
                 Close
               </EuiButtonEmpty>
             </EuiFlexItem>
-            {globalNotificationsAlerts.length === 0 ?? (
-              <EuiFlexItem grow={false}>
-                <EuiText color="subdued" size="s">
-                  <EuiButton size="s" fill>
-                    Load more
-                  </EuiButton>
-                </EuiText>
-              </EuiFlexItem>
-            )}
+
+            <EuiFlexItem grow={false}>
+              <EuiButton size="s" fill>
+                Load more
+              </EuiButton>
+            </EuiFlexItem>
+            <EuiFlexItem grow={false}>
+              <ComponentPermissions requiredRole={'manager'} element={addNewNotificationButton} user={user} />
+            </EuiFlexItem>
           </EuiFlexGroup>
         </EuiFlyoutFooter>
       </EuiFlyout>

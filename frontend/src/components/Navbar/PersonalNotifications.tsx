@@ -1,35 +1,21 @@
-import ReactDOM from 'react-dom'
 import '@elastic/eui/dist/eui_theme_amsterdam_dark.css'
 import React, { useState } from 'react'
 
 import {
-  EuiAvatar,
   EuiBadge,
-  EuiButton,
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
-  EuiFlyout,
-  EuiFlyoutBody,
-  EuiFlyoutFooter,
-  EuiFlyoutHeader,
-  EuiHeader,
   EuiHeaderAlert,
   EuiHeaderAlertProps,
-  EuiHeaderLogo,
-  EuiHeaderSection,
-  EuiHeaderSectionItem,
   EuiHeaderSectionItemButton,
   EuiIcon,
   EuiLink,
   EuiPopover,
   EuiPopoverFooter,
   EuiPopoverTitle,
-  EuiPortal,
   EuiSpacer,
-  EuiSwitch,
   EuiText,
-  EuiTitle,
 } from '@elastic/eui'
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
@@ -44,10 +30,10 @@ export default function PersonalNotifications() {
   const {
     hasNewNotifications,
     fetchFeedItemsByLastRead,
-    globalNotificationsFeedItems,
-    globalNotificationsUnreadItems,
+    feedItems: globalNotificationsFeedItems,
+    unreadItems: globalNotificationsUnreadItems,
     isLoading,
-    error,
+    errorList: globalNotificationsErrorList,
     fetchFeedItems,
   } = useGlobalNotificationsFeed()
 

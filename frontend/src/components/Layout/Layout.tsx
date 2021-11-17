@@ -43,7 +43,7 @@ const StyledMain = styled.main`
   }
 `
 
-type LayoutPropTypes = {
+type LayoutProps = {
   children: React.ReactElement
 }
 
@@ -68,7 +68,7 @@ const StyledFooter = styled.footer`
   }
 `
 
-export default function Layout({ children }: LayoutPropTypes) {
+export default function Layout({ children }: LayoutProps) {
   const { toasts, removeToast } = useToasts()
   const [theme, setTheme] = React.useState(localStorage.getItem('theme'))
   const [providerTheme, setProviderTheme] = React.useState(theme === 'light' ? customThemeLight : customThemeDark)

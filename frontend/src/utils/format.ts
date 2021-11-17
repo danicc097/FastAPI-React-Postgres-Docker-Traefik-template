@@ -1,8 +1,8 @@
-import { UserAvatarPropTypes } from 'src/components/UserAvatar/UserAvatar'
+import { UserAvatarProps } from 'src/components/UserAvatar/UserAvatar'
 
 export const capitalize = (str: string) => (str ? str[0].toUpperCase() + str.slice(1) : str)
 
-export const getAvatarName = ({ user }: UserAvatarPropTypes) =>
+export const getAvatarName = ({ user }: UserAvatarProps) =>
   capitalize(user?.profile?.full_name ?? user?.username ?? 'Anonymous')
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {

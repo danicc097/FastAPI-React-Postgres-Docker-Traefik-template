@@ -156,7 +156,7 @@ export default function Navbar() {
         },
         {
           items: [
-            user.is_verified ? <GlobalNotifications /> : null,
+            user.is_verified ? <GlobalNotifications user={user} /> : null,
             user.is_verified ? <PersonalNotifications /> : null,
             <EuiPopover
               id="avatar-menu"

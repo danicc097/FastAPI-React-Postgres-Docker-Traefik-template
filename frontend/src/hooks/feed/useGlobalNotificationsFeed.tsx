@@ -5,6 +5,7 @@ import { useEffect, useCallback } from 'react'
 import { shallowEqual } from 'react-redux'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { GlobalNotificationsActionCreators } from 'src/redux/modules/feed/globalNotifications'
+import { extractErrorMessages } from 'src/utils/errors'
 
 // useDispatch and useSelector in our custom hook to:
 // 1. keep the body of our functional components clean,
@@ -12,6 +13,8 @@ import { GlobalNotificationsActionCreators } from 'src/redux/modules/feed/global
 // 3. allow for descriptive names for a disparate collection of functions, effects, and data.
 //    Everything in our custom hook belongs together.
 export function useGlobalNotificationsFeed() {
+  const GLOBAL_NOTIFICATIONS_CHECK_INTERVAL_MS = 1000 * 10
+
   const dispatch = useAppDispatch()
   // The variables will be set to the state defined from their respective reducers
   // every time the hook useGlobalNotificationsFeed is called.
@@ -20,12 +23,11 @@ export function useGlobalNotificationsFeed() {
   const isLoading = useAppSelector((state) => state.feed.globalNotifications.isLoading)
   // When comparing objects, remember to use shallow equal
   const error = useAppSelector((state) => state.feed.globalNotifications.error, shallowEqual)
-  const globalNotificationsFeedItems = useAppSelector((state) => state.feed.globalNotifications.data, shallowEqual)
-  const globalNotificationsUnreadItems = useAppSelector(
-    (state) => state.feed.globalNotifications.unreadData,
-    shallowEqual,
-  )
+  const feedItems = useAppSelector((state) => state.feed.globalNotifications.data, shallowEqual)
+  const unreadItems = useAppSelector((state) => state.feed.globalNotifications.unreadData, shallowEqual)
   const hasNewNotifications = useAppSelector((state) => Boolean(state.feed.globalNotifications.hasNewNotifications))
+
+  const errorList = extractErrorMessages(error)
 
   /**
    * Requires UTC dates.
@@ -55,17 +57,17 @@ export function useGlobalNotificationsFeed() {
     if (!hasNewNotifications) {
       const interval = setInterval(() => {
         dispatch(GlobalNotificationsActionCreators.updateHasNewNotifications())
-      }, 10000)
+      }, GLOBAL_NOTIFICATIONS_CHECK_INTERVAL_MS)
       return () => clearInterval(interval)
     }
   }, [dispatch, hasNewNotifications])
 
   return {
     isLoading,
-    error,
+    errorList,
     hasNewNotifications,
-    globalNotificationsFeedItems,
-    globalNotificationsUnreadItems,
+    feedItems,
+    unreadItems,
     fetchFeedItems,
     fetchFeedItemsByLastRead,
   }
