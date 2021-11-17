@@ -28,6 +28,7 @@ import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
 import styled from 'styled-components'
 import ComponentPermissions from 'src/components/Permissions/ComponentPermissions'
 import { schema } from 'src/types/schema_override'
+import GlobalNotificationsModalForm from 'src/components/Navbar/GlobalNotifications/GlobalNotificationsModalForm'
 
 const Center = styled.div`
   align-self: center;
@@ -145,12 +146,6 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
     </EuiHeaderSectionItemButton>
   )
 
-  const addNewNotificationButton = (
-    <EuiButton size="m" color="success" onClick={() => null}>
-      Add notification
-    </EuiButton>
-  )
-
   const flyout = (
     <EuiPortal>
       <EuiFlyout
@@ -198,20 +193,25 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
         <EuiFlyoutFooter>
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
             <EuiFlexItem grow={false}>
-              <EuiButtonEmpty iconType="cross" onClick={closeFlyout} flush="left">
-                Close
-              </EuiButtonEmpty>
-            </EuiFlexItem>
-
-            <EuiFlexItem grow={false}>
               <EuiButton size="s" fill>
                 Load more
               </EuiButton>
             </EuiFlexItem>
-            <EuiFlexItem grow={false}>
-              <ComponentPermissions requiredRole={'manager'} element={addNewNotificationButton} user={user} />
-            </EuiFlexItem>
+            <ComponentPermissions
+              requiredRole={'admin'}
+              element={
+                <EuiFlexItem grow={false}>
+                  <GlobalNotificationsModalForm />
+                </EuiFlexItem>
+              }
+              user={user}
+            />
           </EuiFlexGroup>
+          {/* <EuiFlexItem grow={false}>
+            <EuiButtonEmpty iconType="cross" size="s" onClick={closeFlyout} flush="left">
+              Close
+            </EuiButtonEmpty>
+          </EuiFlexItem> */}
         </EuiFlyoutFooter>
       </EuiFlyout>
     </EuiPortal>

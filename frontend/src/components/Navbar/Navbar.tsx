@@ -26,7 +26,7 @@ import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import UserAvatar from '../UserAvatar/UserAvatar'
 import CollapsibleNav from './CollapsibleNav'
 import Notifications from './PersonalNotifications'
-import GlobalNotifications from 'src/components/Navbar/GlobalNotifications'
+import GlobalNotifications from 'src/components/Navbar/GlobalNotifications/GlobalNotifications'
 import PersonalNotifications from './PersonalNotifications'
 
 const LogoSection = styled(EuiHeaderLink)`

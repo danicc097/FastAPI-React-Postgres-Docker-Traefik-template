@@ -203,7 +203,6 @@ GlobalNotificationsActionCreators.updateHasNewNotifications = () => {
           params: {},
         },
         onSuccess: (res) => {
-          console.log(`res.data`, res.data)
           dispatch({
             type: GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS,
             hasNewNotifications: res.data, // boolean returned by backend

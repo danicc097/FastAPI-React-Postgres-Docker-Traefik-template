@@ -28,3 +28,11 @@ export const truncate = (str: string, n = 200, useWordBoundary = false) => {
   const subString = str.substr(0, n - 1)
   return `${useWordBoundary ? subString.substr(0, subString.lastIndexOf(' ')) : subString}&hellip;`
 }
+
+/**
+ * Join strings with commas and an 'and' before the last item
+ */
+export const joinWithAnd = (arr: string[]) => {
+  if (arr.length === 1) return arr[0]
+  return `${arr.slice(0, -1).join(', ')} and ${arr.slice(-1)[0]}`
+}

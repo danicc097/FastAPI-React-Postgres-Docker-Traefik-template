@@ -1,6 +1,10 @@
 import { schema } from 'src/types/schema_override'
 
-export const ROLE_PERMISSIONS: { [key in Partial<schema['Roles']>]: schema['Roles'][] } = {
+type RolePermissions = {
+  [key in Partial<schema['Roles']>]: schema['Roles'][]
+}
+
+export const ROLE_PERMISSIONS: RolePermissions = {
   user: ['user'],
   manager: ['manager', 'user'],
   admin: ['admin', 'manager', 'user'],
