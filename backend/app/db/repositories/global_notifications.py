@@ -27,72 +27,46 @@ from app.models.user import Roles
 # We navigate around this pitfall by using the LIMIT and WHERE clauses to implement pagination.
 
 
-def _fetch_notifications_query(date_condition: str = "> :last_notification_at") -> str:
+def _fetch_notifications_query(date_condition: str) -> str:
     return f"""
+SELECT
+  *,
+  ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
+FROM ((
+    -- Rows where the notification has been updated at some point.
     SELECT
-    id,
-    sender,
-    receiver_role,
-    title,
-    body,
-    label,
-    link,
-    created_at,
-    updated_at,
-    event_type,
-    event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
-    FROM ((
-        -- Rows where the notification has been updated at some point.
-        SELECT
-        id,
-        sender,
-        receiver_role,
-        title,
-        body,
-        label,
-        link,
-        created_at,
-        updated_at,
-        updated_at AS event_timestamp,
-        -- define a new column ``event_type`` and set its value
-        'is_update' AS event_type
-        FROM
-        global_notifications
-        WHERE
-        updated_at {date_condition}
-        AND receiver_role = :role
-        AND updated_at != created_at
-        ORDER BY
-        updated_at DESC
-        LIMIT :page_chunk_size)
-    UNION (
-    -- All rows.
-    SELECT
-        id,
-        sender,
-        receiver_role,
-        title,
-        body,
-        label,
-        link,
-        created_at,
-        updated_at,
-        created_at AS event_timestamp,
-        -- define a new column ``event_type`` and set its value
-        'is_create' AS event_type
+      *,
+      updated_at AS event_timestamp,
+      -- define a new column ``event_type`` and set its value
+      'is_update' AS event_type
     FROM
-        global_notifications
+      global_notifications
     WHERE
-        created_at {date_condition}
-        AND receiver_role = :role
+      updated_at {date_condition}
+      AND receiver_role = :role
+      AND updated_at != created_at
     ORDER BY
-        created_at DESC
-    LIMIT :page_chunk_size)) AS notifications_feed
-    ORDER BY
-    event_timestamp DESC
-    LIMIT :page_chunk_size;
-    """
+      updated_at DESC
+    LIMIT :page_chunk_size)
+UNION (
+  -- All rows.
+  SELECT
+    *,
+    created_at AS event_timestamp,
+    -- define a new column ``event_type`` and set its value
+    'is_create' AS event_type
+  FROM
+    global_notifications
+  WHERE
+    created_at {date_condition}
+    AND receiver_role = :role
+  ORDER BY
+    created_at DESC
+  LIMIT :page_chunk_size)) AS notifications_feed
+ORDER BY
+  event_timestamp DESC
+LIMIT :page_chunk_size;
+"""
 
 
 CREATE_NOTIFICATION_QUERY = """

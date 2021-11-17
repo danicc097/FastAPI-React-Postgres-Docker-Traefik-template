@@ -1,8 +1,8 @@
 # Backend
+## Things to be aware of
 
-## CI/CD
-
-``.env.ci`` should be as close as possible to production.
+Database transactions bug: 
+ - https://github.com/encode/databases/issues/403
 
 ## Important notes
 
@@ -13,6 +13,10 @@ which by default is the name of the service defined in a ``compose.yml`` file
 Note: ``psql`` requires the ``postgresql-client`` package, which is only included by default in the postgres image. We don't really need it in ``server`` for the time being.
 
 More info about the postgres docker image at <https://hub.docker.com/_/postgres?tab=description>
+
+## CI/CD
+
+``.env.ci`` should be as close as possible to production.
 
 ### Python specifics
 
@@ -42,3 +46,7 @@ VM Cores: 4
 | 6         | 52                   |
 | 8         | 54                   |
 | 10        | 52                   |
+
+## Software recommendations
+
+- DBeaver for Postgres. Dead-simple query testing and debugging and even allows using ``:param`` syntax in its SQL console.
