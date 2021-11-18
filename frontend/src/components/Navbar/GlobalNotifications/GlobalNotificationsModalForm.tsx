@@ -64,7 +64,7 @@ export default function GlobalNotificationsModalForm() {
       </EuiFormRow>
 
       <EuiFormRow label="Body">
-        <EuiTextArea name="body" rows={5} placeholder="Enter the notification body." />
+        <EuiTextArea name="body" rows={5} placeholder="Enter the notification body" />
       </EuiFormRow>
 
       <EuiFormRow label="Label" helpText="Enter a notification label for context.">

@@ -4,7 +4,7 @@ import { useAuthenticatedUser } from './useAuthenticatedUser'
 
 export const useProtectedRoute = (
   redirectTitle = 'Access Denied',
-  redirectMessage = 'Authenticated users only. Login here or create a new account to view that page.',
+  redirectMessage = 'Authenticated users only. Login here or create a new account to view that page',
 ) => {
   // we can use redux hooks inside other hooks!
   const { userLoaded, isAuthenticated, isAdmin, isVerifiedUser } = useAuthenticatedUser()

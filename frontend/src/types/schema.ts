@@ -63,6 +63,10 @@ export interface paths {
     /** Create a new notification for selected user roles to receive. */
     post: operations["admin_create_notification_api_admin_create_notification__post"];
   };
+  "/api/admin/delete-notification/{id}/": {
+    /** Delete a notification with id: ``id``. */
+    delete: operations["admin_delete_notification_api_admin_delete_notification__id___delete"];
+  };
   "/api/admin/change-user-role/": {
     /** Change role of user */
     post: operations["admin_change_user_role_api_admin_change_user_role__post"];
@@ -107,6 +111,18 @@ export interface components {
     };
     Body_users_update_user_by_id_api_users_me__put: {
       user_update: components["schemas"]["UserUpdate"];
+    };
+    /** Admins and authorized roles can send notifications to users based on role. */
+    GlobalNotification: {
+      id: number;
+      created_at?: string;
+      updated_at?: string;
+      sender: string;
+      receiver_role: components["schemas"]["Roles"];
+      title: string;
+      body: string;
+      label: string;
+      link?: string;
     };
     /** Any common logic to be shared by all models goes here */
     GlobalNotificationCreate: {
@@ -520,6 +536,28 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["Body_admin_create_notification_api_admin_create_notification__post"];
+      };
+    };
+  };
+  /** Delete a notification with id: ``id``. */
+  admin_delete_notification_api_admin_delete_notification__id___delete: {
+    parameters: {
+      path: {
+        id: number;
+      };
+    };
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["GlobalNotification"];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
       };
     };
   };

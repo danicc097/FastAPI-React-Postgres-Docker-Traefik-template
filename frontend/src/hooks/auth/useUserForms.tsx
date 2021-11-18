@@ -53,7 +53,7 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
   const handlePasswordConfirmChange = (value: string) => {
     setErrors((errors) => ({
       ...errors,
-      passwordConfirm: form.password !== value ? 'Passwords do not match.' : null,
+      passwordConfirm: form.password !== value ? 'Passwords do not match' : null,
     }))
 
     setForm((form) => ({ ...form, passwordConfirm: value }))
@@ -67,7 +67,7 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
     }
 
     if (hasSubmitted && (authErrorList.length || userProfileErrorList.length)) {
-      // const additionalErrors = isLogin ? ['Invalid credentials. Please try again.'] : authErrorList
+      // const additionalErrors = isLogin ? ['Invalid credentials. Please try again'] : authErrorList
       return formErrors.concat(authErrorList).concat(userProfileErrorList)
     }
 

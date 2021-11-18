@@ -73,11 +73,11 @@ export default function PasswordResetPage() {
   if (isModalVisible) {
     modal = (
       <EuiConfirmModal
-        title={`Reset password for ${selection}`}
+        title={`Reset password`}
         onCancel={closeModal}
         onConfirm={submitPasswordReset}
-        cancelButtonText="No, don't do it"
-        confirmButtonText="Yes, do it"
+        cancelButtonText="Cancel"
+        confirmButtonText="Confirm"
         defaultFocusedButton="confirm"
         data-test-subj="passwordResetForm__confirmModal"
       >
@@ -103,7 +103,9 @@ export default function PasswordResetPage() {
 
       <EuiText size="s">
         <p>
-          <EuiTextColor color="subdued">{_.unescape(`Manually reset a user's password.`)}</EuiTextColor>
+          <EuiTextColor color="subdued">
+            {_.unescape(`Manually reset a user's password. The new credentials will be downloaded.`)}
+          </EuiTextColor>
         </p>
       </EuiText>
     </div>
@@ -114,7 +116,7 @@ export default function PasswordResetPage() {
       <EuiForm component="form" onSubmit={onResetPasswordSubmit}>
         <EuiFlexGroup direction="column">
           <EuiFlexItem grow={false}>
-            <EuiFormRow fullWidth label="Manually reset a user's password. The new credentials will be downloaded.">
+            <EuiFormRow fullWidth label="Select the user's email">
               <EuiSelectable
                 aria-label="Searchable example"
                 data-test-subj="passwordResetForm__selectable"

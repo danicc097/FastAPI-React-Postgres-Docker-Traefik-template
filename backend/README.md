@@ -1,7 +1,7 @@
 # Backend
 ## Things to be aware of
 
-Database transactions bug: 
+Database transactions bug:
  - https://github.com/encode/databases/issues/403
 
 ## Important notes

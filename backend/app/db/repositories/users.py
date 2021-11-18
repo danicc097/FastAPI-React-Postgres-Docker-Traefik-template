@@ -217,10 +217,10 @@ class UsersRepository(BaseRepository):
         verified: bool = False,
     ) -> Optional[Union[UserPublic, UserInDB]]:
         if await self.get_user_by_email(email=new_user.email):
-            raise EmailAlreadyExistsError(f"User with email {new_user.email} already exists.")
+            raise EmailAlreadyExistsError(f"User with email {new_user.email} already exists")
 
         if await self.get_user_by_username(username=new_user.username):
-            raise UsernameAlreadyExistsError(f"User with username {new_user.username} already exists.")
+            raise UsernameAlreadyExistsError(f"User with username {new_user.username} already exists")
 
         # do not pass actual password to models
         user_password_update = self.auth_service.create_salt_and_hashed_password(plaintext_password=new_user.password)
@@ -228,10 +228,10 @@ class UsersRepository(BaseRepository):
 
         if admin:
             query = REGISTER_ADMIN_QUERY
-            loguru.logger.warning("Created new admin user.")
+            loguru.logger.warning("Created new admin user")
         elif verified:
             query = REGISTER_VERIFIED_USER_QUERY
-            loguru.logger.warning("Created new verified user.")
+            loguru.logger.warning("Created new verified user")
         else:
             query = REGISTER_NEW_USER_QUERY
 
@@ -257,7 +257,7 @@ class UsersRepository(BaseRepository):
         user_to_update = user.copy(update=update)
 
         if len(update) == 1 and ("password" in update or "old_password" in update):
-            raise IncorrectPasswordError("Both current and new passwords are required to update.")
+            raise IncorrectPasswordError("Both current and new passwords are required to update")
 
         if user_update.password and user_update.old_password:
             # check previous password is correct
@@ -279,11 +279,11 @@ class UsersRepository(BaseRepository):
 
         if user_update.email:
             if await self.get_user_by_email(email=user_update.email):
-                raise EmailAlreadyExistsError(f"User with email {user_update.email} already exists.")
+                raise EmailAlreadyExistsError(f"User with email {user_update.email} already exists")
 
         if user_update.username:
             if await self.get_user_by_username(username=user_update.username):
-                raise UsernameAlreadyExistsError(f"User with username {user_update.username} already exists.")
+                raise UsernameAlreadyExistsError(f"User with username {user_update.username} already exists")
 
         updated_user = await self.db.fetch_one(
             query=UPDATE_USER_BY_ID_QUERY,
@@ -292,7 +292,7 @@ class UsersRepository(BaseRepository):
             ),  # rest of fields are skipped
         )
         if updated_user is None:
-            raise InvalidUpdateError("Could not update user.")
+            raise InvalidUpdateError("Could not update user")
 
         return UserPublic(**updated_user)
 
@@ -300,7 +300,7 @@ class UsersRepository(BaseRepository):
         query = VERIFY_USER_BY_EMAIL_QUERY
         updated_users = [await self.db.fetch_one(query=query, values={"email": email}) for email in user_emails]
         if len(updated_users) != len(user_emails):
-            raise InvalidUpdateError("Could not verify all users.")
+            raise InvalidUpdateError("Could not verify all users")
 
         return [UserPublic(**user) for user in updated_users if user is not None]
 
@@ -361,7 +361,7 @@ class UsersRepository(BaseRepository):
             },
         )
         if not updated_user:
-            raise InvalidUpdateError(f"Could not update user password for {user.email}.")
+            raise InvalidUpdateError(f"Could not update user password for {user.email}")
 
         # ! won't be used like this
         # remove the request from its own table if (it was a request)

@@ -68,10 +68,10 @@ export default function UserUpdateAccordion() {
     })
     if (action?.type !== UserProfileActionType.REQUEST_USER_UPDATE_SUCCESS) {
       setForm((form) => ({ ...form, password: '', passwordConfirm: '', old_password: '' }))
-      console.log('user update failed.')
+      console.log('user update failed')
       resetForm()
     } else {
-      console.log('user update succeeded.')
+      console.log('user update succeeded')
       // redirect to login page in 5 seconds
       // setTimeout(() => {
       //   window.location.reload()
@@ -101,7 +101,7 @@ export default function UserUpdateAccordion() {
       (!!form.password || !!form.passwordConfirm || !!form.old_password) &&
       !(form.password && form.passwordConfirm && form.old_password)
     ) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all password fields.' }))
+      setErrors((errors) => ({ ...errors, form: 'You must fill out all password fields' }))
       return
     }
 
@@ -116,15 +116,14 @@ export default function UserUpdateAccordion() {
   if (isModalVisible) {
     modal = (
       <EuiConfirmModal
-        title={`Update your credentials`}
+        title={`Update credentials`}
         onCancel={closeModal}
         onConfirm={submitUserUpdate}
-        cancelButtonText="No, don't do it"
-        confirmButtonText="Yes, do it"
+        cancelButtonText="Cancel"
+        confirmButtonText="Confirm"
         defaultFocusedButton="confirm"
       >
         <p>{_.unescape(`You're about to update your credentials.`)}</p>
-        <p>Are you sure you want to do this?</p>
       </EuiConfirmModal>
     )
   }
@@ -143,7 +142,7 @@ export default function UserUpdateAccordion() {
               label="Username"
               helpText="Choose a username consisting solely of letters, numbers, underscores, and dashes."
               isInvalid={!!form.username && Boolean(errors.username)}
-              error="Please enter a valid username."
+              error="Please enter a valid username"
             >
               <EuiFieldText
                 icon="user"
@@ -154,25 +153,23 @@ export default function UserUpdateAccordion() {
                 onChange={(e) => {
                   handleInputChange('username', e.target.value)
                 }}
-                aria-label="Choose a username consisting of letters, numbers, underscores, and dashes."
+                aria-label="Choose a username consisting of letters, numbers, underscores, and dashes"
                 isInvalid={!!form.username && Boolean(errors.username)}
               />
             </EuiFormRow>
           </EuiFlexItem>
-          <EuiHorizontalRule />
-
+          <EuiHorizontalRule margin="m" />
           <EuiFlexItem>
             <EuiFormRow
               label="Old password"
-              helpText="Enter your current password."
               isInvalid={!!form.old_password && Boolean(errors.old_password)}
-              error="Password must be at least 7 characters."
+              error="Password must be at least 7 characters"
             >
               <StyledEuiFieldPassword
                 placeholder="Enter your current password"
                 data-test-subj="old-password"
                 type="text"
-                aria-label="Enter your current password."
+                aria-label="Enter your current password"
                 value={form.old_password}
                 onChange={(e) => {
                   handleInputChange('old_password', e.target.value)
@@ -182,15 +179,14 @@ export default function UserUpdateAccordion() {
             </EuiFormRow>
             <EuiFormRow
               label="New password"
-              helpText="Enter your new password."
               isInvalid={!!form.password && Boolean(errors.password)}
-              error="Password must be at least 7 characters."
+              error="Password must be at least 7 characters"
             >
               <StyledEuiFieldPassword
                 placeholder="Enter your new password"
                 data-test-subj="new-password"
                 type="text"
-                aria-label="Enter your new password."
+                aria-label="Enter your new password"
                 value={form.password}
                 onChange={(e) => {
                   handleInputChange('password', e.target.value)
@@ -200,9 +196,8 @@ export default function UserUpdateAccordion() {
             </EuiFormRow>
             <EuiFormRow
               label="New password confirm"
-              helpText="Confirm your new password."
               isInvalid={!!form.passwordConfirm && Boolean(errors.passwordConfirm)}
-              error="Passwords must match."
+              error="Passwords must match"
             >
               <StyledEuiFieldPassword
                 placeholder="Enter your new password again"
@@ -212,7 +207,7 @@ export default function UserUpdateAccordion() {
                 onChange={(e) => {
                   handlePasswordConfirmChange(e.target.value)
                 }}
-                aria-label="Confirm your password."
+                aria-label="Confirm your password"
                 isInvalid={!!form.passwordConfirm && Boolean(errors.passwordConfirm)}
               />
             </EuiFormRow>

@@ -114,7 +114,7 @@ UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_p
               color: 'success',
               iconType: 'checkInCircleFilled',
               toastLifeTimeMs: 115000,
-              text: 'You will now need to log in again.',
+              text: 'You will now need to log in again',
             }),
           )
           return dispatch({

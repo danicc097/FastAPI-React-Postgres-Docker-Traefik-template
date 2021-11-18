@@ -35,7 +35,7 @@ export default function LoginForm() {
     Object.keys(form).forEach((label) => validateInput(label, form[label]))
     // if any input hasn't been entered in, return early
     if (!Object.values(form).every((value) => Boolean(value) || value === null)) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields.' }))
+      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))
       return
     }
     setHasSubmitted(true)
@@ -62,7 +62,7 @@ export default function LoginForm() {
           label="Email"
           helpText="Enter the email associated with your account."
           isInvalid={Boolean(errors.email)}
-          error="Please enter a valid email."
+          error="Please enter a valid email"
         >
           <EuiFieldText
             data-test-subj="email-input"
@@ -70,7 +70,7 @@ export default function LoginForm() {
             placeholder="user@mail.com"
             value={form.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            aria-label="Enter the email associated with your account."
+            aria-label="Enter the email associated with your account"
             isInvalid={Boolean(errors.email)}
           />
         </EuiFormRow>
@@ -78,7 +78,7 @@ export default function LoginForm() {
           label="Password"
           helpText="Enter your password."
           isInvalid={Boolean(errors.password)}
-          error="Password must be at least 7 characters."
+          error="Password must be at least 7 characters"
         >
           <EuiFieldPassword
             placeholder="Password"
@@ -86,7 +86,7 @@ export default function LoginForm() {
             value={form.password}
             onChange={(e) => handleInputChange('password', e.target.value)}
             type="dual"
-            aria-label="Enter your password."
+            aria-label="Enter your password"
             isInvalid={Boolean(errors.password)}
           />
         </EuiFormRow>

@@ -141,7 +141,7 @@ class GlobalNotificationsRepository(BaseRepository):
             if not deleted_notification:
                 return None
             if deleted_notification["id"] != id:
-                raise GlobalNotificationsRepoException(f"Could not delete notification with id {id}.")
+                raise GlobalNotificationsRepoException(f"Could not delete notification with id {id}")
             return GlobalNotificationFeedItem(**deleted_notification)
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:

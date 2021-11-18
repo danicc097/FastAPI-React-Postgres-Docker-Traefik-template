@@ -269,7 +269,7 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
               color: 'success',
               iconType: 'checkInCircleFilled',
               toastLifeTimeMs: 5000,
-              text: 'All selected users have had their email verified.',
+              text: 'All selected users have had their email verified',
             }),
           )
 

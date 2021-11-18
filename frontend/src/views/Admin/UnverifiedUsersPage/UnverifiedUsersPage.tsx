@@ -144,7 +144,7 @@ export default function UnverifiedUsersPage() {
       <EuiSpacer size="s" />
       <EuiInMemoryTable
         items={unverifiedUsers ?? []}
-        message={unverifiedUsers?.length ? null : 'There are no unverified users.'}
+        message={unverifiedUsers?.length ? null : 'There are no unverified users'}
         itemId="email" // how to extract a unique ID from each item, for selections & expanded rows
         columns={columns}
         sorting={sorting}

@@ -239,7 +239,7 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
               color: 'success',
               iconType: 'checkInCircleFilled',
               toastLifeTimeMs: 15000,
-              text: 'You can now contact an administrator for approval.',
+              text: 'You can now contact an administrator for approval',
             }),
           )
           return dispatch({ type: AuthActionType.REQUEST_PASSWORD_RESET_SUCCESS })
@@ -325,7 +325,7 @@ AuthActionCreators.registerNewUser = ({ username, email, password }) => {
               color: 'success',
               iconType: 'checkInCircleFilled',
               toastLifeTimeMs: 50000,
-              text: 'An administrator will approve your account shortly.',
+              text: 'An administrator will approve your account shortly',
             }),
           )
           //* have to return original response if we implement a custom onSuccess or onFailure

@@ -41,7 +41,7 @@ export default function ForgotPasswordForm() {
     Object.keys(form).forEach((label) => validateInput(label, form[label]))
     // if any input hasn't been entered in, return early
     if (!Object.values(form).every((value) => Boolean(value) || value === null)) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields.' }))
+      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))
       return
     }
     setHasSubmitted(true)
@@ -71,7 +71,7 @@ export default function ForgotPasswordForm() {
           label="Email"
           helpText="Enter the email associated with your account."
           isInvalid={Boolean(errors.email)}
-          error="Please enter a valid email."
+          error="Please enter a valid email"
           fullWidth
         >
           <EuiFieldText
@@ -82,7 +82,7 @@ export default function ForgotPasswordForm() {
             placeholder="user@mail.com"
             value={form.email}
             onChange={(e) => handleInputChange('email', e.target.value)}
-            aria-label="Enter the email associated with your account."
+            aria-label="Enter the email associated with your account"
             isInvalid={Boolean(errors.email)}
           />
         </EuiFormRow>
@@ -90,7 +90,7 @@ export default function ForgotPasswordForm() {
         <EuiFormRow
           label="Request message"
           helpText="Leave a message for the administrator."
-          error="The message is too short."
+          error="The message is too short"
           isInvalid={Boolean(errors.message)}
           fullWidth
         >
@@ -101,7 +101,7 @@ export default function ForgotPasswordForm() {
             onChange={(e) => handleInputChange('message', e.target.value)}
             isInvalid={Boolean(errors.message)}
             fullWidth
-            placeholder="Kindly help."
+            placeholder="Kindly help"
           />
         </EuiFormRow>
         <EuiSpacer />
