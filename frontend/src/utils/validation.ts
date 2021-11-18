@@ -1,3 +1,4 @@
+import { SetStateAction } from 'react'
 import { ROLE_PERMISSIONS } from 'src/utils/permissions'
 
 /**
@@ -49,9 +50,6 @@ export function validateRole(role: string): boolean {
 /**
  * Each key has a reusable validation function as value.
  * Keys must match the keys in the form for the validation to work.
- * @example
- * // assume input is valid if there's no validation function
- * const isValid = functions[formLabel] ? functions[formLabel]?.(formValue) : true
  */
 export const validationFunctions = {
   email: validateEmail,
@@ -60,4 +58,35 @@ export const validationFunctions = {
   price: validatePrice,
   role: validateRole,
   message: validateMessage,
+}
+
+type validationFunction = keyof typeof validationFunctions
+
+interface handleInputChangeParams {
+  label: validationFunction
+  value: string
+  formLabel?: string
+  setForm: SetStateAction<any>
+  setErrors: SetStateAction<any>
+}
+
+/**
+ * Run validation function on input if it exists, else assume the input is valid
+ */
+export const validateInput = (label: string, value: string): boolean => {
+  return validationFunctions[label] ? validationFunctions[label](value) : true
+}
+
+/**
+ * @param label key that maps to a validation function
+ * @param value string to validate
+ * @param formLabel specify form key to validate if it differs from validation function label
+ * @param setForm function to set the form state
+ * @param setErrors function to set the errors state
+ */
+export const handleInputChange = ({ label, value, formLabel, setForm, setErrors }: handleInputChangeParams) => {
+  const isValid = validateInput(label, value)
+
+  setForm((form) => ({ ...form, [formLabel || label]: value }))
+  setErrors((errors) => ({ ...errors, [formLabel || label]: !isValid }))
 }

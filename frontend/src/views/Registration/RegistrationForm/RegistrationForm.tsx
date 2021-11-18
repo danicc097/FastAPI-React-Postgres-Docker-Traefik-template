@@ -12,9 +12,9 @@ import {
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 import React from 'react'
-
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
+import { handleInputChange, validateInput } from 'src/utils/validation'
 
 const RegistrationFormWrapper = styled.div`
   padding: 2rem;
@@ -32,8 +32,6 @@ export default function RegistrationForm() {
     isLoading,
     getFormErrors,
     setHasSubmitted,
-    handleInputChange,
-    validateInput,
     registerNewUser,
     handlePasswordConfirmChange,
   } = useUserForms({ isLogin: false })
@@ -43,8 +41,6 @@ export default function RegistrationForm() {
 
     setErrors({})
 
-    // validate inputs before submitting
-    Object.keys(form).forEach((label: keyof typeof form) => validateInput(label, form[label]))
     // if any input hasn't been entered in, return early
     if (!Object.values(form).every((value) => Boolean(value))) {
       setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))
@@ -87,7 +83,7 @@ export default function RegistrationForm() {
             data-test-subj="email-input"
             placeholder="user@mail.com"
             value={form.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
+            onChange={(e) => handleInputChange({ label: 'email', value: e.target.value, setForm, setErrors })}
             aria-label="Enter the email associated with your account"
             isInvalid={Boolean(errors.email)}
           />
@@ -104,7 +100,7 @@ export default function RegistrationForm() {
             data-test-subj="username-input"
             placeholder="your_username"
             value={form.username}
-            onChange={(e) => handleInputChange('username', e.target.value)}
+            onChange={(e) => handleInputChange({ label: 'username', value: e.target.value, setForm, setErrors })}
             aria-label="Choose a username consisting of letters, numbers, underscores, and dashes"
             isInvalid={Boolean(errors.username)}
           />
@@ -120,7 +116,7 @@ export default function RegistrationForm() {
             placeholder="Password"
             data-test-subj="password-input"
             value={form.password}
-            onChange={(e) => handleInputChange('password', e.target.value)}
+            onChange={(e) => handleInputChange({ label: 'password', value: e.target.value, setForm, setErrors })}
             type="dual"
             aria-label="Enter your password"
             isInvalid={Boolean(errors.password)}

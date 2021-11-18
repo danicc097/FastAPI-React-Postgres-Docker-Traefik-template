@@ -31,26 +31,6 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
   const authErrorList = extractErrorMessages(authError)
   const userProfileErrorList = extractErrorMessages(userProfileError)
 
-  const validateInput = (label: string, value: string) => {
-    // grab validation function and run it on input if it exists
-    // if it doesn't exist, just assume the input is valid
-    const isValid = validationFunctions?.[label] ? validationFunctions?.[label]?.(value) : true
-    // set an error if the validation function did NOT return true
-    setErrors((errors) => ({ ...errors, [label]: !isValid }))
-  }
-
-  /**
-   *
-   * @param label name of the function to run the value against
-   * @param value string to validate
-   * @param formLabel form field to validate if it differs from label
-   */
-  const handleInputChange = (label: string, value: string, formLabel = '') => {
-    validateInput(label, value)
-
-    setForm((form) => ({ ...form, [formLabel || label]: value }))
-  }
-
   const handlePasswordConfirmChange = (value: string) => {
     setErrors((errors) => ({
       ...errors,
@@ -103,8 +83,6 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
     getFormErrors,
     hasSubmitted,
     setHasSubmitted,
-    handleInputChange,
-    validateInput,
     agreedToTerms,
     updateUser,
     setAgreedToTerms,

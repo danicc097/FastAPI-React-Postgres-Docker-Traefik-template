@@ -13,6 +13,7 @@ import React, { useState } from 'react'
 
 import { useForgotPasswordForm } from 'src/hooks/auth/useForgotPasswordForm'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
+import { handleInputChange, validateInput } from 'src/utils/validation'
 
 const ForgotPasswordFormWrapper = styled.div`
   padding: 2rem;
@@ -22,17 +23,8 @@ const ForgotPasswordFormWrapper = styled.div`
 export default function ForgotPasswordForm() {
   // destructure the needed values from the hook's return
   const [isDisabled, setIsDisabled] = useState(false)
-  const {
-    form,
-    setForm,
-    errors,
-    setErrors,
-    getFormErrors,
-    validateInput,
-    handleInputChange,
-    setHasSubmitted,
-    requestPasswordReset,
-  } = useForgotPasswordForm()
+  const { form, setForm, errors, setErrors, getFormErrors, setHasSubmitted, requestPasswordReset } =
+    useForgotPasswordForm()
 
   // don't forget async...
   const handleSubmit = async (e) => {
@@ -81,7 +73,7 @@ export default function ForgotPasswordForm() {
             icon="email"
             placeholder="user@mail.com"
             value={form.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
+            onChange={(e) => handleInputChange({ label: 'email', value: e.target.value, setForm, setErrors })}
             aria-label="Enter the email associated with your account"
             isInvalid={Boolean(errors.email)}
           />
@@ -98,7 +90,7 @@ export default function ForgotPasswordForm() {
             name="message"
             data-test-subj="message-input"
             value={form.message}
-            onChange={(e) => handleInputChange('message', e.target.value)}
+            onChange={(e) => handleInputChange({ label: 'message', value: e.target.value, setForm, setErrors })}
             isInvalid={Boolean(errors.message)}
             fullWidth
             placeholder="Kindly help"

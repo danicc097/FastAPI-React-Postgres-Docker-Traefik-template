@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { SetStateAction, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { AuthActionCreators } from 'src/redux/modules/auth/auth'
@@ -21,26 +21,6 @@ export const useForgotPasswordForm = () => {
 
   const error = useAppSelector((state) => state.auth.pwdResetError)
   const pwdResetErrorList = extractErrorMessages(error)
-
-  const validateInput = (label: string, value: string) => {
-    // grab validation function and run it on input if it exists
-    // if it doesn't exist, just assume the input is valid
-    const isValid = validationFunctions?.[label] ? validationFunctions?.[label]?.(value) : true
-    // set an error if the validation function did NOT return true
-    setErrors((errors) => ({ ...errors, [label]: !isValid }))
-  }
-
-  /**
-   *
-   * @param label name of the function to run the value against
-   * @param value string to validate
-   * @param formLabel form field to validate if it differs from label
-   */
-  const handleInputChange = (label: string, value: string, formLabel = '') => {
-    validateInput(label, value)
-
-    setForm((form) => ({ ...form, [formLabel || label]: value }))
-  }
 
   const getFormErrors = () => {
     const formErrors = []
@@ -69,7 +49,5 @@ export const useForgotPasswordForm = () => {
     hasSubmitted,
     requestPasswordReset,
     setHasSubmitted,
-    handleInputChange,
-    validateInput,
   }
 }
