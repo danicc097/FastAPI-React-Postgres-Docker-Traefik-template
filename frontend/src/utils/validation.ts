@@ -17,10 +17,10 @@ export function validatePassword(password: string): boolean {
 }
 
 /**
- * Ensures password is of at least a certain length
+ * Validate a generic string
  */
 export function validateMessage(message: string): boolean {
-  const minLength = 2
+  const minLength = 1
   return message?.length >= minLength
 }
 
@@ -49,46 +49,15 @@ export function validateRole(role: string): boolean {
 /**
  * Each key has a reusable validation function as value.
  * Keys must match the keys in the form for the validation to work.
- * e.g. ``old_password`` is a form's key as well.
  * @example
  * // assume input is valid if there's no validation function
  * const isValid = functions[formLabel] ? functions[formLabel]?.(formValue) : true
  */
-const functions = {
+export const validationFunctions = {
   email: validateEmail,
   password: validatePassword,
-  old_password: validatePassword,
   username: validateUsername,
   price: validatePrice,
   role: validateRole,
-}
-
-/**
- * Validate a form based on form keys.
- * Refer to the ``functions`` object to map form keys to the appropiate validation function key.
- * @example
- *const isValid = validateForm({
- *  email: form.my_email,
- *  password: form.my_password,
- *})
- * // returns the form with boolean values for each key
- */
-export function validateForm(form: { [key: string]: string }): GenObjType<string> {
-  let isValid = {}
-  Object.keys(form).forEach((key) => {
-    const value = form[key]
-    const validation = functions[key]
-    if (validation) {
-      isValid = {
-        ...isValid,
-        [key]: validation(value),
-      }
-    } else {
-      isValid = {
-        ...isValid,
-        [key]: true,
-      }
-    }
-  })
-  return isValid
+  message: validateMessage,
 }

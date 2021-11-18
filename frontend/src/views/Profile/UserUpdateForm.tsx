@@ -172,7 +172,7 @@ export default function UserUpdateAccordion() {
                 aria-label="Enter your current password"
                 value={form.old_password}
                 onChange={(e) => {
-                  handleInputChange('old_password', e.target.value)
+                  handleInputChange('password', e.target.value, 'old_password')
                 }}
                 isInvalid={!!form.old_password && Boolean(errors.old_password)}
               />

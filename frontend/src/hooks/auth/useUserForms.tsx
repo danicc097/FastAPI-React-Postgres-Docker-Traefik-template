@@ -4,7 +4,7 @@ import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { UserUpdateActionCreators, UserUpdateActionsParams } from 'src/redux/modules/userProfile/userProfile'
 import { extractErrorMessages } from 'src/utils/errors'
-import validation from 'src/utils/validation'
+import { validationFunctions } from 'src/utils/validation'
 
 /**
  *  handle LoginForm, RegistrationForm and ProfilePage update form
@@ -34,7 +34,7 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
   const validateInput = (label: string, value: string) => {
     // grab validation function and run it on input if it exists
     // if it doesn't exist, just assume the input is valid
-    const isValid = validation?.[label] ? validation?.[label]?.(value) : true
+    const isValid = validationFunctions?.[label] ? validationFunctions?.[label]?.(value) : true
     // set an error if the validation function did NOT return true
     setErrors((errors) => ({ ...errors, [label]: !isValid }))
   }
@@ -43,11 +43,12 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
    *
    * @param label name of the function to run the value against
    * @param value string to validate
+   * @param formLabel form field to validate if it differs from label
    */
-  const handleInputChange = (label: string, value: string) => {
+  const handleInputChange = (label: string, value: string, formLabel = '') => {
     validateInput(label, value)
 
-    setForm((form) => ({ ...form, [label]: value }))
+    setForm((form) => ({ ...form, [formLabel || label]: value }))
   }
 
   const handlePasswordConfirmChange = (value: string) => {
