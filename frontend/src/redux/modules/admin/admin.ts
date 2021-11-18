@@ -165,7 +165,7 @@ export default function adminReducer(
   }
 }
 
-type AdminActionsParamsType = {
+type AdminActionsParams = {
   userEmails?: Array<schema['UserPublic']['email']>
   users?: Array<schema['UserPublic']>
   email?: string
@@ -175,19 +175,19 @@ type AdminActionsParamsType = {
 type ActionCreatorsType = {
   fetchAllUsers: () => any
   fetchAllNonVerifiedUsers: () => any
-  verifyUsers: ({ userEmails }: AdminActionsParamsType) => any
-  removeVerifiedUsersFromStore: ({ users }: AdminActionsParamsType) => any
+  verifyUsers: ({ userEmails }: AdminActionsParams) => any
+  removeVerifiedUsersFromStore: ({ users }: AdminActionsParams) => any
   fetchAllPasswordResetUsers: () => any
   /**
    * Accept a password reset request created by a user.
    * Also used to manually reset passwords.
    */
-  resetPasswordForUser: ({ email }: AdminActionsParamsType) => any
+  resetPasswordForUser: ({ email }: AdminActionsParams) => any
   /**
    * Delete a password reset request created by a user.
    */
-  deletePasswordResetRequest: ({ request }: AdminActionsParamsType) => any
-  removeResetPasswordRequestFromStore: ({ email }: AdminActionsParamsType) => any
+  deletePasswordResetRequest: ({ request }: AdminActionsParams) => any
+  removeResetPasswordRequestFromStore: ({ email }: AdminActionsParams) => any
 }
 
 export const AdminActionCreators: Partial<ActionCreatorsType> = {}

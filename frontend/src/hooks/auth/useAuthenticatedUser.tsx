@@ -1,7 +1,7 @@
 // centralize authentication logic as well
 
 import { shallowEqual } from 'react-redux'
-import { AuthActionCreators, AuthActionsParamsType } from '../../redux/modules/auth/auth'
+import { AuthActionCreators, AuthActionsParams } from '../../redux/modules/auth/auth'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 
 export const useAuthenticatedUser = () => {
@@ -23,11 +23,11 @@ export const useAuthenticatedUser = () => {
   // no need to use connect by using this approach
   const logUserOut = () => dispatch(AuthActionCreators.logUserOut())
 
-  const registerNewUser = ({ username, email, password }: AuthActionsParamsType) => {
+  const registerNewUser = ({ username, email, password }: AuthActionsParams) => {
     return dispatch(AuthActionCreators.registerNewUser({ username, email, password }))
   }
 
-  const requestUserLogin = ({ email, password }: AuthActionsParamsType) => {
+  const requestUserLogin = ({ email, password }: AuthActionsParams) => {
     return dispatch(AuthActionCreators.requestUserLogin({ email, password }))
   }
 

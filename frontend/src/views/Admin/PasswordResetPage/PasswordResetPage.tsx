@@ -77,8 +77,9 @@ export default function PasswordResetPage() {
         onCancel={closeModal}
         onConfirm={submitPasswordReset}
         cancelButtonText="Cancel"
-        confirmButtonText="Confirm"
+        confirmButtonText="Reset password"
         defaultFocusedButton="confirm"
+        buttonColor="warning"
         data-test-subj="passwordResetForm__confirmModal"
       >
         <p>{_.unescape(`You're about to reset the password for ${selection}.`)}</p>

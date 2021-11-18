@@ -2,7 +2,7 @@ import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
 import { UiActionCreators } from '../ui/ui'
-import { loadingState } from '../../utils/slices'
+import { loadingState, successState } from '../../utils/slices'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { schema } from 'src/types/schema_override'
 
@@ -46,11 +46,7 @@ export default function userProfileReducer(
         user: { id: null },
       }
     case UserProfileActionType.REQUEST_USER_UPDATE_SUCCESS:
-      return {
-        ...state,
-        isLoading: false,
-        error: null,
-      }
+      return successState(state)
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.userProfile
@@ -59,7 +55,7 @@ export default function userProfileReducer(
   }
 }
 
-export type UserUpdateActionsParamsType = {
+export type UserUpdateActionsParams = {
   username?: string
   email?: string
   password?: string
@@ -69,7 +65,7 @@ export type UserUpdateActionsParamsType = {
 
 // make optional properties to allow easier usage of actions inside other actions in this file.
 type ActionCreatorsType = {
-  requestUserUpdate: ({ email, username, password, old_password }: UserUpdateActionsParamsType) => any
+  requestUserUpdate: ({ email, username, password, old_password }: UserUpdateActionsParams) => any
 }
 
 export const UserUpdateActionCreators: Partial<ActionCreatorsType> = {}

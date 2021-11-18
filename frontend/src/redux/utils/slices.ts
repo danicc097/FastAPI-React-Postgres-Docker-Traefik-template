@@ -19,3 +19,14 @@ export function loadingState(state) {
     isLoading: true,
   }
 }
+
+/**
+ * Generic success slice of state
+ */
+export function successState(state) {
+  return {
+    ...state,
+    isLoading: false,
+    error: null,
+  }
+}

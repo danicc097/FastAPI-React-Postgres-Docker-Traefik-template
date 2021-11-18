@@ -60,15 +60,15 @@ export default function GlobalNotificationsModalForm() {
       isInvalid={false}
     >
       <EuiFormRow label="Title">
-        <EuiFieldText name="title" placeholder="Enter title" />
+        <EuiFieldText name="title" placeholder="Enter title" maxLength={30} />
       </EuiFormRow>
 
       <EuiFormRow label="Body">
-        <EuiTextArea name="body" rows={5} placeholder="Enter the notification body" />
+        <EuiTextArea name="body" rows={5} placeholder="Enter the notification body" maxLength={200} />
       </EuiFormRow>
 
       <EuiFormRow label="Label" helpText="Enter a notification label for context.">
-        <EuiFieldText name="label" placeholder="e.g. 'Updates' or 'Warning'" />
+        <EuiFieldText name="label" placeholder="e.g. 'Updates' or 'Warning'" maxLength={15} />
       </EuiFormRow>
 
       <EuiFormRow label="Link" helpText="Provide an optional link.">

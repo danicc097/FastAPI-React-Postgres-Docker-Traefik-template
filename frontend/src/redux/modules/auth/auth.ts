@@ -3,7 +3,7 @@ import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
 import { UiActionCreators } from '../ui/ui'
 import { schema } from 'src/types/schema_override'
-import { loadingState } from '../../utils/slices'
+import { loadingState, successState } from '../../utils/slices'
 
 type initialStateType = {
   auth: {
@@ -65,11 +65,7 @@ export default function authReducer(
         user: { id: null },
       }
     case AuthActionType.REQUEST_LOGIN_SUCCESS:
-      return {
-        ...state,
-        isLoading: false,
-        error: null,
-      }
+      return successState(state)
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return {
@@ -97,11 +93,7 @@ export default function authReducer(
     case AuthActionType.REQUEST_USER_SIGN_UP:
       return loadingState(state)
     case AuthActionType.REQUEST_USER_SIGN_UP_SUCCESS:
-      return {
-        ...state,
-        isLoading: false,
-        error: null,
-      }
+      return successState(state)
     case AuthActionType.REQUEST_USER_SIGN_UP_FAILURE:
       return {
         ...state,
@@ -129,7 +121,7 @@ export default function authReducer(
   }
 }
 
-export type AuthActionsParamsType = {
+export type AuthActionsParams = {
   username?: string
   email?: string
   password?: string
@@ -138,11 +130,11 @@ export type AuthActionsParamsType = {
 
 // make optional properties to allow easier usage of actions inside other actions in this file.
 type ActionCreatorsType = {
-  requestUserLogin: ({ email, password }: AuthActionsParamsType) => any
+  requestUserLogin: ({ email, password }: AuthActionsParams) => any
   fetchUserFromToken: () => any
   logUserOut: () => any
-  registerNewUser: ({ username, email, password }: AuthActionsParamsType) => any
-  requestPasswordReset: ({ email, message }: AuthActionsParamsType) => any
+  registerNewUser: ({ username, email, password }: AuthActionsParams) => any
+  requestPasswordReset: ({ email, message }: AuthActionsParams) => any
 }
 
 export const AuthActionCreators: Partial<ActionCreatorsType> = {}

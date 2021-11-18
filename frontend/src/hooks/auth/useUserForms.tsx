@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
-import { UserUpdateActionCreators, UserUpdateActionsParamsType } from 'src/redux/modules/userProfile/userProfile'
+import { UserUpdateActionCreators, UserUpdateActionsParams } from 'src/redux/modules/userProfile/userProfile'
 import { extractErrorMessages } from 'src/utils/errors'
 import validation from 'src/utils/validation'
 
@@ -74,7 +74,7 @@ export const useUserForms = ({ isLogin = false, isUpdate = false }: GenObjType<b
     return formErrors
   }
 
-  const updateUser = ({ email, username, password, old_password }: UserUpdateActionsParamsType) =>
+  const updateUser = ({ email, username, password, old_password }: UserUpdateActionsParams) =>
     dispatch(UserUpdateActionCreators.requestUserUpdate({ email, username, password, old_password }))
 
   // if the user is already authenticated, redirect them to the "/profile" page

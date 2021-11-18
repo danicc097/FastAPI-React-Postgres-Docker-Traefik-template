@@ -120,10 +120,10 @@ export default function UserUpdateAccordion() {
         onCancel={closeModal}
         onConfirm={submitUserUpdate}
         cancelButtonText="Cancel"
-        confirmButtonText="Confirm"
+        confirmButtonText="Update credentials"
         defaultFocusedButton="confirm"
       >
-        <p>{_.unescape(`You're about to update your credentials.`)}</p>
+        <p>{_.unescape(`You're about to update your login credentials.`)}</p>
       </EuiConfirmModal>
     )
   }

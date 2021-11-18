@@ -1,3 +1,5 @@
+import { ROLE_PERMISSIONS } from 'src/utils/permissions'
+
 /**
  * VERY simple email validation
  */
@@ -9,22 +11,25 @@ export function validateEmail(text: string): boolean {
 /**
  * Ensures password is of at least a certain length
  */
-export function validatePassword(password: string, length = 7): boolean {
-  return password?.length >= length
+export function validatePassword(password: string): boolean {
+  const minLength = 7
+  return password?.length >= minLength
 }
 
 /**
  * Ensures password is of at least a certain length
  */
-export function validateMessage(message: string, length = 2): boolean {
-  return message?.length >= length
+export function validateMessage(message: string): boolean {
+  const minLength = 2
+  return message?.length >= minLength
 }
 
 /**
  * Ensures a username consists of only letters, numbers, underscores, and dashes
  */
-export function validateUsername(username: string, length = 3): boolean {
-  return /^[a-zA-Z0-9_-]+$/.test(username) && username?.length >= length
+export function validateUsername(username: string): boolean {
+  const minLength = 3
+  return /^[a-zA-Z0-9_-]+$/.test(username) && username?.length >= minLength
 }
 
 /**
@@ -35,16 +40,55 @@ export function validatePrice(price: string): boolean {
 }
 
 /**
- * We export validation functions with keys that match the name of the input field
- * in a form, e.g. old_password is a form's key as well.
+ * Validate user roles
+ */
+export function validateRole(role: string): boolean {
+  return Object.keys(ROLE_PERMISSIONS).includes(role)
+}
+
+/**
+ * Each key has a reusable validation function as value.
+ * Keys must match the keys in the form for the validation to work.
+ * e.g. ``old_password`` is a form's key as well.
+ * @example
+ * // assume input is valid if there's no validation function
+ * const isValid = functions[formLabel] ? functions[formLabel]?.(formValue) : true
  */
 const functions = {
   email: validateEmail,
-  message: validateMessage,
   password: validatePassword,
   old_password: validatePassword,
   username: validateUsername,
   price: validatePrice,
+  role: validateRole,
 }
 
-export default functions
+/**
+ * Validate a form based on form keys.
+ * Refer to the ``functions`` object to map form keys to the appropiate validation function key.
+ * @example
+ *const isValid = validateForm({
+ *  email: form.my_email,
+ *  password: form.my_password,
+ *})
+ * // returns the form with boolean values for each key
+ */
+export function validateForm(form: { [key: string]: string }): GenObjType<string> {
+  let isValid = {}
+  Object.keys(form).forEach((key) => {
+    const value = form[key]
+    const validation = functions[key]
+    if (validation) {
+      isValid = {
+        ...isValid,
+        [key]: validation(value),
+      }
+    } else {
+      isValid = {
+        ...isValid,
+        [key]: true,
+      }
+    }
+  })
+  return isValid
+}

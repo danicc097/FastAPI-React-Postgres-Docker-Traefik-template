@@ -1,5 +1,3 @@
-// core logic for the cleaning feed.
-
 import moment from 'moment'
 import { useEffect, useCallback } from 'react'
 import { shallowEqual } from 'react-redux'
@@ -43,7 +41,9 @@ export function useGlobalNotificationsFeed() {
     [dispatch],
   )
 
-  // TODO delete global notifications action
+  // TODO delete global notifications action. backend ready
+
+  // TODO create global notifications action. backend ready
 
   const fetchFeedItemsByLastRead = () => {
     dispatch(GlobalNotificationsActionCreators.clearFeedItemsFromStore()) // must get rid of current feed items
