@@ -3,7 +3,7 @@ import { EuiAvatar } from '@elastic/eui'
 import { getAvatarName } from 'src/utils/format'
 import { schema } from 'src/types/schema_override'
 
-export type UserAvatarPropTypes = {
+export type UserAvatarProps = {
   user: schema['UserPublic']
   size?: typeof EuiAvatar.defaultProps.size
   initialsLength?: typeof EuiAvatar.defaultProps.initialsLength
@@ -17,7 +17,7 @@ export default function UserAvatar({
   initialsLength = 2,
   type = 'user',
   color = '#eee',
-}: UserAvatarPropTypes) {
+}: UserAvatarProps) {
   const imageUrl = user?.profile?.image
   const EuiAvatarProps = {
     size: size,

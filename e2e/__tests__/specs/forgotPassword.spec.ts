@@ -37,9 +37,9 @@ describe('Test forgot password form', () => {
     },
   )
 
-  it('should display 2 form errors given invalid email and message', async () => {
-    await forgotPasswordPo.fillPasswordResetRequestForm('a', 'b')
+  it('should display 2 form errors given invalid email', async () => {
+    await forgotPasswordPo.fillPasswordResetRequestForm('a', 'some message')
     const formErrors = await forgotPasswordPo.getFormRowErrors()
-    expect(formErrors).toHaveLength(2)
+    expect(formErrors).toHaveLength(1)
   })
 })

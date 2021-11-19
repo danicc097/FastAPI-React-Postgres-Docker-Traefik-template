@@ -23,7 +23,7 @@ export default function UnverifiedUsersPage() {
   const [sortField, setSortField] = useState('') // broken when specifying any field first
   const [selectedItems, setSelectedItems] = useState<typeof unverifiedUsers>([])
   const [sortDirection, setSortDirection] = useState<Direction>('asc')
-  const { verifyUsers, fetchAllNonVerifiedUsers, removeVerifiedUsersFromStore, unverifiedUsers } = useUnverifiedUsers()
+  const { verifyUsers, fetchAllNonVerifiedUsers, unverifiedUsers } = useUnverifiedUsers()
 
   const onTableChange = ({ page = {}, sort = {} }) => {
     const { field: sortField, direction: sortDirection }: any = sort
@@ -47,7 +47,6 @@ export default function UnverifiedUsersPage() {
     )
     if (action.success) {
       await fetchAllNonVerifiedUsers()
-      removeVerifiedUsersFromStore({ users: selectedItems })
       setSelectedItems([])
     }
   }
@@ -144,7 +143,7 @@ export default function UnverifiedUsersPage() {
       <EuiSpacer size="s" />
       <EuiInMemoryTable
         items={unverifiedUsers ?? []}
-        message={unverifiedUsers?.length ? null : 'There are no unverified users.'}
+        message={unverifiedUsers?.length ? null : 'There are no unverified users'}
         itemId="email" // how to extract a unique ID from each item, for selections & expanded rows
         columns={columns}
         sorting={sorting}

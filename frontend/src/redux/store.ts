@@ -23,7 +23,7 @@ const loggerMiddleware = (storeAPI) => (next) => (action) => {
 const store = configureStore({
   // these are our combined reducers into rootReducer
   reducer: rootReducer,
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(loggerMiddleware).concat(thunkMiddleware),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(thunkMiddleware), // .concat(loggerMiddleware)
   ...(process.env.NODE_ENV === 'production' && { devTools: false }),
 })
 

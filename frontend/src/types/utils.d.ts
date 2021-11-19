@@ -1,3 +1,18 @@
+/**
+ * Generic object ``{}``
+ */
+declare interface GenObjType<TValue> {
+  [key: string]: TValue
+}
+
+/**
+ * Returns the type of the elements in an array or tuple
+ * @example ArrayElement<MyArrayType>
+ */
+declare type ArrayElement<ArrayType extends readonly unknown[]> = ArrayType extends readonly (infer ElementType)[]
+  ? ElementType
+  : never
+
 // Passing types through Expand<T> makes TS expand them instead of lazily
 // evaluating the type. This also has the benefit that intersections are merged
 // to show as one object.

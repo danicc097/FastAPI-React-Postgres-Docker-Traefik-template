@@ -36,5 +36,5 @@
     "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/"
   },
   "python.formatting.provider": "black",
-  "cSpell.words": ["ondelete"]
+  "cSpell.words": ["ondelete", "psql"]
 }

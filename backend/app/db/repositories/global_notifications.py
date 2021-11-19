@@ -19,6 +19,56 @@ from app.models.global_notifications import (
 )
 from app.models.profile import ProfileCreate
 from app.models.user import Roles
+from app.services.authorization import ROLE_PERMISSIONS
+
+# The OFFSET clause is going to cause your SQL query plan to read all the results
+# anyway and then discard most of it until reaching the offset count.
+# When paging through additional results, it’s less and less efficient
+# with each additional page you fetch that way.
+# We navigate around this pitfall by using the LIMIT and WHERE clauses to implement pagination.
+
+
+def _fetch_notifications_query(date_condition: str) -> str:
+    return f"""
+SELECT
+  *,
+  ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
+FROM ((
+    -- Rows where the notification has been updated at some point.
+    SELECT
+      *,
+      updated_at AS event_timestamp,
+      -- define a new column ``event_type`` and set its value
+      'is_update' AS event_type
+    FROM
+      global_notifications
+    WHERE
+      updated_at {date_condition}
+      AND receiver_role = ANY(:roles)
+      AND updated_at != created_at
+    ORDER BY
+      updated_at DESC
+    LIMIT :page_chunk_size)
+UNION (
+  -- All rows.
+  SELECT
+    *,
+    created_at AS event_timestamp,
+    -- define a new column ``event_type`` and set its value
+    'is_create' AS event_type
+  FROM
+    global_notifications
+  WHERE
+    created_at {date_condition}
+    AND receiver_role = ANY(:roles)
+  ORDER BY
+    created_at DESC
+  LIMIT :page_chunk_size)) AS notifications_feed
+ORDER BY
+  event_timestamp DESC
+LIMIT :page_chunk_size;
+"""
+
 
 CREATE_NOTIFICATION_QUERY = """
 INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
@@ -32,81 +82,8 @@ WHERE id = :id
 RETURNING *;
 """
 
-# The OFFSET clause is going to cause your SQL query plan to read all the results
-# anyway and then discard most of it until reaching the offset count.
-# When paging through additional results, it’s less and less efficient
-# with each additional page you fetch that way.
-# We navigate around this pitfall by using the LIMIT and WHERE clauses to implement pagination.
-
-
-def get_notifications_query(date_condition: str = "> :last_notification_at") -> str:
-    return f"""
-    SELECT
-    id,
-    sender,
-    receiver_role,
-    title,
-    body,
-    label,
-    link,
-    created_at,
-    updated_at,
-    event_type,
-    event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
-    FROM ((
-        -- Rows where the notification has been updated at some point.
-        SELECT
-        id,
-        sender,
-        receiver_role,
-        title,
-        body,
-        label,
-        link,
-        created_at,
-        updated_at,
-        updated_at AS event_timestamp,
-        -- define a new column ``event_type`` and set its value
-        'is_update' AS event_type
-        FROM
-        global_notifications
-        WHERE
-        updated_at {date_condition}
-        AND receiver_role = :role
-        AND updated_at != created_at
-        ORDER BY
-        updated_at DESC
-        LIMIT :page_chunk_size)
-    UNION (
-    -- All rows.
-    SELECT
-        id,
-        sender,
-        receiver_role,
-        title,
-        body,
-        label,
-        link,
-        created_at,
-        updated_at,
-        created_at AS event_timestamp,
-        -- define a new column ``event_type`` and set its value
-        'is_create' AS event_type
-    FROM
-        global_notifications
-    WHERE
-        created_at {date_condition}
-        AND receiver_role = :role
-    ORDER BY
-        created_at DESC
-    LIMIT :page_chunk_size)) AS notifications_feed
-    ORDER BY
-    event_timestamp DESC
-    LIMIT :page_chunk_size;
-    """
-
-
+# check where any :roles in a array of
+# in the form ['admin', 'user'] is present
 CHECK_NEW_NOTIFICATIONS_QUERY = """
 SELECT
   EXISTS(
@@ -116,7 +93,7 @@ SELECT
       global_notifications
     WHERE
       updated_at > :last_notification_at
-      AND receiver_role = :role
+      AND receiver_role = ANY(:roles)
   ) AS has_new_notifications;
 """
 
@@ -159,14 +136,24 @@ class GlobalNotificationsRepository(BaseRepository):
         return GlobalNotificationFeedItem(**new_notification)
 
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotificationFeedItem]:
-        pass
+        async with self.db.transaction():
+            deleted_notification = await self.db.fetch_one(
+                DELETE_NOTIFICATION_QUERY,
+                values={"id": id},
+            )
+            if not deleted_notification:
+                return None
+            if deleted_notification["id"] != id:
+                raise GlobalNotificationsRepoException(f"Could not delete notification with id {id}")
+            return GlobalNotificationFeedItem(**deleted_notification)
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:
+        logger.critical("has_new_notifications", ROLE_PERMISSIONS[role])
         return await self.db.fetch_val(
             CHECK_NEW_NOTIFICATIONS_QUERY,
             values={
                 "last_notification_at": last_notification_at,
-                "role": role,
+                "roles": ROLE_PERMISSIONS[role],
             },
         )
 
@@ -187,11 +174,11 @@ class GlobalNotificationsRepository(BaseRepository):
             notifications = [
                 GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
-                    get_notifications_query(date_condition),
+                    _fetch_notifications_query(date_condition),
                     values={
                         "last_notification_at": last_notification_at.replace(tzinfo=None),
                         "page_chunk_size": page_chunk_size or self.page_chunk_size,
-                        "role": role.value,
+                        "roles": ROLE_PERMISSIONS[role],
                     },
                 )
             ]
@@ -201,11 +188,11 @@ class GlobalNotificationsRepository(BaseRepository):
             notifications = [
                 GlobalNotificationFeedItem(**notification)
                 for notification in await self.db.fetch_all(
-                    get_notifications_query(date_condition),
+                    _fetch_notifications_query(date_condition),
                     values={
                         "starting_date": starting_date.replace(tzinfo=None),
                         "page_chunk_size": page_chunk_size or self.page_chunk_size,
-                        "role": role.value,
+                        "roles": ROLE_PERMISSIONS[role],
                     },
                 )
             ]

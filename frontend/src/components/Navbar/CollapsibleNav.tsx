@@ -127,7 +127,7 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
    * Accordion toggling
    */
   const [openGroups, setOpenGroups] = useState(
-    JSON.parse(String(localStorage.getItem('openNavGroups'))) || ['Learn', 'Skills'],
+    JSON.parse(String(localStorage.getItem('openNavGroups'))) || ['Learn', 'Skills', 'Admin'],
   )
 
   // Save which groups are open and which are not with state and local store

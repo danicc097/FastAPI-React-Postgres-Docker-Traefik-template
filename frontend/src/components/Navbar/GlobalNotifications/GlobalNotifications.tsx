@@ -1,12 +1,11 @@
-import ReactDOM from 'react-dom'
 import '@elastic/eui/dist/eui_theme_amsterdam_dark.css'
 import React, { useEffect, useState } from 'react'
 
 import {
-  EuiAvatar,
   EuiBadge,
   EuiButton,
   EuiButtonEmpty,
+  EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
   EuiFlyout,
@@ -18,7 +17,6 @@ import {
   EuiHeaderSectionItemButton,
   EuiIcon,
   EuiLink,
-  EuiLoadingSpinner,
   EuiPortal,
   EuiText,
   EuiTitle,
@@ -29,6 +27,12 @@ import moment from 'moment'
 import { motion } from 'framer-motion'
 import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
 import styled from 'styled-components'
+import ComponentPermissions from 'src/components/Permissions/ComponentPermissions'
+import { schema } from 'src/types/schema_override'
+import GlobalNotificationsModalForm from 'src/components/Navbar/GlobalNotifications/GlobalNotificationsModalForm'
+import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificationsForm'
+import { Link } from 'react-router-dom'
+import _ from 'lodash'
 
 const Center = styled.div`
   align-self: center;
@@ -37,7 +41,12 @@ const Center = styled.div`
   }
 `
 
-export default function Notifications() {
+type GlobalNotificationsProps = {
+  user: schema['UserPublic']
+}
+export default function GlobalNotifications({ user }: GlobalNotificationsProps) {
+  const { deleteNotification } = useGlobalNotificationsForm()
+
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false)
   const newsFeedFlyoutId = useGeneratedHtmlId({ prefix: 'newsFeedFlyout' })
   const newsFeedFlyoutTitleId = useGeneratedHtmlId({
@@ -47,14 +56,16 @@ export default function Notifications() {
   const {
     hasNewNotifications,
     fetchFeedItemsByLastRead,
-    globalNotificationsFeedItems,
-    globalNotificationsUnreadItems,
+    feedItems: globalNotificationsFeedItems,
+    unreadItems: globalNotificationsUnreadItems,
     isLoading,
-    error,
+    errorList: globalNotificationsErrorList,
     fetchFeedItems,
   } = useGlobalNotificationsFeed()
 
   const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
+
+  type AlertProps = EuiHeaderAlertProps & { notificationId: number }
 
   const globalNotificationsAlerts: Array<EuiHeaderAlertProps> = globalNotificationsFeedItems.map(
     (item: ArrayElement<typeof globalNotificationsFeedItems>) => {
@@ -74,19 +85,21 @@ export default function Notifications() {
       } = item
 
       const alertProps = {
+        notificationId: id,
         title: event_type === 'is_update' ? '[UPDATE]' + title : title,
         text: <EuiText size="s">{body}</EuiText>,
         action: link ? (
           <EuiLink href={link} target="_blank">
-            {label}
+            <EuiButtonEmpty size="s" color="primary">
+              {_.truncate(link, { length: 30 })}
+            </EuiButtonEmpty>
           </EuiLink>
         ) : null,
         date: (
           <EuiBadge color="lightblue">
             <Center>
               <EuiIcon type="clock" size="m" />
-              {/* TODO user timezones */}
-              {moment(created_at).fromNow()}
+              {moment.utc(event_timestamp).local().fromNow()}
             </Center>
           </EuiBadge>
         ),
@@ -100,7 +113,7 @@ export default function Notifications() {
             </EuiFlexItem>
           </EuiFlexGroup>
         ),
-      } as EuiHeaderAlertProps
+      } as AlertProps
 
       return alertProps
     },
@@ -164,18 +177,35 @@ export default function Notifications() {
           {isLoading ? (
             <InfiniteSpinner size="xl" />
           ) : (
-            globalNotificationsAlerts.map((alert, i) => (
+            globalNotificationsAlerts.map((alert: AlertProps, i) => (
               <EuiHeaderAlert
                 key={`alert-${i}`}
                 title={alert.title}
-                action={alert.action}
+                action={
+                  <EuiFlexGroup alignItems="center" gutterSize="xs" justifyContent="spaceBetween">
+                    <EuiFlexItem grow={false}>{alert.action}</EuiFlexItem>
+                    <EuiFlexItem grow={false}>
+                      <EuiButtonIcon
+                        iconType="trash"
+                        size="xs"
+                        color="danger"
+                        aria-label="Delete notification"
+                        onClick={() => deleteNotification({ id: alert.notificationId })}
+                      />
+                    </EuiFlexItem>
+                  </EuiFlexGroup>
+                }
                 text={alert.text}
                 date={alert.date}
                 badge={alert.badge}
               />
             ))
           )}
-          {globalNotificationsAlerts.length === 0 ? (
+          {globalNotificationsErrorList.length !== 0 ? (
+            <EuiText>
+              <p>{globalNotificationsErrorList}</p>
+            </EuiText>
+          ) : globalNotificationsAlerts.length === 0 ? (
             <EuiText size="s">
               <p>No new notifications</p>
             </EuiText>
@@ -186,19 +216,19 @@ export default function Notifications() {
         <EuiFlyoutFooter>
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
             <EuiFlexItem grow={false}>
-              <EuiButtonEmpty iconType="cross" onClick={closeFlyout} flush="left">
-                Close
-              </EuiButtonEmpty>
+              <EuiButton size="s" fill>
+                Load more
+              </EuiButton>
             </EuiFlexItem>
-            {globalNotificationsAlerts.length === 0 ?? (
-              <EuiFlexItem grow={false}>
-                <EuiText color="subdued" size="s">
-                  <EuiButton size="s" fill>
-                    Load more
-                  </EuiButton>
-                </EuiText>
-              </EuiFlexItem>
-            )}
+            <ComponentPermissions
+              requiredRole={'admin'}
+              element={
+                <EuiFlexItem grow={false}>
+                  <GlobalNotificationsModalForm />
+                </EuiFlexItem>
+              }
+              user={user}
+            />
           </EuiFlexGroup>
         </EuiFlyoutFooter>
       </EuiFlyout>

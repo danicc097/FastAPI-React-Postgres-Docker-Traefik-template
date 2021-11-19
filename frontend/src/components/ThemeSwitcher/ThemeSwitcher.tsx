@@ -18,13 +18,13 @@ const StyledFontAwesomeIcon = styled(FontAwesomeIcon)`
   font-size: large;
 `
 
-type ThemeSwitcherPropTypes = {
+type ThemeSwitcherProps = {
   currentTheme: string
   setTheme: Dispatch<any>
   setProviderTheme: Dispatch<any>
 }
 
-export function ThemeSwitcher({ currentTheme, setTheme, setProviderTheme }: ThemeSwitcherPropTypes) {
+export function ThemeSwitcher({ currentTheme, setTheme, setProviderTheme }: ThemeSwitcherProps) {
   const [checked, setChecked] = React.useState(currentTheme === 'dark' ? true : false)
 
   // only way to have both of them in the build output. Additionally,

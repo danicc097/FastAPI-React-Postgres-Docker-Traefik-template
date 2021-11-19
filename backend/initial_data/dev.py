@@ -37,6 +37,11 @@ USERS: Dict[str, UserCreate] = {
         email="unverified@myapp.com",
         password="12341234",
     ),
+    "unverified2": UserCreate(
+        username="unverified2",
+        email="unverified2@myapp.com",
+        password="12341234",
+    ),
 }
 
 
@@ -82,6 +87,14 @@ async def main():
         verified=False,
     )
     logger.info(f'Created unverified user  {USERS["unverified"].email}') if not err else logger.exception(err)
+
+    err = await create_user(
+        database,
+        USERS["unverified2"],
+        admin=False,
+        verified=False,
+    )
+    logger.info(f'Created unverified2 user  {USERS["unverified2"].email}') if not err else logger.exception(err)
 
     for i in range(20):
         err = await create_user(

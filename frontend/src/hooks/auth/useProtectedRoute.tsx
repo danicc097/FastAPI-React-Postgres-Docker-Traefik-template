@@ -2,11 +2,13 @@ import { useEffect } from 'react'
 import { useToasts } from 'src/hooks/ui/useToasts'
 import { useAuthenticatedUser } from './useAuthenticatedUser'
 
+/**
+ * Protect routes against unauthenticated users
+ */
 export const useProtectedRoute = (
   redirectTitle = 'Access Denied',
-  redirectMessage = 'Authenticated users only. Login here or create a new account to view that page.',
+  redirectMessage = 'Authenticated users only. Login here or create a new account to view that page',
 ) => {
-  // we can use redux hooks inside other hooks!
   const { userLoaded, isAuthenticated, isAdmin, isVerifiedUser } = useAuthenticatedUser()
   const { addToast } = useToasts()
 

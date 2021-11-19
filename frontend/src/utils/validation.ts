@@ -1,3 +1,6 @@
+import { SetStateAction } from 'react'
+import { ROLE_PERMISSIONS } from 'src/utils/permissions'
+
 /**
  * VERY simple email validation
  */
@@ -9,22 +12,25 @@ export function validateEmail(text: string): boolean {
 /**
  * Ensures password is of at least a certain length
  */
-export function validatePassword(password: string, length = 7): boolean {
-  return password?.length >= length
+export function validatePassword(password: string): boolean {
+  const minLength = 7
+  return password?.length >= minLength
 }
 
 /**
- * Ensures password is of at least a certain length
+ * Validate a generic string
  */
-export function validateMessage(message: string, length = 2): boolean {
-  return message?.length >= length
+export function validateMessage(message: string): boolean {
+  const minLength = 1
+  return message?.length >= minLength
 }
 
 /**
  * Ensures a username consists of only letters, numbers, underscores, and dashes
  */
-export function validateUsername(username: string, length = 3): boolean {
-  return /^[a-zA-Z0-9_-]+$/.test(username) && username?.length >= length
+export function validateUsername(username: string): boolean {
+  const minLength = 3
+  return /^[a-zA-Z0-9_-]+$/.test(username) && username?.length >= minLength
 }
 
 /**
@@ -35,16 +41,71 @@ export function validatePrice(price: string): boolean {
 }
 
 /**
- * We export validation functions with keys that match the name of the input field
- * in a form, e.g. old_password is a form's key as well.
+ * Validate user roles
  */
-const functions = {
-  email: validateEmail,
-  message: validateMessage,
-  password: validatePassword,
-  old_password: validatePassword,
-  username: validateUsername,
-  price: validatePrice,
+export function validateRole(role: string): boolean {
+  return Object.keys(ROLE_PERMISSIONS).includes(role)
 }
 
-export default functions
+/**
+ * Each key has a reusable validation function as value.
+ * Keys must match the keys in the form for the validation to work.
+ */
+export const validationFunctions = {
+  email: validateEmail,
+  password: validatePassword,
+  username: validateUsername,
+  price: validatePrice,
+  role: validateRole,
+  message: validateMessage,
+}
+
+type validationFunction = keyof typeof validationFunctions
+
+interface handleInputChangeParams {
+  label: validationFunction
+  value: string
+  formLabel?: string
+  setForm: SetStateAction<any>
+  setErrors: SetStateAction<any>
+}
+
+/**
+ * Run validation function on input if it exists, else assume the input is valid
+ */
+export const validateInput = (label: string, value: string): boolean => {
+  return validationFunctions[label] ? validationFunctions[label](value) : true
+}
+
+/**
+ * @param label key that maps to a validation function
+ * @param value string to validate
+ * @param formLabel specify form key to validate if it differs from validation function label
+ * @param setForm function to set the form state
+ * @param setErrors function to set the form errors state
+ */
+export const handleInputChange = ({ label, value, formLabel, setForm, setErrors }: handleInputChangeParams) => {
+  const isValid = validateInput(label, value)
+
+  setForm((form) => ({ ...form, [formLabel || label]: value }))
+  setErrors((errors) => ({ ...errors, [formLabel || label]: !isValid }))
+}
+
+export function _getFormErrors(
+  form,
+  errors: FormErrors<typeof form>,
+  hasSubmitted: boolean,
+  ...errorLists: Array<Array<unknown>>
+) {
+  const formErrors = []
+
+  if (errors.form) {
+    formErrors.push(errors.form)
+  }
+
+  if (hasSubmitted && errorLists.some((list) => list.length)) {
+    return formErrors.concat(errorLists.flat())
+  }
+
+  return formErrors
+}

@@ -2,14 +2,14 @@ import { useNavigate } from 'react-router-dom'
 import { EuiEmptyPrompt, EuiButton } from '@elastic/eui'
 import React from 'react'
 
-type NotFoundPagePropTypes = {
+type NotFoundPageProps = {
   notFoundItem?: string
   notFoundError?: string
 }
 export default function NotFoundPage({
   notFoundItem = 'Page',
   notFoundError = "Looks like there's nothing there. We must have misplaced it!",
-}: NotFoundPagePropTypes) {
+}: NotFoundPageProps) {
   const navigate = useNavigate()
 
   return (
