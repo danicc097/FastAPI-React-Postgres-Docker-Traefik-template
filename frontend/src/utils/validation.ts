@@ -90,3 +90,22 @@ export const handleInputChange = ({ label, value, formLabel, setForm, setErrors 
   setForm((form) => ({ ...form, [formLabel || label]: value }))
   setErrors((errors) => ({ ...errors, [formLabel || label]: !isValid }))
 }
+
+export function _getFormErrors(
+  form,
+  errors: FormErrors<typeof form>,
+  hasSubmitted: boolean,
+  ...errorLists: Array<Array<unknown>>
+) {
+  const formErrors = []
+
+  if (errors.form) {
+    formErrors.push(errors.form)
+  }
+
+  if (hasSubmitted && errorLists.some((list) => list.length)) {
+    return formErrors.concat(errorLists.flat())
+  }
+
+  return formErrors
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import { extractErrorMessages } from 'src/utils/errors'
+import { _getFormErrors } from 'src/utils/validation'
 
 /**
  *  handle LoginForm, RegistrationForm and ProfilePage update form
@@ -23,19 +24,7 @@ export const useLoginForm = () => {
    * Retrieve form errors specific to the current form
    * form-specific errors should be set in its own form key
    */
-  const getFormErrors = () => {
-    const formErrors = []
-
-    if (errors.form) {
-      formErrors.push(errors.form)
-    }
-
-    if (hasSubmitted && authErrorList.length) {
-      return formErrors.concat(authErrorList)
-    }
-
-    return formErrors
-  }
+  const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, authErrorList)
 
   // if the user is already authenticated, redirect them to the profile page instead
   useEffect(() => {

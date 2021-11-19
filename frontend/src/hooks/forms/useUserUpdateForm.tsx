@@ -4,7 +4,7 @@ import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { UserUpdateActionCreators } from 'src/redux/modules/userProfile/userProfile'
 import { extractErrorMessages } from 'src/utils/errors'
-import { validationFunctions } from 'src/utils/validation'
+import { validationFunctions, _getFormErrors } from 'src/utils/validation'
 
 export const useUserUpdateForm = () => {
   const dispatch = useAppDispatch()
@@ -34,20 +34,11 @@ export const useUserUpdateForm = () => {
     setForm((form) => ({ ...form, passwordConfirm: value }))
   }
 
-  const getFormErrors = () => {
-    const formErrors = []
-
-    if (errors.form) {
-      formErrors.push(errors.form)
-    }
-
-    if (hasSubmitted && (authErrorList.length || userProfileErrorList.length)) {
-      // const additionalErrors = isLogin ? ['Invalid credentials. Please try again'] : authErrorList
-      return formErrors.concat(authErrorList).concat(userProfileErrorList)
-    }
-
-    return formErrors
-  }
+  /**
+   * Retrieve form errors specific to the current form
+   * form-specific errors should be set in its own form key
+   */
+  const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, authErrorList, userProfileErrorList)
 
   const updateUser = ({ email, username, password, old_password }) =>
     dispatch(UserUpdateActionCreators.requestUserUpdate({ email, username, password, old_password }))
