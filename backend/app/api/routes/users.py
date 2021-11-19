@@ -13,9 +13,11 @@ from starlette.status import (
     HTTP_409_CONFLICT,
 )
 
-from app.api.dependencies.auth import get_current_active_user
+from app.api.dependencies.auth import (
+    email_is_verified,
+    get_current_active_user,
+)
 from app.api.dependencies.database import get_repository
-from app.api.dependencies.auth import email_is_verified
 from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,

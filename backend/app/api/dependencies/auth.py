@@ -3,6 +3,7 @@ from typing import Optional, cast
 from fastapi import Depends, HTTPException, params, status
 from fastapi.security import OAuth2PasswordBearer
 from starlette.requests import Request
+
 from app.api.dependencies.database import get_repository
 from app.core.config import API_PREFIX, UNIQUE_KEY
 from app.db.repositories.users import UsersRepository

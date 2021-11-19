@@ -10,20 +10,16 @@ import { useGlobalNotifications } from '../ui/useGlobalNotifications'
 
 export function useGlobalNotificationsForm() {
   // grab functionality as needed
-  const { createNotification, deleteNotification, errorList } = useGlobalNotifications()
 
   const dispatch = useAppDispatch()
   // define keys meant to be passed to API with original snake_case
-  const [form, setForm] = useState<schema['GlobalNotificationCreate']>({
-    sender: '',
-    receiver_role: 'user',
-    title: '',
-    body: '',
-    label: '',
-    link: '',
+  const [form, setForm] = useState<schema['RoleUpdate']>({
+    email: '',
+    role: 'user',
   })
   const [errors, setErrors] = useState<FormErrors<typeof form>>({})
   const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [errorList, setErrorList] = useState<string[]>([])
 
   /**
    * Retrieve form errors specific to the current form.
@@ -32,9 +28,6 @@ export function useGlobalNotificationsForm() {
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, errorList)
 
   return {
-    errorList,
     getFormErrors,
-    createNotification,
-    deleteNotification,
   }
 }

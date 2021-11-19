@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
+import { schema } from 'src/types/schema_override'
 import { extractErrorMessages } from 'src/utils/errors'
 import { _getFormErrors } from 'src/utils/validation'
 
 export const useRegistrationForm = () => {
   const navigate = useNavigate()
   const { user, authError, isLoading, isAuthenticated, registerNewUser } = useAuthenticatedUser()
-  // define keys meant to be passed to API with original snake_case
+
   const [form, setForm] = useState({
     username: '',
     email: '',
