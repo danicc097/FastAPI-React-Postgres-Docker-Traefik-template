@@ -38,6 +38,7 @@ export default function userProfileReducer(
   switch (action.type) {
     case UserProfileActionType.REQUEST_USER_UPDATE:
       return loadingState(state)
+
     case UserProfileActionType.REQUEST_USER_UPDATE_FAILURE:
       return {
         ...state,
@@ -45,11 +46,14 @@ export default function userProfileReducer(
         error: action.error,
         user: { id: null },
       }
+
     case UserProfileActionType.REQUEST_USER_UPDATE_SUCCESS:
       return successState(state)
     // remove data when user logs out
+
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.userProfile
+
     default:
       return state
   }
@@ -64,11 +68,11 @@ export type UserUpdateActionsParams = {
 }
 
 // make optional properties to allow easier usage of actions inside other actions in this file.
-type ActionCreatorsType = {
+type ActionCreators = {
   requestUserUpdate: ({ email, username, password, old_password }: UserUpdateActionsParams) => any
 }
 
-export const UserUpdateActionCreators: Partial<ActionCreatorsType> = {}
+export const UserUpdateActionCreators: Partial<ActionCreators> = {}
 
 UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_password }) => {
   return async (dispatch: AppDispatch) => {

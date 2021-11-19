@@ -67,22 +67,9 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
 
   type AlertProps = EuiHeaderAlertProps & { notificationId: number }
 
-  const globalNotificationsAlerts: Array<EuiHeaderAlertProps> = globalNotificationsFeedItems.map(
+  const globalNotificationsAlerts: Array<AlertProps> = globalNotificationsFeedItems.map(
     (item: ArrayElement<typeof globalNotificationsFeedItems>) => {
-      const {
-        row_number,
-        event_timestamp,
-        id,
-        created_at,
-        updated_at,
-        sender,
-        receiver_role,
-        title,
-        body,
-        label,
-        link,
-        event_type,
-      } = item
+      const { event_timestamp, id, title, body, label, link, event_type } = item
 
       const alertProps = {
         notificationId: id,
@@ -164,6 +151,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
         id={newsFeedFlyoutId}
         aria-labelledby={newsFeedFlyoutTitleId}
         paddingSize="m"
+        maxWidth={500}
       >
         {/* HEADER */}
         <EuiFlyoutHeader hasBorder>
@@ -184,15 +172,21 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
                 action={
                   <EuiFlexGroup alignItems="center" gutterSize="xs" justifyContent="spaceBetween">
                     <EuiFlexItem grow={false}>{alert.action}</EuiFlexItem>
-                    <EuiFlexItem grow={false}>
-                      <EuiButtonIcon
-                        iconType="trash"
-                        size="xs"
-                        color="danger"
-                        aria-label="Delete notification"
-                        onClick={() => deleteNotification({ id: alert.notificationId })}
-                      />
-                    </EuiFlexItem>
+                    <ComponentPermissions
+                      requiredRole="admin"
+                      user={user}
+                      element={
+                        <EuiFlexItem grow={false}>
+                          <EuiButtonIcon
+                            iconType="trash"
+                            size="xs"
+                            color="danger"
+                            aria-label="Delete notification"
+                            onClick={() => deleteNotification({ id: alert.notificationId })}
+                          />
+                        </EuiFlexItem>
+                      }
+                    ></ComponentPermissions>
                   </EuiFlexGroup>
                 }
                 text={alert.text}

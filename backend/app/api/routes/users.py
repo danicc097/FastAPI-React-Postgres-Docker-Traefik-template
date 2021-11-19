@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime, timedelta
-from logging.config import dictConfig
 from typing import List, Optional, cast
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
@@ -9,20 +8,14 @@ from loguru import logger
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
-    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-    HTTP_500_INTERNAL_SERVER_ERROR,
 )
 
 from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.database import get_repository
-from app.api.dependencies.users import (
-    verify_email_is_verified,
-    verify_user_is_admin,
-)
+from app.api.dependencies.auth import email_is_verified
 from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
@@ -87,7 +80,7 @@ async def register_new_user(
     "/me/",
     response_model=UserPublic,
     name="users:get-current-user",
-    dependencies=[Depends(verify_email_is_verified)],
+    dependencies=[Depends(email_is_verified)],
 )
 async def get_currently_authenticated_user(
     current_user: UserPublic = Depends(get_current_active_user),
@@ -101,7 +94,7 @@ async def get_currently_authenticated_user(
     response_model=UserPublic,
     name="users:update-user-by-id",
     status_code=HTTP_200_OK,
-    dependencies=[Depends(verify_email_is_verified)],
+    dependencies=[Depends(email_is_verified)],
 )
 async def update_user_by_id(
     current_user: UserPublic = Depends(get_current_active_user),

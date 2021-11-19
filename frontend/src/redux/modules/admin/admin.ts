@@ -45,8 +45,6 @@ export enum AdminActionType {
   VERIFY_USERS_SUCCESS = 'admin/VERIFY_USERS_SUCCESS',
   VERIFY_USERS_FAILURE = 'admin/VERIFY_USERS_FAILURE',
 
-  // REMOVE_VERIFIED_USERS_FROM_STORE = 'admin/REMOVE_VERIFIED_USERS_FROM_STORE',
-
   FETCH_ALL_PASSWORD_RESET_REQUESTS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS',
   FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS',
   FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE',
@@ -124,6 +122,7 @@ export default function adminReducer(
   switch (action.type) {
     case AdminActionType.FETCH_ALL_USERS:
       return loadingState(state)
+
     case AdminActionType.FETCH_ALL_USERS_SUCCESS:
       return {
         ...state,
@@ -143,23 +142,32 @@ export default function adminReducer(
 
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS:
       return loadingState(state)
+
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS:
       return updateStateOfUnverifiedUsers(state, action.data, false)
+
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE:
       return errorState(state, action)
+
     case AdminActionType.VERIFY_USERS_SUCCESS:
       return updateStateOfUnverifiedUsers(state, action.data, true)
+
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS:
       return loadingState(state)
+
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS:
       return updateStateOfPasswordResetRequests(state, action.data, false)
+
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE:
       return errorState(state, action)
+
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
+
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.admin
+
     default:
       return state
   }
@@ -172,7 +180,7 @@ type AdminActionsParams = {
   request?: schema['PasswordResetRequest']
 }
 
-type ActionCreatorsType = {
+type ActionCreators = {
   fetchAllUsers: () => any
   fetchAllNonVerifiedUsers: () => any
   verifyUsers: ({ userEmails }: AdminActionsParams) => any
@@ -189,7 +197,7 @@ type ActionCreatorsType = {
   _removeResetPasswordRequestFromStore: ({ email }: AdminActionsParams) => any
 }
 
-export const AdminActionCreators: Partial<ActionCreatorsType> = {}
+export const AdminActionCreators: Partial<ActionCreators> = {}
 
 AdminActionCreators.fetchAllUsers = () => {
   return async (dispatch: AppDispatch) => {
@@ -304,13 +312,6 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
     )
   }
 }
-
-// // we can directly dispatch an action that edits the store
-// AdminActionCreators.removeVerifiedUsersFromStore = ({ users }) => {
-//   return async (dispatch: AppDispatch) => {
-//     return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
-//   }
-// }
 
 AdminActionCreators.fetchAllPasswordResetUsers = () => {
   return async (dispatch: AppDispatch) => {

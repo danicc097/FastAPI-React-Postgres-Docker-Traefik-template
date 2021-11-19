@@ -18,7 +18,7 @@ from app.models.global_notifications import (
     GlobalNotificationCreate,
 )
 from app.models.profile import ProfileCreate
-from app.models.user import Roles
+from app.models.user import Role
 from app.services.authorization import ROLE_PERMISSIONS
 
 # The OFFSET clause is going to cause your SQL query plan to read all the results
@@ -147,7 +147,7 @@ class GlobalNotificationsRepository(BaseRepository):
                 raise GlobalNotificationsRepoException(f"Could not delete notification with id {id}")
             return GlobalNotificationFeedItem(**deleted_notification)
 
-    async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:
+    async def has_new_notifications(self, *, last_notification_at: datetime, role: Role) -> bool:
         logger.critical("has_new_notifications", ROLE_PERMISSIONS[role])
         return await self.db.fetch_val(
             CHECK_NEW_NOTIFICATIONS_QUERY,
@@ -163,7 +163,7 @@ class GlobalNotificationsRepository(BaseRepository):
         last_notification_at: datetime = None,
         page_chunk_size: int = None,
         starting_date: datetime = None,
-        role: Roles = Roles.user,
+        role: Role = Role.user,
         by_last_read: bool = False,
     ) -> List[GlobalNotificationFeedItem]:
         """

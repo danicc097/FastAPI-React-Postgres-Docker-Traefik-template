@@ -7,7 +7,7 @@ from loguru import logger
 
 from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import PasswordResetRequestCreate
-from app.models.user import Roles, RoleUpdate, UserCreate
+from app.models.user import Role, RoleUpdate, UserCreate
 from initial_data.utils import (
     change_user_role,
     create_global_notification,
@@ -59,7 +59,7 @@ async def main():
         verified=True,
     )
     logger.info(f'Created superuser {USERS["admin"].email}') if not err else logger.exception(err)
-    err = await change_user_role(database, RoleUpdate(email=USERS["admin"].email, role=Roles.admin))
+    err = await change_user_role(database, RoleUpdate(email=USERS["admin"].email, role=Role.admin))
     logger.info(f'Changed role for {USERS["admin"].email}') if not err else logger.exception(err)
 
     err = await create_user(
@@ -69,7 +69,7 @@ async def main():
         verified=True,
     )
     logger.info(f'Created superuser {USERS["manager"].email}') if not err else logger.exception(err)
-    err = await change_user_role(database, RoleUpdate(email=USERS["manager"].email, role=Roles.manager))
+    err = await change_user_role(database, RoleUpdate(email=USERS["manager"].email, role=Role.manager))
     logger.info(f'Changed role for {USERS["manager"].email}') if not err else logger.exception(err)
 
     err = await create_user(
@@ -128,7 +128,7 @@ async def main():
     for i in range(20):
         notification = GlobalNotificationCreate(
             sender=USERS["admin"].email,
-            receiver_role=Roles.user.value,
+            receiver_role=Role.user.value,
             title=f"Test notification {i}",
             body=f"""
                 This is test notification {i}.\n

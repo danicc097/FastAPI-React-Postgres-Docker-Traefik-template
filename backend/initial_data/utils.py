@@ -17,7 +17,7 @@ from app.db.repositories.pwd_reset_req import UserPwdReqRepository
 from app.db.repositories.users import UsersRepository
 from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import PasswordResetRequestCreate
-from app.models.user import Roles, RoleUpdate, UserCreate
+from app.models.user import Role, RoleUpdate, UserCreate
 
 
 async def init_database():

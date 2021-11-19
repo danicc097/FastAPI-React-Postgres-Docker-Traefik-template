@@ -48,7 +48,7 @@ from app.models.pwd_reset_req import (
     PasswordResetRequestCreate,
 )
 from app.models.token import JWTCreds, JWTMeta, JWTPayload
-from app.models.user import Roles, RoleUpdate, UserCreate, UserInDB, UserPublic
+from app.models.user import Role, RoleUpdate, UserCreate, UserInDB, UserPublic
 from app.services import auth_service
 from tests.conftest import TEST_USERS
 
@@ -254,7 +254,7 @@ class TestAdminUserModification:
     ) -> None:
         user_repo = UsersRepository(db)
         role_update = RoleUpdate(
-            role=Roles.manager.value,
+            role=Role.manager.value,
             email=test_user7.email,
         )
 
@@ -290,7 +290,7 @@ class TestAdminGlobalNotifications:
         for i in range(1, self.n_notifications_start + 1):
             notification = GlobalNotificationCreate(
                 sender=test_admin_user.email,
-                receiver_role=Roles.user.value,
+                receiver_role=Role.user.value,
                 title=f"Test notification {i}",
                 body=f"This is test notification {i}",
                 label=f"Test label {i}",
@@ -305,7 +305,7 @@ class TestAdminGlobalNotifications:
             logger.info(res.json())
             assert res.status_code == HTTP_200_OK
 
-        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Roles.user.value}'"
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
         logger.critical(f"query: {query}")
         n_notifications = await db.fetch_val(query)
         assert n_notifications == self.n_notifications_start
@@ -323,7 +323,7 @@ class TestAdminGlobalNotifications:
         global_notification_repo = GlobalNotificationsRepository(db)
         async with global_notification_repo.db.transaction(force_rollback=True):
             # get the last one
-            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Roles.user.value}' ORDER BY id DESC LIMIT 1"
+            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
             notification_id = await db.fetch_val(query)
             assert notification_id is not None
 
@@ -332,7 +332,7 @@ class TestAdminGlobalNotifications:
             )
             assert res.status_code == HTTP_200_OK
 
-            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Roles.user.value}'"
+            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
             n_notifications = await db.fetch_val(query)
 
             assert n_notifications == self.n_notifications_start - 1
@@ -392,7 +392,7 @@ class TestAdminGlobalNotifications:
     ) -> None:
         notification = GlobalNotificationCreate(
             sender=test_admin_user.email,
-            receiver_role=Roles.manager.value,
+            receiver_role=Role.manager.value,
             title="Test notification for manager",
             body="This is test notification for manager",
             label="Test label for manager",

@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import EmailStr, constr
 
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
-from app.models.user import Roles
+from app.models.user import Role
 
 # ? until constr fixed
 # mypy: ignore-errors
@@ -15,7 +15,7 @@ class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
     """
 
     sender: EmailStr
-    receiver_role: Roles
+    receiver_role: Role
     title: str
     body: str
     label: str
@@ -25,7 +25,7 @@ class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
 class GlobalNotificationCreate(CoreModel):
 
     sender: EmailStr
-    receiver_role: Roles
+    receiver_role: Role
     title: str
     body: str
     label: str

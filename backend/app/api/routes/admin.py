@@ -8,8 +8,8 @@ from loguru import logger
 from pydantic.networks import EmailStr
 from starlette import status
 
+from app.api.dependencies.auth import RoleVerifier
 from app.api.dependencies.database import get_repository
-from app.api.dependencies.users import verify_user_is_admin
 from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
@@ -32,6 +32,7 @@ from app.models.pwd_reset_req import (
     PasswordResetRequestCreate,
 )
 from app.models.user import (
+    Role,
     RoleUpdate,
     UserCreate,
     UserInDB,
@@ -47,7 +48,7 @@ router = APIRouter()
     response_model=List[UserPublic],
     name="admin:list-users",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_all_users(
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
@@ -63,7 +64,7 @@ async def list_all_users(
     response_model=List[UserPublic],
     name="admin:list-unverified-users",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_unverified_users(
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
@@ -79,7 +80,7 @@ async def list_unverified_users(
     response_model=List[UserPublic],
     name="admin:verify-users-by-email",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def verify_user_by_email(
     user_emails: List[str] = Body(..., embed=True),  # consumer requires sending a data/payload/...: {user_emails: ...}
@@ -101,7 +102,7 @@ async def verify_user_by_email(
     response_model=List[PasswordResetRequest],
     name="admin:list-password-request-users",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_password_request_users(
     user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
@@ -121,7 +122,7 @@ async def list_password_request_users(
     response_model=str,
     name="admin:reset-user-password-by-email",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def reset_user_password_by_email(
     email: EmailStr = Body(..., embed=True),  # consumer requires sending a data/payload/...: {email: ...}
@@ -152,7 +153,7 @@ async def reset_user_password_by_email(
     response_model=List[PasswordResetRequest],
     name="admin:delete-password-reset-request",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def delete_password_reset_request(
     id: int = Path(..., ge=1),
@@ -171,7 +172,7 @@ async def delete_password_reset_request(
     "/create-notification/",
     name="admin:create-notification",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def create_notification(
     notification: GlobalNotificationCreate = Body(..., embed=True),
@@ -192,7 +193,7 @@ async def create_notification(
     name="admin:delete-notification",
     response_model=GlobalNotification,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def delete_notification(
     id: int = Path(..., ge=1),
@@ -213,7 +214,7 @@ async def delete_notification(
     response_model=UserPublic,
     name="admin:change-user-role",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def change_user_role(
     role_update: RoleUpdate = Body(..., embed=True),

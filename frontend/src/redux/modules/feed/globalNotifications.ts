@@ -69,13 +69,16 @@ export default function globalNotificationsReducer(
         ...state,
         canLoadMore: action.canLoadMore,
       }
+
     case GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS:
       return {
         ...state,
         hasNewNotifications: action.hasNewNotifications,
       }
+
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS:
       return loadingState(state)
+
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_SUCCESS:
       return {
         ...state,
@@ -83,10 +86,13 @@ export default function globalNotificationsReducer(
         error: null,
         data: [...(state.data || []), ...action.data],
       }
+
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE:
       return errorState(state, action)
+
     case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS:
       return loadingState(state)
+
     case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_SUCCESS:
       return {
         ...state,
@@ -94,21 +100,28 @@ export default function globalNotificationsReducer(
         error: null,
         unreadData: [...action.data], // override each time
       }
+
     case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_FAILURE:
       return errorState(state, action)
+
     case GlobalNotificationsActionType.CLEAR_NOTIFICATIONS:
       return {
         ...state,
         data: [],
       }
+
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION:
       return loadingState(state)
+
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS:
       return successState(state)
+
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE:
       return errorState(state, action)
+
     case GlobalNotificationsActionType.DELETE_NOTIFICATION:
       return loadingState(state)
+
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS:
       return {
         ...state,
@@ -116,12 +129,14 @@ export default function globalNotificationsReducer(
         error: null,
         data: state.data.filter((item: any) => item.id !== action.id),
       }
+
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_FAILURE:
       return errorState(state, action)
 
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.feed.globalNotifications
+
     default:
       return state
   }
@@ -133,7 +148,7 @@ type ActionCreatorsParams = {
   starting_date?: Date
 }
 
-type ActionCreatorsType = {
+type ActionCreators = {
   clearFeedItemsFromStore: () => any
   fetchFeedItems: ({ starting_date }: ActionCreatorsParams) => any
   fetchFeedItemsByLastRead: () => any
@@ -142,7 +157,7 @@ type ActionCreatorsType = {
   deleteNotification: ({ id }: ActionCreatorsParams) => any
 }
 
-export const GlobalNotificationsActionCreators: Partial<ActionCreatorsType> = {}
+export const GlobalNotificationsActionCreators: Partial<ActionCreators> = {}
 
 GlobalNotificationsActionCreators.clearFeedItemsFromStore = () => ({
   type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS,

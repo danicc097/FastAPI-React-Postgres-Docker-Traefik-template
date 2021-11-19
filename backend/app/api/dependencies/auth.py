@@ -1,13 +1,14 @@
 from typing import Optional, cast
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, params, status
 from fastapi.security import OAuth2PasswordBearer
-
+from starlette.requests import Request
 from app.api.dependencies.database import get_repository
 from app.core.config import API_PREFIX, UNIQUE_KEY
 from app.db.repositories.users import UsersRepository
-from app.models.user import UserInDB, UserPublic
+from app.models.user import Role, UserInDB, UserPublic
 from app.services import auth_service
+from app.services.authorization import ROLE_PERMISSIONS
 
 # This class simply informs FastAPI that the URL provided is the
 # one used to get a token. That information is used in OpenAPI
@@ -56,3 +57,25 @@ def get_current_active_user(
         )
 
     return current_user
+
+
+async def email_is_verified(
+    current_user: UserPublic = Depends(get_current_active_user),
+):
+    if not current_user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Current user is not verified. An administrator will approve your account soon.",
+        )
+
+
+class RoleVerifier:
+    def __init__(self, required_role):
+        self.required_role = required_role
+
+    def __call__(self, request: Request, current_user: UserPublic = Depends(get_user_from_token)) -> None:
+        if self.required_role not in ROLE_PERMISSIONS[current_user.role]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have the necessary access level for this resource.",
+            )

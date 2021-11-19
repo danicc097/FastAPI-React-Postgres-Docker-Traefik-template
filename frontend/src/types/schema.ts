@@ -118,7 +118,7 @@ export interface components {
       created_at?: string;
       updated_at?: string;
       sender: string;
-      receiver_role: components["schemas"]["Roles"];
+      receiver_role: components["schemas"]["Role"];
       title: string;
       body: string;
       label: string;
@@ -127,7 +127,7 @@ export interface components {
     /** Any common logic to be shared by all models goes here */
     GlobalNotificationCreate: {
       sender: string;
-      receiver_role: components["schemas"]["Roles"];
+      receiver_role: components["schemas"]["Role"];
       title: string;
       body: string;
       label: string;
@@ -141,7 +141,7 @@ export interface components {
       created_at?: string;
       updated_at?: string;
       sender: string;
-      receiver_role: components["schemas"]["Roles"];
+      receiver_role: components["schemas"]["Role"];
       title: string;
       body: string;
       label: string;
@@ -184,13 +184,13 @@ export interface components {
       bio?: string;
       image?: string;
     };
+    /** An enumeration. */
+    Role: "user" | "manager" | "admin";
     /** Any common logic to be shared by all models goes here */
     RoleUpdate: {
       email: string;
-      role: components["schemas"]["Roles"];
+      role: components["schemas"]["Role"];
     };
-    /** An enumeration. */
-    Roles: "user" | "manager" | "admin";
     /** Email, username, and password are required for registering a new user */
     UserCreate: {
       email: string;
@@ -208,7 +208,7 @@ export interface components {
       is_verified?: boolean;
       is_active?: boolean;
       is_superuser?: boolean;
-      role?: components["schemas"]["Roles"];
+      role?: components["schemas"]["Role"];
       last_notification_at?: string;
       created_at?: string;
       updated_at?: string;

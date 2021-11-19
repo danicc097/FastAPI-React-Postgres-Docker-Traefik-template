@@ -30,7 +30,7 @@ import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificatio
 export default function GlobalNotificationsModalForm() {
   const { getFormErrors, createNotification } = useGlobalNotificationsForm()
   const [isModalVisible, setIsModalVisible] = useState(false)
-  const [receiverRole, setReceiverRole] = useState('user' as schema['Roles'])
+  const [receiverRole, setReceiverRole] = useState('user' as schema['Role'])
 
   const modalFormId = useGeneratedHtmlId({ prefix: 'modalForm' })
 
@@ -38,7 +38,7 @@ export default function GlobalNotificationsModalForm() {
   const showModal = () => setIsModalVisible(true)
 
   const roleOptions: EuiSuperSelectProps<string>['options'] = Object.keys(ROLE_PERMISSIONS).map(
-    (key: Partial<schema['Roles']>) => ({
+    (key: Partial<schema['Role']>) => ({
       value: key,
       inputDisplay: capitalize(key),
       dropdownDisplay: (
