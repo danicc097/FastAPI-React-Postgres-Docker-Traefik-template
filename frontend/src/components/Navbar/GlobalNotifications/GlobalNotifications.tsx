@@ -99,8 +99,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
           <EuiBadge color="lightblue">
             <Center>
               <EuiIcon type="clock" size="m" />
-              {/* TODO user timezones */}
-              {moment(created_at).fromNow()}
+              {moment.utc(event_timestamp).local().fromNow()}
             </Center>
           </EuiBadge>
         ),

@@ -64,8 +64,7 @@ export default function PersonalNotifications() {
             {label}
           </EuiLink>
         ) : null,
-        // TODO user timezones
-        date: moment(event_timestamp).fromNow(),
+        date: moment.utc(event_timestamp).local().fromNow(),
         badge: (
           <EuiFlexGroup alignItems="center" gutterSize="xs">
             <EuiFlexItem grow={false}>
