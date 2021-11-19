@@ -28,13 +28,8 @@ export const useUnverifiedUsers = () => {
     return dispatch(AdminActionCreators.verifyUsers({ userEmails }))
   }
 
-  const removeVerifiedUsersFromStore = ({ users }) => {
-    return dispatch(AdminActionCreators.removeVerifiedUsersFromStore({ users }))
-  }
-
   return {
     unverifiedUsers,
-    removeVerifiedUsersFromStore,
     adminError,
     fetchAllNonVerifiedUsers,
     verifyUsers,

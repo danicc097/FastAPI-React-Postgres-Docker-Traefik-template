@@ -7,7 +7,6 @@ const newPassword = 'newPassword'
 beforeEach(async () => {
   // await profilePo.setupPuppeteerLogging()
   await profilePo.go()
-  await profilePo.autoLogout()
   await profilePo.login('profileTestUser', true)
 })
 

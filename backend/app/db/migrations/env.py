@@ -86,7 +86,7 @@ def run_migrations_offline() -> None:
     """
 
     if is_testing():
-        raise DatabaseError("Running testing migrations offline currently not permitted.")
+        raise DatabaseError("Running testing migrations offline currently not permitted")
 
     alembic.context.configure(url=str(DATABASE_URL))
 

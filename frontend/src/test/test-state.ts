@@ -2,10 +2,10 @@
  * Snapshot data for unit and integration tests.
  * Update regularly after feature updates, do not type check as its an unnecessary burden
  */
-export const testInitialState = {
+export const testInitialState: any = {
   auth: {
     isLoading: false,
-    isUpdating: false,
+
     isAuthenticated: true,
     error: null,
     pwdResetError: null,
@@ -41,7 +41,7 @@ export const testInitialState = {
   },
   userProfile: {
     isLoading: false,
-    isUpdating: false,
+
     isUpdated: false,
     error: null,
     userLoaded: false,
@@ -51,7 +51,7 @@ export const testInitialState = {
   },
   admin: {
     isLoading: false,
-    isUpdating: false,
+
     error: null,
     data: {},
   },

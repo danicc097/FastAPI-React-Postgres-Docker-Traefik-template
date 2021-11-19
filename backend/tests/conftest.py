@@ -65,7 +65,7 @@ def app(apply_migrations) -> FastAPI:
 def db(app: FastAPI) -> Database:
     """
     Current app's ``Database`` object to be used in other fixtures.
-    NOTE: use app.state._db in a test instead, else it will be ``None``.
+    NOTE: use app.state._db in a test instead or through a repository's ``db`` property.
     """
     return app.state._db
 

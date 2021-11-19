@@ -5,22 +5,14 @@ import {
   EuiIcon,
   EuiPageBody,
   EuiPageContent,
-  EuiText,
-  EuiTextColor,
-  EuiTitle,
   EuiHorizontalRule,
 } from '@elastic/eui'
 import React from 'react'
 
 import styled from 'styled-components'
-import { useUnverifiedUsers } from 'src/hooks/admin/useUnverifiedUsers'
-import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import _ from 'lodash'
 import { useNavigate } from 'react-router-dom'
 import { LandingTitle, StyledEuiPage, StyledEuiPageHeader } from 'src/components/StyledComponents/StyledComponents'
-import UnverifiedUsersPage from '../UnverifiedUsersPage/UnverifiedUsersPage'
-import PasswordResetPage from '../PasswordResetPage/PasswordResetPage'
-import PasswordResetRequestsPage from '../PasswordResetRequestsPage/PasswordResetRequestsPage'
 
 const StyledEuiPageContent = styled(EuiPageContent)`
   &&& {
@@ -37,7 +29,7 @@ const StyledEuiHorizontalRule = styled(EuiHorizontalRule)`
 
 type AdminPageTemplateProps = {
   title: React.ReactNode
-  element: React.ReactNode
+  element: JSX.Element
 }
 
 export default function AdminPageTemplate({ title, element }: AdminPageTemplateProps) {

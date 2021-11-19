@@ -18,9 +18,9 @@ import {
 import _ from 'lodash'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
-import { useUserForms } from 'src/hooks/auth/useUserForms'
+import { useUserUpdateForm } from 'src/hooks/forms/useUserUpdateForm'
 import { UserProfileActionType } from 'src/redux/modules/userProfile/userProfile'
+import { handleInputChange, validateInput } from 'src/utils/validation'
 import styled from 'styled-components'
 
 const StyledEuiAccordion = styled(EuiAccordion)`
@@ -37,19 +37,8 @@ const StyledEuiFieldPassword = styled(EuiFieldPassword)`
 `
 
 export default function UserUpdateAccordion() {
-  const {
-    form,
-    setForm,
-    errors,
-    setErrors,
-    isLoading,
-    getFormErrors,
-    updateUser,
-    setHasSubmitted,
-    handleInputChange,
-    validateInput,
-    handlePasswordConfirmChange,
-  } = useUserForms({ isLogin: false, isUpdating: true })
+  const { form, setForm, errors, setErrors, getFormErrors, updateUser, setHasSubmitted, handlePasswordConfirmChange } =
+    useUserUpdateForm()
 
   const resetForm = () => {
     Object.keys(form).forEach((key) => {
@@ -58,7 +47,8 @@ export default function UserUpdateAccordion() {
   }
 
   // don't forget async...
-  const submitUserUpdate = async () => {
+  const submitUserUpdate = async (e) => {
+    e.preventDefault()
     closeModal()
     setHasSubmitted(true)
     const action = await updateUser({
@@ -69,10 +59,10 @@ export default function UserUpdateAccordion() {
     })
     if (action?.type !== UserProfileActionType.REQUEST_USER_UPDATE_SUCCESS) {
       setForm((form) => ({ ...form, password: '', passwordConfirm: '', old_password: '' }))
-      console.log('user update failed.')
+      console.log('user update failed')
       resetForm()
     } else {
-      console.log('user update succeeded.')
+      console.log('user update succeeded')
       // redirect to login page in 5 seconds
       // setTimeout(() => {
       //   window.location.reload()
@@ -91,18 +81,13 @@ export default function UserUpdateAccordion() {
       return
     }
 
-    // validate inputs before submitting
-    Object.keys(form).forEach((label: keyof typeof form) => form[label] && validateInput(label, form[label]))
-
-    console.log(`form`, form)
-
     // ensure passwords match
     // ensure all password fields are not empty if at least one isn't
     if (
       (!!form.password || !!form.passwordConfirm || !!form.old_password) &&
       !(form.password && form.passwordConfirm && form.old_password)
     ) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all password fields.' }))
+      setErrors((errors) => ({ ...errors, form: 'You must fill out all password fields' }))
       return
     }
 
@@ -117,15 +102,14 @@ export default function UserUpdateAccordion() {
   if (isModalVisible) {
     modal = (
       <EuiConfirmModal
-        title={`Update your credentials`}
+        title={`Update credentials`}
         onCancel={closeModal}
         onConfirm={submitUserUpdate}
-        cancelButtonText="No, don't do it"
-        confirmButtonText="Yes, do it"
+        cancelButtonText="Cancel"
+        confirmButtonText="Update credentials"
         defaultFocusedButton="confirm"
       >
-        <p>{_.unescape(`You're about to update your credentials.`)}</p>
-        <p>Are you sure you want to do this?</p>
+        <p>{_.unescape(`You're about to update your login credentials.`)}</p>
       </EuiConfirmModal>
     )
   }
@@ -144,7 +128,7 @@ export default function UserUpdateAccordion() {
               label="Username"
               helpText="Choose a username consisting solely of letters, numbers, underscores, and dashes."
               isInvalid={!!form.username && Boolean(errors.username)}
-              error="Please enter a valid username."
+              error="Please enter a valid username"
             >
               <EuiFieldText
                 icon="user"
@@ -153,57 +137,59 @@ export default function UserUpdateAccordion() {
                 data-test-subj="new-username"
                 value={form.username}
                 onChange={(e) => {
-                  handleInputChange('username', e.target.value)
+                  handleInputChange({ label: 'username', value: e.target.value, setForm, setErrors })
                 }}
-                aria-label="Choose a username consisting of letters, numbers, underscores, and dashes."
+                aria-label="Choose a username consisting of letters, numbers, underscores, and dashes"
                 isInvalid={!!form.username && Boolean(errors.username)}
               />
             </EuiFormRow>
           </EuiFlexItem>
-          <EuiHorizontalRule />
-
+          <EuiHorizontalRule margin="m" />
           <EuiFlexItem>
             <EuiFormRow
               label="Old password"
-              helpText="Enter your current password."
               isInvalid={!!form.old_password && Boolean(errors.old_password)}
-              error="Password must be at least 7 characters."
+              error="Password must be at least 7 characters"
             >
               <StyledEuiFieldPassword
                 placeholder="Enter your current password"
                 data-test-subj="old-password"
                 type="text"
-                aria-label="Enter your current password."
+                aria-label="Enter your current password"
                 value={form.old_password}
                 onChange={(e) => {
-                  handleInputChange('old_password', e.target.value)
+                  handleInputChange({
+                    label: 'message',
+                    value: e.target.value,
+                    formLabel: 'old_password',
+                    setForm,
+                    setErrors,
+                  })
                 }}
                 isInvalid={!!form.old_password && Boolean(errors.old_password)}
               />
             </EuiFormRow>
             <EuiFormRow
               label="New password"
-              helpText="Enter your new password."
               isInvalid={!!form.password && Boolean(errors.password)}
-              error="Password must be at least 7 characters."
+              error="Password must be at least 7 characters"
             >
               <StyledEuiFieldPassword
                 placeholder="Enter your new password"
                 data-test-subj="new-password"
                 type="text"
-                aria-label="Enter your new password."
+                aria-label="Enter your new password"
                 value={form.password}
                 onChange={(e) => {
-                  handleInputChange('password', e.target.value)
+                  handleInputChange({ label: 'password', value: e.target.value, setForm, setErrors })
                 }}
                 isInvalid={!!form.password && Boolean(errors.password)}
               />
             </EuiFormRow>
             <EuiFormRow
               label="New password confirm"
-              helpText="Confirm your new password."
               isInvalid={!!form.passwordConfirm && Boolean(errors.passwordConfirm)}
-              error="Passwords must match."
+              error="Passwords must match"
             >
               <StyledEuiFieldPassword
                 placeholder="Enter your new password again"
@@ -213,7 +199,7 @@ export default function UserUpdateAccordion() {
                 onChange={(e) => {
                   handlePasswordConfirmChange(e.target.value)
                 }}
-                aria-label="Confirm your password."
+                aria-label="Confirm your password"
                 isInvalid={!!form.passwordConfirm && Boolean(errors.passwordConfirm)}
               />
             </EuiFormRow>

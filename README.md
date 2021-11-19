@@ -1,6 +1,6 @@
 # FastAPI-React-Postgres-Docker-Traefik-template
 
-[![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
+[![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev) ![Size](https://github-size-badge.herokuapp.com/danicc097/FastAPI-React-Postgres-Docker-Traefik-template.svg)
 
 ## Table of contents  <!-- omit in toc -->
 
@@ -43,6 +43,8 @@ sudo chown --recursive 1500:1500 logs/
 Create ``.env`` from template.
 
 ### Frontend dev setup
+
+Note: frontend uses Yarn Zero-Installs.
 
 ```bash
 cd frontend && yarn

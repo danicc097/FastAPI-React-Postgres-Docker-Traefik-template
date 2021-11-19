@@ -35,7 +35,7 @@ export class PasswordResetPO extends BasePO {
 }
 
 export class PasswordResetRequestsPO extends BasePO {
-  private readonly $xPasswordResetRequestsRow = '//*[@data-test-subj="passwordResetTable__row"]'
+  private readonly $xPasswordResetRequestsRow = '[@data-test-subj="passwordResetTable__row"]'
 
   async go() {
     await this.navigate('/admin/password-reset-requests')
@@ -43,11 +43,10 @@ export class PasswordResetRequestsPO extends BasePO {
 
   // We must rely on XPaths to get text content
   async clickResetRequestsTableAction(email: string, action: 'reset' | 'delete') {
-    await page.waitForXPath(this.$xPasswordResetRequestsRow, { timeout: 20000 })
-    const $xEmailCell = `${this.$xPasswordResetRequestsRow}//*[contains(text(), "${email}")]`
-    const $xActionRow = `${$xEmailCell}/ancestor::*[@data-test-subj="passwordResetTable__row"]`
+    await page.waitForXPath(`//*${this.$xPasswordResetRequestsRow}`, { timeout: 20000 })
+    const $xEmailCell = `//*${this.$xPasswordResetRequestsRow}//*[contains(text(), "${email}")]`
+    const $xActionRow = `${$xEmailCell}/ancestor::*${this.$xPasswordResetRequestsRow}`
     await page.waitForXPath($xActionRow, { timeout: 20000 })
-    // const row = await page.$x($xActionRow) // email is unique
     const $xResetAction = $xActionRow + '//*[@data-test-subj="passwordResetTable__resetAction"]'
     const $xDeleteAction = $xActionRow + '//*[@data-test-subj="passwordResetTable__deleteAction"]'
     switch (action) {

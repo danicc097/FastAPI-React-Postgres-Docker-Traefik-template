@@ -42,6 +42,6 @@ async def update_own_profile(
 ) -> ProfilePublic:
     updated_profile = await profiles_repo.update_profile(profile_update=profile_update, requesting_user=current_user)
     if not updated_profile:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No profile found for user.")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No profile found for user")
 
     return updated_profile

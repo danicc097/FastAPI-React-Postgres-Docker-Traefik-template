@@ -11,7 +11,7 @@ export default function PictureUpload() {
   return (
     <EuiFlexGroup direction="column">
       <EuiFlexItem>
-        <EuiFormHelpText>Upload a profile picture</EuiFormHelpText>
+        <EuiFormHelpText>Upload a profile picture.</EuiFormHelpText>
       </EuiFlexItem>
       <Fragment>
         <EuiFlexGroup direction="column">

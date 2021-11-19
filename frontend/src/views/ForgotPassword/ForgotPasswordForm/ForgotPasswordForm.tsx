@@ -11,8 +11,9 @@ import {
 import styled from 'styled-components'
 import React, { useState } from 'react'
 
-import { useForgotPasswordForm } from 'src/hooks/auth/useForgotPasswordForm'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
+import { handleInputChange, validateInput } from 'src/utils/validation'
+import { useForgotPasswordForm } from 'src/hooks/forms/useForgotPasswordForm'
 
 const ForgotPasswordFormWrapper = styled.div`
   padding: 2rem;
@@ -22,17 +23,8 @@ const ForgotPasswordFormWrapper = styled.div`
 export default function ForgotPasswordForm() {
   // destructure the needed values from the hook's return
   const [isDisabled, setIsDisabled] = useState(false)
-  const {
-    form,
-    setForm,
-    errors,
-    setErrors,
-    getFormErrors,
-    validateInput,
-    handleInputChange,
-    setHasSubmitted,
-    requestPasswordReset,
-  } = useForgotPasswordForm()
+  const { form, setForm, errors, setErrors, getFormErrors, setHasSubmitted, requestPasswordReset } =
+    useForgotPasswordForm()
 
   // don't forget async...
   const handleSubmit = async (e) => {
@@ -41,7 +33,7 @@ export default function ForgotPasswordForm() {
     Object.keys(form).forEach((label) => validateInput(label, form[label]))
     // if any input hasn't been entered in, return early
     if (!Object.values(form).every((value) => Boolean(value) || value === null)) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields.' }))
+      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))
       return
     }
     setHasSubmitted(true)
@@ -71,7 +63,7 @@ export default function ForgotPasswordForm() {
           label="Email"
           helpText="Enter the email associated with your account."
           isInvalid={Boolean(errors.email)}
-          error="Please enter a valid email."
+          error="Please enter a valid email"
           fullWidth
         >
           <EuiFieldText
@@ -81,8 +73,8 @@ export default function ForgotPasswordForm() {
             icon="email"
             placeholder="user@mail.com"
             value={form.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            aria-label="Enter the email associated with your account."
+            onChange={(e) => handleInputChange({ label: 'email', value: e.target.value, setForm, setErrors })}
+            aria-label="Enter the email associated with your account"
             isInvalid={Boolean(errors.email)}
           />
         </EuiFormRow>
@@ -90,7 +82,7 @@ export default function ForgotPasswordForm() {
         <EuiFormRow
           label="Request message"
           helpText="Leave a message for the administrator."
-          error="The message is too short."
+          error="The message is too short"
           isInvalid={Boolean(errors.message)}
           fullWidth
         >
@@ -98,10 +90,10 @@ export default function ForgotPasswordForm() {
             name="message"
             data-test-subj="message-input"
             value={form.message}
-            onChange={(e) => handleInputChange('message', e.target.value)}
+            onChange={(e) => handleInputChange({ label: 'message', value: e.target.value, setForm, setErrors })}
             isInvalid={Boolean(errors.message)}
             fullWidth
-            placeholder="Kindly help."
+            placeholder="Kindly help"
           />
         </EuiFormRow>
         <EuiSpacer />

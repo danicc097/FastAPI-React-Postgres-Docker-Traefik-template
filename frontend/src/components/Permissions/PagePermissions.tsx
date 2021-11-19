@@ -2,18 +2,14 @@ import { EuiEmptyPrompt } from '@elastic/eui'
 import _ from 'lodash'
 import React from 'react'
 
-type PermissionsNeededPropTypes = {
+type PagePermissionsProps = {
   element: JSX.Element
   isAllowed: boolean
   adminRoute?: boolean
 }
 
 // props with same syntax as the Route component from react-router-dom
-export default function PermissionsNeeded({
-  element,
-  isAllowed = false,
-  adminRoute = false,
-}: PermissionsNeededPropTypes) {
+export default function PagePermissions({ element, isAllowed = false, adminRoute = false }: PagePermissionsProps) {
   if (!isAllowed) {
     return (
       <EuiEmptyPrompt

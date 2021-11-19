@@ -15,6 +15,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "isolatedModules": true,
+    "allowUnreachableCode": true,
     "noEmit": true,
     "jsx": "react-jsx",
     "outDir": "./build",

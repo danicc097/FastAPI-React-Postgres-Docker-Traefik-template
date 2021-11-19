@@ -14,9 +14,9 @@ type errorFieldToMessageMappingTypes = {
 }
 
 export const errorFieldToMessageMapping: errorFieldToMessageMappingTypes = {
-  email: 'Please enter a valid email.',
-  username: 'Please enter a username consisting of only letters, numbers, underscores, and dashes.',
-  password: 'Please choose a password with at least 7 characters.',
+  email: 'Please enter a valid email',
+  username: 'Please enter a username consisting of only letters, numbers, underscores, and dashes',
+  password: 'Please choose a password with at least 7 characters',
 }
 
 export const parseErrorDetail = (errorDetail: schema['ValidationError']): string => {
@@ -52,7 +52,7 @@ export const extractErrorMessages = (error: schema['HTTPValidationError']): unkn
   // in case that we raised the error ourselves with FastAPI's HTTPException,
   // just use the message passed from the backend.
   if (typeof error?.detail === 'string') {
-    errorList.push(error.detail === 'Not Found' ? 'Internal Server Error.' : error.detail)
+    errorList.push(error.detail === 'Not Found' ? 'Internal Server Error' : error.detail)
   }
 
   // in case that there's a validation error in the request body, path parameters, or query parameters

@@ -1,5 +1,3 @@
-// handle all toast-related redux stuff in the UI
-
 import { Toast } from '@elastic/eui/src/components/toast/global_toast_list'
 import { shallowEqual } from 'react-redux'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'

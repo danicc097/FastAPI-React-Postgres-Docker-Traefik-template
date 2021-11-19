@@ -131,19 +131,20 @@ async def reset_user_password_by_email(
     Reset password for any user by email.
     """
     logger.info(f"Resetting password for user: {email}")
-    try:
-        new_password = await users_repo.reset_user_password(email=email)
-    except Exception as e:
-        exception_handler(e)
+    async with users_repo.db.transaction():
+        try:
+            new_password = await users_repo.reset_user_password(email=email)
+        except Exception as e:
+            exception_handler(e)
 
-    # do not return empty string or None.
-    if not new_password:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Could not reset password for user with email: {email}",
-        )
+        # do not return empty string or None.
+        if not new_password:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Could not reset password for user with email: {email}",
+            )
 
-    return new_password
+        return new_password
 
 
 @router.delete(
@@ -184,6 +185,27 @@ async def create_notification(
     except Exception as e:
         exception_handler(e)
     return None
+
+
+@router.delete(
+    "/delete-notification/{id}/",
+    name="admin:delete-notification",
+    response_model=GlobalNotification,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_user_is_admin)],
+)
+async def delete_notification(
+    id: int = Path(..., ge=1),
+    global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
+):
+    """
+    Delete a notification with id: ``id``.
+    """
+    try:
+        deleted_notification = await global_notif_repo.delete_notification_by_id(id=id)
+        return deleted_notification
+    except Exception as e:
+        exception_handler(e)
 
 
 @router.post(
