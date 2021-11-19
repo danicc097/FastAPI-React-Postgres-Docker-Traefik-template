@@ -65,6 +65,8 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
 
   const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
 
+  type AlertProps = EuiHeaderAlertProps & { notificationId: number }
+
   const globalNotificationsAlerts: Array<EuiHeaderAlertProps> = globalNotificationsFeedItems.map(
     (item: ArrayElement<typeof globalNotificationsFeedItems>) => {
       const {
@@ -83,6 +85,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
       } = item
 
       const alertProps = {
+        notificationId: id,
         title: event_type === 'is_update' ? '[UPDATE]' + title : title,
         text: <EuiText size="s">{body}</EuiText>,
         action: link ? (
@@ -111,7 +114,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
             </EuiFlexItem>
           </EuiFlexGroup>
         ),
-      } as EuiHeaderAlertProps
+      } as AlertProps
 
       return alertProps
     },
@@ -175,12 +178,11 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
           {isLoading ? (
             <InfiniteSpinner size="xl" />
           ) : (
-            globalNotificationsAlerts.map((alert, i) => (
+            globalNotificationsAlerts.map((alert: AlertProps, i) => (
               <EuiHeaderAlert
                 key={`alert-${i}`}
                 title={alert.title}
                 action={
-                  // space between maximum
                   <EuiFlexGroup alignItems="center" gutterSize="xs" justifyContent="spaceBetween">
                     <EuiFlexItem grow={false}>{alert.action}</EuiFlexItem>
                     <EuiFlexItem grow={false}>
@@ -189,7 +191,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
                         size="xs"
                         color="danger"
                         aria-label="Delete notification"
-                        onClick={() => deleteNotification({ id: alert.id })}
+                        onClick={() => deleteNotification({ id: alert.notificationId })}
                       />
                     </EuiFlexItem>
                   </EuiFlexGroup>

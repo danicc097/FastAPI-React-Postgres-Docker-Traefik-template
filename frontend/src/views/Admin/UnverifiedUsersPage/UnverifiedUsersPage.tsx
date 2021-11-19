@@ -23,7 +23,7 @@ export default function UnverifiedUsersPage() {
   const [sortField, setSortField] = useState('') // broken when specifying any field first
   const [selectedItems, setSelectedItems] = useState<typeof unverifiedUsers>([])
   const [sortDirection, setSortDirection] = useState<Direction>('asc')
-  const { verifyUsers, fetchAllNonVerifiedUsers, removeVerifiedUsersFromStore, unverifiedUsers } = useUnverifiedUsers()
+  const { verifyUsers, fetchAllNonVerifiedUsers, unverifiedUsers } = useUnverifiedUsers()
 
   const onTableChange = ({ page = {}, sort = {} }) => {
     const { field: sortField, direction: sortDirection }: any = sort
@@ -47,7 +47,6 @@ export default function UnverifiedUsersPage() {
     )
     if (action.success) {
       await fetchAllNonVerifiedUsers()
-      removeVerifiedUsersFromStore({ users: selectedItems })
       setSelectedItems([])
     }
   }

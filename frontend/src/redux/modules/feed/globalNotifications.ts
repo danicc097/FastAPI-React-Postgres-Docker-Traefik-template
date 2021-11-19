@@ -108,10 +108,14 @@ export default function globalNotificationsReducer(
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE:
       return errorState(state, action)
     case GlobalNotificationsActionType.DELETE_NOTIFICATION:
-      // TODO delete from store by id as well
       return loadingState(state)
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS:
-      return successState(state)
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        data: state.data.filter((item: any) => item.id !== action.id),
+      }
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_FAILURE:
       return errorState(state, action)
 
@@ -270,6 +274,7 @@ GlobalNotificationsActionCreators.deleteNotification = ({ id }) => {
           params: {},
         },
         onSuccess: (res) => {
+          dispatch({ type: GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS, id })
           return { success: true, status: res.status, data: res.data }
         },
       }),

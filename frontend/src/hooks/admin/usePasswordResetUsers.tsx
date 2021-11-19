@@ -30,18 +30,12 @@ export const usePasswordResetUsers = () => {
     return dispatch(AdminActionCreators.resetPasswordForUser({ email }))
   }
 
-  // remove email that has had their password reset
-  const removeResetPasswordRequestFromStore = ({ email }) => {
-    return dispatch(AdminActionCreators.removeResetPasswordRequestFromStore({ email }))
-  }
-
   const deletePasswordResetRequest = ({ request }) => {
     return dispatch(AdminActionCreators.deletePasswordResetRequest({ request }))
   }
 
   return {
     passwordResetRequests,
-    removeResetPasswordRequestFromStore,
     adminError,
     deletePasswordResetRequest,
     fetchAllPasswordResetUsers,

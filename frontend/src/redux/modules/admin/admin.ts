@@ -45,7 +45,7 @@ export enum AdminActionType {
   VERIFY_USERS_SUCCESS = 'admin/VERIFY_USERS_SUCCESS',
   VERIFY_USERS_FAILURE = 'admin/VERIFY_USERS_FAILURE',
 
-  REMOVE_VERIFIED_USERS_FROM_STORE = 'admin/REMOVE_VERIFIED_USERS_FROM_STORE',
+  // REMOVE_VERIFIED_USERS_FROM_STORE = 'admin/REMOVE_VERIFIED_USERS_FROM_STORE',
 
   FETCH_ALL_PASSWORD_RESET_REQUESTS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS',
   FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS',
@@ -62,9 +62,9 @@ export enum AdminActionType {
   REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE = 'admin/REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE',
 }
 
-/*
-isRemoval: whether it's a removal or addition of unverified users
-*/
+/**
+ * @param isRemoval whether it's a removal or addition of unverified users
+ */
 function updateStateOfUnverifiedUsers(
   state: initialStateType['admin'],
   users: Array<schema['UserPublic']>,
@@ -79,7 +79,10 @@ function updateStateOfUnverifiedUsers(
       ...(users?.length > 0
         ? {
             unverifiedUsers: isRemoval
-              ? state.data.unverifiedUsers.filter((oldUser) => !users.includes(oldUser))
+              ? // filter where oldUser's email key is not in the new array's object's email key
+                state.data.unverifiedUsers.filter(
+                  (oldUser) => !users.some((newUser) => newUser.email === oldUser.email),
+                )
               : [...users],
           }
         : {}),
@@ -144,9 +147,8 @@ export default function adminReducer(
       return updateStateOfUnverifiedUsers(state, action.data, false)
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE:
       return errorState(state, action)
-    case AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE:
+    case AdminActionType.VERIFY_USERS_SUCCESS:
       return updateStateOfUnverifiedUsers(state, action.data, true)
-
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS:
       return loadingState(state)
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS:
@@ -174,7 +176,6 @@ type ActionCreatorsType = {
   fetchAllUsers: () => any
   fetchAllNonVerifiedUsers: () => any
   verifyUsers: ({ userEmails }: AdminActionsParams) => any
-  removeVerifiedUsersFromStore: ({ users }: AdminActionsParams) => any
   fetchAllPasswordResetUsers: () => any
   /**
    * Accept a password reset request created by a user.
@@ -185,7 +186,7 @@ type ActionCreatorsType = {
    * Delete a password reset request created by a user.
    */
   deletePasswordResetRequest: ({ request }: AdminActionsParams) => any
-  removeResetPasswordRequestFromStore: ({ email }: AdminActionsParams) => any
+  _removeResetPasswordRequestFromStore: ({ email }: AdminActionsParams) => any
 }
 
 export const AdminActionCreators: Partial<ActionCreatorsType> = {}
@@ -259,7 +260,8 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
           params: {},
         },
         onSuccess: (res) => {
-          dispatch({ type: AdminActionType.VERIFY_USERS_SUCCESS })
+          console.log(`res.data`, res.data)
+          dispatch({ type: AdminActionType.VERIFY_USERS_SUCCESS, data: res.data })
           dispatch(
             UiActionCreators.addToast({
               id: 'verify-user-toast-success',
@@ -303,12 +305,12 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
   }
 }
 
-// we can directly dispatch an action that edits the store
-AdminActionCreators.removeVerifiedUsersFromStore = ({ users }) => {
-  return async (dispatch: AppDispatch) => {
-    return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
-  }
-}
+// // we can directly dispatch an action that edits the store
+// AdminActionCreators.removeVerifiedUsersFromStore = ({ users }) => {
+//   return async (dispatch: AppDispatch) => {
+//     return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
+//   }
+// }
 
 AdminActionCreators.fetchAllPasswordResetUsers = () => {
   return async (dispatch: AppDispatch) => {
@@ -349,7 +351,7 @@ AdminActionCreators.resetPasswordForUser = ({ email }) => {
           params: {},
         },
         onSuccess: (res) => {
-          dispatch(AdminActionCreators.removeResetPasswordRequestFromStore({ email }))
+          dispatch(AdminActionCreators._removeResetPasswordRequestFromStore({ email }))
           dispatch(
             UiActionCreators.addToast({
               id: 'reset-user-password-success',
@@ -414,7 +416,7 @@ AdminActionCreators.deletePasswordResetRequest = ({ request }) => {
           params: {},
         },
         onSuccess: (res) => {
-          dispatch(AdminActionCreators.removeResetPasswordRequestFromStore({ email: request.email }))
+          dispatch(AdminActionCreators._removeResetPasswordRequestFromStore({ email: request.email }))
           return {
             type: AdminActionType.DELETE_PASSWORD_RESET_REQUEST_SUCCESS,
             success: true,
@@ -438,7 +440,7 @@ AdminActionCreators.deletePasswordResetRequest = ({ request }) => {
 }
 
 // we can directly dispatch an action that edits the store
-AdminActionCreators.removeResetPasswordRequestFromStore = ({ email }) => {
+AdminActionCreators._removeResetPasswordRequestFromStore = ({ email }) => {
   return (dispatch: AppDispatch) => {
     return dispatch({ type: AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE, data: [email] })
   }

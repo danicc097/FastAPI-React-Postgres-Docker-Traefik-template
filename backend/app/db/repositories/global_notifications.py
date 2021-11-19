@@ -19,6 +19,7 @@ from app.models.global_notifications import (
 )
 from app.models.profile import ProfileCreate
 from app.models.user import Roles
+from app.services.authorization import ROLE_PERMISSIONS
 
 # The OFFSET clause is going to cause your SQL query plan to read all the results
 # anyway and then discard most of it until reaching the offset count.
@@ -43,7 +44,7 @@ FROM ((
       global_notifications
     WHERE
       updated_at {date_condition}
-      AND receiver_role = :role
+      AND receiver_role = ANY(:roles)
       AND updated_at != created_at
     ORDER BY
       updated_at DESC
@@ -59,7 +60,7 @@ UNION (
     global_notifications
   WHERE
     created_at {date_condition}
-    AND receiver_role = :role
+    AND receiver_role = ANY(:roles)
   ORDER BY
     created_at DESC
   LIMIT :page_chunk_size)) AS notifications_feed
@@ -81,6 +82,8 @@ WHERE id = :id
 RETURNING *;
 """
 
+# check where any :roles in a array of
+# in the form ['admin', 'user'] is present
 CHECK_NEW_NOTIFICATIONS_QUERY = """
 SELECT
   EXISTS(
@@ -90,7 +93,7 @@ SELECT
       global_notifications
     WHERE
       updated_at > :last_notification_at
-      AND receiver_role = :role
+      AND receiver_role = ANY(:roles)
   ) AS has_new_notifications;
 """
 
@@ -145,11 +148,12 @@ class GlobalNotificationsRepository(BaseRepository):
             return GlobalNotificationFeedItem(**deleted_notification)
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Roles) -> bool:
+        logger.critical("has_new_notifications", ROLE_PERMISSIONS[role])
         return await self.db.fetch_val(
             CHECK_NEW_NOTIFICATIONS_QUERY,
             values={
                 "last_notification_at": last_notification_at,
-                "role": role,
+                "roles": ROLE_PERMISSIONS[role],
             },
         )
 
@@ -174,7 +178,7 @@ class GlobalNotificationsRepository(BaseRepository):
                     values={
                         "last_notification_at": last_notification_at.replace(tzinfo=None),
                         "page_chunk_size": page_chunk_size or self.page_chunk_size,
-                        "role": role.value,
+                        "roles": ROLE_PERMISSIONS[role],
                     },
                 )
             ]
@@ -188,7 +192,7 @@ class GlobalNotificationsRepository(BaseRepository):
                     values={
                         "starting_date": starting_date.replace(tzinfo=None),
                         "page_chunk_size": page_chunk_size or self.page_chunk_size,
-                        "role": role.value,
+                        "roles": ROLE_PERMISSIONS[role],
                     },
                 )
             ]
