@@ -14,12 +14,12 @@ export const useForgotPasswordForm = () => {
   const [errors, setErrors] = useState<FormErrors<typeof form>>({})
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false)
 
-  const error = useAppSelector((state) => state.auth.pwdResetError)
-  const pwdResetErrorList = extractErrorMessages(error)
+  const pwdResetError = useAppSelector((state) => state.auth.pwdResetError)
+  const pwdResetErrorList = extractErrorMessages(pwdResetError)
 
   /**
-   * Retrieve form errors specific to the current form
-   * form-specific errors should be set in its own form key
+   * Retrieve form errors specific to the current form.
+   * Form-specific errors should be set in its own form key
    */
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, pwdResetErrorList)
 
@@ -29,7 +29,6 @@ export const useForgotPasswordForm = () => {
   return {
     form,
     setForm,
-    error,
     errors,
     setErrors,
     getFormErrors,

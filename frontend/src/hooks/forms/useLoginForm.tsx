@@ -21,8 +21,8 @@ export const useLoginForm = () => {
   const authErrorList = extractErrorMessages(authError)
 
   /**
-   * Retrieve form errors specific to the current form
-   * form-specific errors should be set in its own form key
+   * Retrieve form errors specific to the current form.
+   * Form-specific errors should be set in its own form key
    */
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, authErrorList)
 

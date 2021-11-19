@@ -14,12 +14,7 @@ export function useGlobalNotificationsFeed() {
   const GLOBAL_NOTIFICATIONS_CHECK_INTERVAL_MS = 1000 * 10
 
   const dispatch = useAppDispatch()
-  // The variables will be set to the state defined from their respective reducers
-  // every time the hook useGlobalNotificationsFeed is called.
-  // The selected state is compared to determine whether the component needs to be re-rendered.
-  // When comparing booleans, strict equality is enough
   const isLoading = useAppSelector((state) => state.feed.globalNotifications.isLoading)
-  // When comparing objects, remember to use shallow equal
   const error = useAppSelector((state) => state.feed.globalNotifications.error, shallowEqual)
   const feedItems = useAppSelector((state) => state.feed.globalNotifications.data, shallowEqual)
   const unreadItems = useAppSelector((state) => state.feed.globalNotifications.unreadData, shallowEqual)
@@ -36,14 +31,10 @@ export function useGlobalNotificationsFeed() {
   const fetchFeedItems = useCallback(
     (starting_date?) => {
       dispatch(GlobalNotificationsActionCreators.clearFeedItemsFromStore()) // must get rid of current feed items
-      dispatch(GlobalNotificationsActionCreators.fetchFeedItems(starting_date))
+      dispatch(GlobalNotificationsActionCreators.fetchFeedItems(starting_date || new Date(moment().utc().format())))
     },
     [dispatch],
   )
-
-  // TODO delete global notifications action. backend ready
-
-  // TODO create global notifications action. backend ready
 
   const fetchFeedItemsByLastRead = () => {
     dispatch(GlobalNotificationsActionCreators.clearFeedItemsFromStore()) // must get rid of current feed items

@@ -25,8 +25,10 @@ import {
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { EuiSuperSelectProps } from '@elastic/eui/src/components'
 import { schema } from 'src/types/schema_override'
+import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificationsForm'
 
 export default function GlobalNotificationsModalForm() {
+  const { getFormErrors, createNotification } = useGlobalNotificationsForm()
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [receiverRole, setReceiverRole] = useState('user' as schema['Roles'])
 

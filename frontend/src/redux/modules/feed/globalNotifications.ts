@@ -108,6 +108,7 @@ export default function globalNotificationsReducer(
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE:
       return errorState(state, action)
     case GlobalNotificationsActionType.DELETE_NOTIFICATION:
+      // TODO delete from store by id as well
       return loadingState(state)
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS:
       return successState(state)

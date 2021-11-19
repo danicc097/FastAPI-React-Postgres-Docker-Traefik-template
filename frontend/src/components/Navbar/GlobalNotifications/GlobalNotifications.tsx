@@ -5,6 +5,7 @@ import {
   EuiBadge,
   EuiButton,
   EuiButtonEmpty,
+  EuiButtonIcon,
   EuiFlexGroup,
   EuiFlexItem,
   EuiFlyout,
@@ -29,6 +30,9 @@ import styled from 'styled-components'
 import ComponentPermissions from 'src/components/Permissions/ComponentPermissions'
 import { schema } from 'src/types/schema_override'
 import GlobalNotificationsModalForm from 'src/components/Navbar/GlobalNotifications/GlobalNotificationsModalForm'
+import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificationsForm'
+import { Link } from 'react-router-dom'
+import _ from 'lodash'
 
 const Center = styled.div`
   align-self: center;
@@ -41,6 +45,8 @@ type GlobalNotificationsProps = {
   user: schema['UserPublic']
 }
 export default function GlobalNotifications({ user }: GlobalNotificationsProps) {
+  const { deleteNotification } = useGlobalNotificationsForm()
+
   const [isFlyoutVisible, setIsFlyoutVisible] = useState(false)
   const newsFeedFlyoutId = useGeneratedHtmlId({ prefix: 'newsFeedFlyout' })
   const newsFeedFlyoutTitleId = useGeneratedHtmlId({
@@ -81,7 +87,9 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
         text: <EuiText size="s">{body}</EuiText>,
         action: link ? (
           <EuiLink href={link} target="_blank">
-            {label}
+            <EuiButtonEmpty size="s" color="primary">
+              {_.truncate(link, { length: 30 })}
+            </EuiButtonEmpty>
           </EuiLink>
         ) : null,
         date: (
@@ -171,7 +179,21 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
               <EuiHeaderAlert
                 key={`alert-${i}`}
                 title={alert.title}
-                action={alert.action}
+                action={
+                  // space between maximum
+                  <EuiFlexGroup alignItems="center" gutterSize="xs" justifyContent="spaceBetween">
+                    <EuiFlexItem grow={false}>{alert.action}</EuiFlexItem>
+                    <EuiFlexItem grow={false}>
+                      <EuiButtonIcon
+                        iconType="trash"
+                        size="xs"
+                        color="danger"
+                        aria-label="Delete notification"
+                        onClick={() => deleteNotification({ id: alert.id })}
+                      />
+                    </EuiFlexItem>
+                  </EuiFlexGroup>
+                }
                 text={alert.text}
                 date={alert.date}
                 badge={alert.badge}
@@ -207,11 +229,6 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
               user={user}
             />
           </EuiFlexGroup>
-          {/* <EuiFlexItem grow={false}>
-            <EuiButtonEmpty iconType="cross" size="s" onClick={closeFlyout} flush="left">
-              Close
-            </EuiButtonEmpty>
-          </EuiFlexItem> */}
         </EuiFlyoutFooter>
       </EuiFlyout>
     </EuiPortal>
