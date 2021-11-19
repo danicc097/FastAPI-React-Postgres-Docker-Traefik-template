@@ -82,7 +82,7 @@ export const validateInput = (label: string, value: string): boolean => {
  * @param value string to validate
  * @param formLabel specify form key to validate if it differs from validation function label
  * @param setForm function to set the form state
- * @param setErrors function to set the errors state
+ * @param setErrors function to set the form errors state
  */
 export const handleInputChange = ({ label, value, formLabel, setForm, setErrors }: handleInputChangeParams) => {
   const isValid = validateInput(label, value)

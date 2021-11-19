@@ -1,6 +1,6 @@
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { useUserForms } from 'src/hooks/auth/useUserForms'
+import { useLoginForm } from 'src/hooks/auth/useLoginForm'
 import { EuiButton, EuiFieldText, EuiForm, EuiFormRow, EuiFieldPassword, EuiSpacer } from '@elastic/eui'
 import styled from 'styled-components'
 import React from 'react'
@@ -15,9 +15,8 @@ const LoginFormWrapper = styled.div`
 `
 
 export default function LoginForm() {
-  // destructure the needed values from the hook's return
   const { form, setForm, errors, setErrors, isLoading, getFormErrors, setHasSubmitted, requestUserLogin } =
-    useUserForms({ isLogin: true })
+    useLoginForm()
 
   // don't forget async...
   const handleSubmit = async (e) => {

@@ -18,7 +18,7 @@ import {
 import _ from 'lodash'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUserForms } from 'src/hooks/auth/useUserForms'
+import { useUserUpdateForm } from 'src/hooks/auth/useUserUpdateForm'
 import { UserProfileActionType } from 'src/redux/modules/userProfile/userProfile'
 import { handleInputChange, validateInput } from 'src/utils/validation'
 import styled from 'styled-components'
@@ -37,17 +37,8 @@ const StyledEuiFieldPassword = styled(EuiFieldPassword)`
 `
 
 export default function UserUpdateAccordion() {
-  const {
-    form,
-    setForm,
-    errors,
-    setErrors,
-    isLoading,
-    getFormErrors,
-    updateUser,
-    setHasSubmitted,
-    handlePasswordConfirmChange,
-  } = useUserForms({ isLogin: false, isUpdating: true })
+  const { form, setForm, errors, setErrors, getFormErrors, updateUser, setHasSubmitted, handlePasswordConfirmChange } =
+    useUserUpdateForm()
 
   const resetForm = () => {
     Object.keys(form).forEach((key) => {
@@ -56,7 +47,8 @@ export default function UserUpdateAccordion() {
   }
 
   // don't forget async...
-  const submitUserUpdate = async () => {
+  const submitUserUpdate = async (e) => {
+    e.preventDefault()
     closeModal()
     setHasSubmitted(true)
     const action = await updateUser({

@@ -231,7 +231,7 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
               color: 'success',
               iconType: 'checkInCircleFilled',
               toastLifeTimeMs: 15000,
-              text: 'You can now contact an administrator for approval',
+              text: 'An administrator will approve your account soon',
             }),
           )
           return dispatch({ type: AuthActionType.REQUEST_PASSWORD_RESET_SUCCESS })

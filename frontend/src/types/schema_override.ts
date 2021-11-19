@@ -1,4 +1,4 @@
 import { components } from './schema'
 
-// create a new interface for openapi
+// convenient alias for schema
 export type schema = components['schemas']
