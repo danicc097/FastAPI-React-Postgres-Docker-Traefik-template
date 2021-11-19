@@ -1,4 +1,3 @@
-import { useRegistrationForm } from 'src/hooks/auth/useRegistrationForm'
 import {
   EuiButton,
   EuiCheckbox,
@@ -15,6 +14,7 @@ import React from 'react'
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { handleInputChange, validateInput } from 'src/utils/validation'
+import { useRegistrationForm } from 'src/hooks/forms/useRegistrationForm'
 
 const RegistrationFormWrapper = styled.div`
   padding: 2rem;

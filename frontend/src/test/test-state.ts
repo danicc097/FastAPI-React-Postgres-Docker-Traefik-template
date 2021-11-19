@@ -5,7 +5,7 @@
 export const testInitialState: any = {
   auth: {
     isLoading: false,
-    isUpdating: false,
+
     isAuthenticated: true,
     error: null,
     pwdResetError: null,
@@ -41,7 +41,7 @@ export const testInitialState: any = {
   },
   userProfile: {
     isLoading: false,
-    isUpdating: false,
+
     isUpdated: false,
     error: null,
     userLoaded: false,
@@ -51,7 +51,7 @@ export const testInitialState: any = {
   },
   admin: {
     isLoading: false,
-    isUpdating: false,
+
     error: null,
     data: {},
   },

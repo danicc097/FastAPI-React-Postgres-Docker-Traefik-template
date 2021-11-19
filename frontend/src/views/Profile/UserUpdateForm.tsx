@@ -18,7 +18,7 @@ import {
 import _ from 'lodash'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUserUpdateForm } from 'src/hooks/auth/useUserUpdateForm'
+import { useUserUpdateForm } from 'src/hooks/forms/useUserUpdateForm'
 import { UserProfileActionType } from 'src/redux/modules/userProfile/userProfile'
 import { handleInputChange, validateInput } from 'src/utils/validation'
 import styled from 'styled-components'

@@ -11,9 +11,9 @@ import {
 import styled from 'styled-components'
 import React, { useState } from 'react'
 
-import { useForgotPasswordForm } from 'src/hooks/auth/useForgotPasswordForm'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { handleInputChange, validateInput } from 'src/utils/validation'
+import { useForgotPasswordForm } from 'src/hooks/forms/useForgotPasswordForm'
 
 const ForgotPasswordFormWrapper = styled.div`
   padding: 2rem;

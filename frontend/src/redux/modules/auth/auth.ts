@@ -8,7 +8,6 @@ import { loadingState, successState } from '../../utils/slices'
 type initialStateType = {
   auth: {
     isLoading: boolean
-    isUpdating: boolean
     isAuthenticated: boolean
     error?: schema['HTTPValidationError']
     pwdResetError?: schema['HTTPValidationError']
@@ -20,7 +19,6 @@ type initialStateType = {
 const initialState: initialStateType = {
   auth: {
     isLoading: false,
-    isUpdating: false,
     isAuthenticated: false,
     error: null,
     pwdResetError: null,

@@ -19,7 +19,6 @@ type AdminDataType = {
 type initialStateType = {
   admin: {
     isLoading: boolean
-    isUpdating: boolean
     error?: schema['HTTPValidationError'] | GenObjType<string>
     data?: AdminDataType | GenObjType<null>
   }
@@ -28,7 +27,6 @@ type initialStateType = {
 const initialState: initialStateType = {
   admin: {
     isLoading: false,
-    isUpdating: false,
     error: null,
     data: {},
   },

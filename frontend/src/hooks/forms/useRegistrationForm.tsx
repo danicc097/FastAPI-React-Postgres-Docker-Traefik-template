@@ -59,7 +59,6 @@ export const useRegistrationForm = () => {
     hasSubmitted,
     setHasSubmitted,
     handlePasswordConfirmChange,
-
     registerNewUser,
   }
 }

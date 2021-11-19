@@ -1,6 +1,5 @@
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
-import { useLoginForm } from 'src/hooks/auth/useLoginForm'
 import { EuiButton, EuiFieldText, EuiForm, EuiFormRow, EuiFieldPassword, EuiSpacer } from '@elastic/eui'
 import styled from 'styled-components'
 import React from 'react'
@@ -8,6 +7,7 @@ import React from 'react'
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { handleInputChange, validateInput } from 'src/utils/validation'
+import { useLoginForm } from 'src/hooks/forms/useLoginForm'
 
 const LoginFormWrapper = styled.div`
   padding: 2rem;

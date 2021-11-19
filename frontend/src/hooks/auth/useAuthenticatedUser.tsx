@@ -11,7 +11,6 @@ export const useAuthenticatedUser = () => {
   const authError = useAppSelector((state) => state.auth.error)
 
   const isLoading = useAppSelector((state) => state.auth.isLoading)
-  const isUpdating = useAppSelector((state) => state.auth.isUpdating)
   const userLoaded = useAppSelector((state) => state.auth.userLoaded)
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated)
   const isAdmin = useAppSelector((state) => state.auth.user.is_superuser)
@@ -35,7 +34,6 @@ export const useAuthenticatedUser = () => {
   return {
     userLoaded,
     isLoading,
-    isUpdating,
     isAdmin,
     isVerifiedUser,
     authError,

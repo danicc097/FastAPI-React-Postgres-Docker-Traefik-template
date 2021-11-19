@@ -93,10 +93,10 @@ UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_p
           data: {
             user_update: {
               // dynamically set update form data if truthy values
-              ...(email && { email: email }),
-              ...(username && { username: username }),
-              ...(password && { password: password }),
-              ...(old_password && { old_password: old_password }),
+              ...(email && { email }),
+              ...(username && { username }),
+              ...(password && { password }),
+              ...(old_password && { old_password }),
             },
           },
           headers,
