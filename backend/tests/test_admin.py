@@ -14,13 +14,9 @@ from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
 import jwt
 import pytest
 from databases import Database
-from databases.core import Connection, Transaction
 from fastapi import FastAPI, HTTPException, status
 from httpx import AsyncClient
 from loguru import logger
-from pydantic import ValidationError
-from sqlalchemy.engine import create_engine
-from sqlalchemy.orm import close_all_sessions
 from starlette.datastructures import Secret
 from starlette.status import (
     HTTP_200_OK,
@@ -312,6 +308,39 @@ class TestAdminGlobalNotifications:
         n_notifications = await db.fetch_val(query)
         assert n_notifications == self._n_notifications
 
+    async def test_admin_can_delete_a_notification(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: UserInDB,
+        test_user: UserPublic,
+        db: Database,
+    ) -> None:
+        # this test should run in a transaction for readability
+        database = Database(os.environ["TEST_DB_URL"], force_rollback=True)
+        await database.connect()
+        app.state._db = database
+
+        query = (
+            f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
+        )
+        notification_id = await db.fetch_val(query)
+        assert notification_id is not None
+
+        res = await superuser_client.delete(
+            app.url_path_for("admin:delete-notification", id=notification_id),
+        )
+        assert res.status_code == HTTP_200_OK
+        assert res.json()["id"] == notification_id
+
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
+        n_notifications = await db.fetch_val(query)
+
+        # transaction should have been rolled back
+        assert n_notifications == self._n_notifications
+
     async def test_user_receives_has_new_notification_alert(
         self,
         app: FastAPI,
@@ -428,32 +457,3 @@ class TestAdminGlobalNotifications:
         id_set: Set[str] = set.union(*combos)
         assert len(id_set) == length_of_all_id_combos
         assert len(id_set) == total_feed_items_to_fetch
-
-    # TODO find out how to remove AUTOCOMMIT level in arbitrary tests and handle transactions manually
-    # creating a new engine inplace
-    # tests will fail if this function is not the last
-    async def test_admin_can_delete_a_notification(
-        self,
-        app: FastAPI,
-        create_authorized_client: Callable,
-        authorized_client: AsyncClient,
-        superuser_client: AsyncClient,
-        test_admin_user: UserInDB,
-        test_user: UserPublic,
-        db: Database,
-    ) -> None:
-        query = (
-            f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
-        )
-        notification_id = await db.fetch_val(query)
-        assert notification_id is not None
-
-        res = await superuser_client.delete(
-            app.url_path_for("admin:delete-notification", id=notification_id),
-        )
-        assert res.status_code == HTTP_200_OK
-
-        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
-        n_notifications = await db.fetch_val(query)
-
-        assert n_notifications == self._n_notifications - 1
