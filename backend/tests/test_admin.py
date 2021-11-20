@@ -319,27 +319,25 @@ class TestAdminGlobalNotifications:
         db: Database,
     ) -> None:
         # this test should run in a transaction for readability
-        database = Database(os.environ["TEST_DB_URL"], force_rollback=True)
-        await database.connect()
-        app.state._db = database
+        # database = Database(os.environ["TEST_DB_URL"], force_rollback=True)
+        # await database.connect()
+        # app.state._db = database
+        async with app.state._db.transaction(force_rollback=True):
+            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
+            notification_id = await db.fetch_val(query)
+            assert notification_id is not None
 
-        query = (
-            f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
-        )
-        notification_id = await db.fetch_val(query)
-        assert notification_id is not None
+            res = await superuser_client.delete(
+                app.url_path_for("admin:delete-notification", id=notification_id),
+            )
+            assert res.status_code == HTTP_200_OK
+            assert res.json()["id"] == notification_id
 
-        res = await superuser_client.delete(
-            app.url_path_for("admin:delete-notification", id=notification_id),
-        )
-        assert res.status_code == HTTP_200_OK
-        assert res.json()["id"] == notification_id
+            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
+            n_notifications = await db.fetch_val(query)
 
-        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
-        n_notifications = await db.fetch_val(query)
-
-        # transaction should have been rolled back
-        assert n_notifications == self._n_notifications
+            # transaction should have been rolled back
+            assert n_notifications == self._n_notifications
 
     async def test_user_receives_has_new_notification_alert(
         self,
