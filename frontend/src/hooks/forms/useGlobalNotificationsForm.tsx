@@ -7,15 +7,16 @@ import { extractErrorMessages } from 'src/utils/errors'
 import { ROLE_PERMISSIONS } from 'src/utils/permissions'
 import { _getFormErrors } from 'src/utils/validation'
 import { useGlobalNotifications } from '../ui/useGlobalNotifications'
+import { useAuthenticatedUser } from '../auth/useAuthenticatedUser'
 
 export function useGlobalNotificationsForm() {
   // grab functionality as needed
   const { createNotification, deleteNotification, errorList } = useGlobalNotifications()
-
+  const { user } = useAuthenticatedUser()
   const dispatch = useAppDispatch()
   // define keys meant to be passed to API with original snake_case
   const [form, setForm] = useState<schema['GlobalNotificationCreate']>({
-    sender: '',
+    sender: user.email,
     receiver_role: 'user',
     title: '',
     body: '',
@@ -32,7 +33,11 @@ export function useGlobalNotificationsForm() {
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, errorList)
 
   return {
-    errorList,
+    form,
+    setForm,
+    errors,
+    setErrors,
+    setHasSubmitted,
     getFormErrors,
     createNotification,
     deleteNotification,

@@ -1,7 +1,7 @@
 import asyncio
-import time
 import pathlib
 import sys
+import time
 from typing import Dict
 
 from loguru import logger

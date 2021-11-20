@@ -6,15 +6,15 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 
 
 """
-import os
 import json
+import os
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
-from databases.core import Connection, Transaction
 
 import jwt
 import pytest
 from databases import Database
+from databases.core import Connection, Transaction
 from fastapi import FastAPI, HTTPException, status
 from httpx import AsyncClient
 from loguru import logger
@@ -442,9 +442,6 @@ class TestAdminGlobalNotifications:
         test_user: UserPublic,
         db: Database,
     ) -> None:
-        # default_engine = create_engine(os.environ["TEST_DB_URL"], isolation_level="SERIALIZABLE")
-        # with default_engine.connect() as default_conn:
-
         query = (
             f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
         )

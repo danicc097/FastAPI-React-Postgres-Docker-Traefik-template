@@ -3,8 +3,8 @@ import time
 from typing import Dict
 
 from loguru import logger
-from app.models.global_notifications import GlobalNotificationCreate
 
+from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import PasswordResetRequestCreate
 from app.models.user import Role, RoleUpdate, UserCreate
 from initial_data.utils import (

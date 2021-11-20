@@ -20,6 +20,7 @@ import {
   EuiPortal,
   EuiText,
   EuiTitle,
+  EuiToolTip,
 } from '@elastic/eui'
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
@@ -183,13 +184,15 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
                       user={user}
                       element={
                         <EuiFlexItem grow={false}>
-                          <EuiButtonIcon
-                            iconType="trash"
-                            size="xs"
-                            color="danger"
-                            aria-label="Delete notification"
-                            onClick={() => deleteNotification({ id: alert.notificationId })}
-                          />
+                          <EuiToolTip position="top" content="Delete Notification" display="block">
+                            <EuiButtonIcon
+                              iconType="trash"
+                              size="xs"
+                              color="danger"
+                              aria-label="Delete notification"
+                              onClick={() => deleteNotification({ id: alert.notificationId })}
+                            />
+                          </EuiToolTip>
                         </EuiFlexItem>
                       }
                     ></ComponentPermissions>
@@ -224,7 +227,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
               requiredRole={'admin'}
               element={
                 <EuiFlexItem grow={false}>
-                  <GlobalNotificationsModalForm />
+                  <GlobalNotificationsModalForm closeFlyout={closeFlyout} />
                 </EuiFlexItem>
               }
               user={user}

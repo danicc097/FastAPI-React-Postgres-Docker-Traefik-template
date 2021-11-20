@@ -13,11 +13,11 @@ export function useGlobalNotifications() {
   const errorList = extractErrorMessages(error)
 
   const createNotification = ({ notification }) => {
-    dispatch(GlobalNotificationsActionCreators.createNotification({ notification }))
+    return dispatch(GlobalNotificationsActionCreators.createNotification({ notification }))
   }
 
   const deleteNotification = ({ id }) => {
-    dispatch(GlobalNotificationsActionCreators.deleteNotification({ id }))
+    return dispatch(GlobalNotificationsActionCreators.deleteNotification({ id }))
   }
 
   return {

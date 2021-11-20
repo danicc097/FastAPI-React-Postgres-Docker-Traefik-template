@@ -5,6 +5,7 @@ import { AppDispatch } from '../../store'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { schema } from 'src/types/schema_override'
 import { errorState, loadingState, successState } from 'src/redux/utils/slices'
+import { UiActionCreators } from 'src/redux/modules/ui/ui'
 
 type initialStateType = {
   feed: {
@@ -263,11 +264,21 @@ GlobalNotificationsActionCreators.createNotification = ({ notification }) => {
           FAILURE: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE,
         },
         options: {
-          data: notification,
+          data: { notification },
           params: {},
         },
         onSuccess: (res) => {
-          return { success: true, status: res.status, data: res.data }
+          dispatch(
+            UiActionCreators.addToast({
+              id: 'create-global-notification-success',
+              title: `Successfully created the notification!`,
+              color: 'success',
+              iconType: 'checkInCircleFilled',
+              toastLifeTimeMs: 5000,
+              text: `Users with role '${notification.receiver_role}' will receive it.`,
+            }),
+          )
+          return dispatch({ type: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS })
         },
       }),
     )

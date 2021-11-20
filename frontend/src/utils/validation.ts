@@ -78,6 +78,7 @@ export const validateInput = (label: string, value: string): boolean => {
 }
 
 /**
+ * Handle input change and update form state accordingly
  * @param label key that maps to a validation function
  * @param value string to validate
  * @param formLabel specify form key to validate if it differs from validation function label

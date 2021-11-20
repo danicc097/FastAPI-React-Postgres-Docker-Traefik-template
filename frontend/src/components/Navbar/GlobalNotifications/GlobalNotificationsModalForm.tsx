@@ -26,11 +26,41 @@ import { useGeneratedHtmlId } from '@elastic/eui'
 import { EuiSuperSelectProps } from '@elastic/eui/src/components'
 import { schema } from 'src/types/schema_override'
 import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificationsForm'
+import { handleInputChange, validateInput } from 'src/utils/validation'
+import { GlobalNotificationsActionType } from '../../../redux/modules/feed/globalNotifications'
+import { useGlobalNotificationsFeed } from '../../../hooks/feed/useGlobalNotificationsFeed'
 
-export default function GlobalNotificationsModalForm() {
-  const { getFormErrors, createNotification } = useGlobalNotificationsForm()
+export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFlyout?: () => void }) {
+  const { getFormErrors, createNotification, form, setForm, errors, setErrors, setHasSubmitted } =
+    useGlobalNotificationsForm()
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [receiverRole, setReceiverRole] = useState('user' as schema['Role'])
+
+  // don't forget async...
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    setHasSubmitted(true)
+
+    const action = await createNotification({ notification: form })
+
+    // reset the password form state if the login attempt is not successful
+    if (action?.type !== GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS) {
+      setErrors((errors) => ({ ...errors, form: 'There was an error creating the notification' }))
+    } else {
+      closeModal()
+      setForm({
+        ...form,
+        title: '',
+        body: '',
+        label: '',
+        link: '',
+      })
+      if (closeFlyout) {
+        closeFlyout()
+      }
+    }
+  }
 
   const modalFormId = useGeneratedHtmlId({ prefix: 'modalForm' })
 
@@ -56,35 +86,90 @@ export default function GlobalNotificationsModalForm() {
     <EuiForm
       id={modalFormId}
       component="form"
-      onSubmit={() => {
-        null
-      }}
-      isInvalid={false}
+      onSubmit={handleSubmit}
+      isInvalid={Boolean(getFormErrors().length)}
+      error={getFormErrors()}
     >
-      <EuiFormRow label="Title">
-        <EuiFieldText name="title" placeholder="Enter title" maxLength={30} />
+      <EuiFormRow label="Title" isInvalid={Boolean(errors.title)} error="Please enter a valid title">
+        <EuiFieldText
+          name="title"
+          placeholder="Enter title"
+          maxLength={30}
+          value={form.title}
+          onChange={(e) =>
+            handleInputChange({ label: 'message', formLabel: 'title', value: e.target.value, setForm, setErrors })
+          }
+          isInvalid={Boolean(errors.title)}
+        />
       </EuiFormRow>
 
-      <EuiFormRow label="Body">
-        <EuiTextArea name="body" rows={5} placeholder="Enter the notification body" maxLength={200} />
+      <EuiFormRow label="Body" isInvalid={Boolean(errors.body)} error="Please enter a valid body">
+        <EuiTextArea
+          name="body"
+          rows={5}
+          placeholder="Enter the notification body"
+          maxLength={200}
+          value={form.body}
+          onChange={(e) =>
+            handleInputChange({ label: 'message', formLabel: 'body', value: e.target.value, setForm, setErrors })
+          }
+          isInvalid={Boolean(errors.body)}
+        />
       </EuiFormRow>
 
-      <EuiFormRow label="Label" helpText="Enter a notification label for context.">
-        <EuiFieldText name="label" placeholder="e.g. 'Updates' or 'Warning'" maxLength={15} />
+      <EuiFormRow
+        label="Label"
+        helpText="Enter a notification label for context."
+        isInvalid={Boolean(errors.label)}
+        error="Please enter a valid label"
+      >
+        <EuiFieldText
+          name="label"
+          placeholder="e.g. 'Updates' or 'Warning'"
+          maxLength={15}
+          value={form.label}
+          onChange={(e) =>
+            handleInputChange({ label: 'message', formLabel: 'label', value: e.target.value, setForm, setErrors })
+          }
+          isInvalid={Boolean(errors.label)}
+        />
       </EuiFormRow>
 
-      <EuiFormRow label="Link" helpText="Provide an optional link.">
-        <EuiFieldText name="link" required={false} placeholder="e.g. 'https://www.somewhere.com'" />
+      <EuiFormRow
+        label="Link"
+        helpText="Provide an optional link."
+        isInvalid={!!form.link && Boolean(errors.link)}
+        error="Please enter a valid link"
+      >
+        <EuiFieldText
+          name="link"
+          required={false}
+          placeholder="e.g. 'https://www.somewhere.com'"
+          value={form.link}
+          onChange={(e) =>
+            handleInputChange({ label: 'message', formLabel: 'link', value: e.target.value, setForm, setErrors })
+          }
+          isInvalid={!!form.link && Boolean(errors.link)}
+        />
       </EuiFormRow>
 
-      <EuiFormRow label="Receiver role" helpText="Select the role that will receive this notification.">
+      <EuiFormRow
+        label="Receiver role"
+        helpText="Select the role that will receive this notification."
+        isInvalid={Boolean(errors.receiver_role)}
+        error="Please select a valid role"
+      >
         <EuiSuperSelect
           name="receiver_role"
           options={roleOptions}
           valueOfSelected={receiverRole}
-          onChange={(value) => onSuperSelectChange(value)}
+          onChange={(value: any) => {
+            onSuperSelectChange(value)
+            setForm((form) => ({ ...form, receiver_role: value }))
+          }}
           itemLayoutAlign="top"
           hasDividers
+          isInvalid={Boolean(errors.receiver_role)}
         />
       </EuiFormRow>
     </EuiForm>
@@ -110,7 +195,7 @@ export default function GlobalNotificationsModalForm() {
         <EuiModalFooter>
           <EuiButtonEmpty onClick={closeModal}>Cancel</EuiButtonEmpty>
 
-          <EuiButton type="submit" form={modalFormId} onClick={closeModal} fill>
+          <EuiButton type="submit" form={modalFormId} fill>
             Publish
           </EuiButton>
         </EuiModalFooter>

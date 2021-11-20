@@ -39,8 +39,6 @@ export default function RegistrationForm() {
   const handleSubmit = async function handleSubmit(e: any) {
     e.preventDefault()
 
-    setErrors({})
-
     // if any input hasn't been entered in, return early
     if (!Object.values(form).every((value) => Boolean(value))) {
       setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))

@@ -131,7 +131,9 @@ export default function PasswordResetRequestsPage() {
 
       <EuiText size="s">
         <p>
-          <EuiTextColor color="subdued">Approve or deny existing user password reset requests.</EuiTextColor>
+          <EuiTextColor color="subdued">
+            Approve or deny existing user password reset requests. The new credentials will be downloaded.
+          </EuiTextColor>
         </p>
       </EuiText>
     </div>

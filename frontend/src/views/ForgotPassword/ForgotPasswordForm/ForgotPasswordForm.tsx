@@ -47,6 +47,7 @@ export default function ForgotPasswordForm() {
       setIsDisabled(true)
     }
   }
+
   return (
     <ForgotPasswordFormWrapper>
       {/* EuiForm component renders as a div by default, but we can pass in component="form"
