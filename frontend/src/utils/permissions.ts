@@ -1,7 +1,7 @@
 import { schema } from 'src/types/schema_override'
 
 type RolePermissions = {
-  [key in Partial<schema['Role']>]: schema['Role'][]
+  [key in schema['Role']]: schema['Role'][]
 }
 
 export const ROLE_PERMISSIONS: RolePermissions = {

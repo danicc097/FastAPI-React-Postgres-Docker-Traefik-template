@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom'
 import React, { useState, Fragment } from 'react'
 import { getAllowedRoles, ROLE_PERMISSIONS } from '../../../utils/permissions'
-import { capitalize, joinWithAnd } from '../../../utils/format'
+import { joinWithAnd } from '../../../utils/format'
 
 import {
   EuiButton,
@@ -29,6 +29,7 @@ import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificatio
 import { handleInputChange, validateInput } from 'src/utils/validation'
 import { GlobalNotificationsActionType } from '../../../redux/modules/feed/globalNotifications'
 import { useGlobalNotificationsFeed } from '../../../hooks/feed/useGlobalNotificationsFeed'
+import { capitalize } from 'lodash'
 
 export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFlyout?: () => void }) {
   const { getFormErrors, createNotification, form, setForm, errors, setErrors, setHasSubmitted } =

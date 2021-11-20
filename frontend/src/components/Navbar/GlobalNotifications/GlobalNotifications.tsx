@@ -64,11 +64,10 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
     fetchFeedItems,
   } = useGlobalNotificationsFeed()
 
-  const loadMoreNotifications = () => {
+  const loadMoreNotifications = async () => {
     // get the last item in the list
     const lastDateUTC = globalNotificationsFeedItems[globalNotificationsFeedItems.length - 1].event_timestamp
-    // use current date as the last date converting from utc
-    fetchFeedItems({ starting_date: new Date(moment.utc(lastDateUTC).format()) })
+    await fetchFeedItems({ starting_date: new Date(moment.utc(lastDateUTC).format()) })
   }
   const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
 

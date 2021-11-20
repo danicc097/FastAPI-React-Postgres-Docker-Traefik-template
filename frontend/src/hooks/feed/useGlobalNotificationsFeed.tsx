@@ -29,7 +29,7 @@ export function useGlobalNotificationsFeed() {
    * fetchFeedItems(starting_date)
    */
   const fetchFeedItems = useCallback(
-    ({ starting_date = new Date(moment().utc().format()) }: { starting_date?: Date }) => {
+    async ({ starting_date = new Date(moment().utc().format()) }: { starting_date?: Date }) => {
       console.log(`starting_date`, starting_date)
       // dispatch(GlobalNotificationsActionCreators.clearFeedItemsFromStore()) // must get rid of current feed items
       // if (starting_date) {

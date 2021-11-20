@@ -2,6 +2,7 @@ import moment from 'moment'
 import { useEffect, useCallback, useState } from 'react'
 import { shallowEqual } from 'react-redux'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
+import { AdminActionCreators } from 'src/redux/modules/admin/admin'
 import { schema } from 'src/types/schema_override'
 import { extractErrorMessages } from 'src/utils/errors'
 import { ROLE_PERMISSIONS } from 'src/utils/permissions'
@@ -27,7 +28,18 @@ export function useRoleUpdateForm() {
    */
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, errorList)
 
+  const updateUserRole = async ({ role_update }) => {
+    return dispatch(AdminActionCreators.updateUserRole({ role_update }))
+  }
+
   return {
+    form,
+    setForm,
+    errors,
+    setErrors,
     getFormErrors,
+    hasSubmitted,
+    setHasSubmitted,
+    updateUserRole,
   }
 }

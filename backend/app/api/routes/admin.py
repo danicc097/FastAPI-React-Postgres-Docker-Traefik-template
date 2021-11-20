@@ -210,9 +210,9 @@ async def delete_notification(
 
 
 @router.post(
-    "/change-user-role/",
+    "/update-user-role/",
     response_model=UserPublic,
-    name="admin:change-user-role",
+    name="admin:update-user-role",
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(RoleVerifier(Role.admin))],
 )
