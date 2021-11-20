@@ -1,4 +1,5 @@
 import asyncio
+import time
 import pathlib
 import sys
 from typing import Dict
@@ -125,7 +126,7 @@ async def main():
     ##################################################
     # GLOBAL NOTIFICATIONS
     ##################################################
-    for i in range(20):
+    for i in range(1, 21):
         notification = GlobalNotificationCreate(
             sender=USERS["admin"].email,
             receiver_role=Role.user.value,
@@ -141,6 +142,16 @@ async def main():
 
         err = await create_global_notification(database, notification)
         logger.info(f"Created global notification {notification.title}") if not err else logger.exception(err)
+
+        # fabricate time to make tests easier
+        await database.execute(
+            f"""
+            UPDATE global_notifications
+            SET created_at = created_at - interval '{i} hour',
+                updated_at = updated_at - interval '{i} hour'
+            WHERE id = {i}
+            """
+        )
 
 
 if __name__ == "__main__":

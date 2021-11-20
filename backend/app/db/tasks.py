@@ -12,7 +12,10 @@ from app.core.config import DATABASE_URL, is_testing
 async def connect_to_db(app: FastAPI) -> None:
 
     pytest_worker = os.environ.get("PYTEST_XDIST_WORKER")
-    DB_URL = f"{DATABASE_URL}_test_{pytest_worker}" if is_testing() else DATABASE_URL
+    TEST_DB_URL = f"{DATABASE_URL}_test_{pytest_worker}"
+    os.environ["TEST_DB_URL"] = TEST_DB_URL
+
+    DB_URL = TEST_DB_URL if is_testing() else DATABASE_URL
     # set min and max n. of connections
     database = Database(DB_URL, min_size=2, max_size=10)
     connected = False

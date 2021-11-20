@@ -163,8 +163,9 @@ GlobalNotificationsActionCreators.clearFeedItemsFromStore = () => ({
   type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS,
 })
 
-GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date = new Date(moment().utc().format()) }) => {
-  const PAGE_CHUNK_SIZE = 10
+GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date }) => {
+  const PAGE_CHUNK_SIZE = 5
+  console.log(starting_date.toISOString())
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({

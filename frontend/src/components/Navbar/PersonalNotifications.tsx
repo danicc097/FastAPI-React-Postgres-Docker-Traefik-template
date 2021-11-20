@@ -88,7 +88,7 @@ export default function PersonalNotifications() {
   const showPopover = () => {
     if (!isPopoverVisible) {
       fetchFeedItemsByLastRead()
-      fetchFeedItems()
+      fetchFeedItems({})
     }
     setIsPopoverVisible(!isPopoverVisible)
   }

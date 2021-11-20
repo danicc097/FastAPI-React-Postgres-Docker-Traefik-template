@@ -63,6 +63,12 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
     fetchFeedItems,
   } = useGlobalNotificationsFeed()
 
+  const loadMoreNotifications = () => {
+    // get the last item in the list
+    const lastDateUTC = globalNotificationsFeedItems[globalNotificationsFeedItems.length - 1].event_timestamp
+    // use current date as the last date converting from utc
+    fetchFeedItems({ starting_date: new Date(moment.utc(lastDateUTC).format()) })
+  }
   const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
 
   type AlertProps = EuiHeaderAlertProps & { notificationId: number }
@@ -113,7 +119,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
   const showFlyout = () => {
     if (!isFlyoutVisible) {
       fetchFeedItemsByLastRead()
-      fetchFeedItems()
+      fetchFeedItems({})
     }
     setIsFlyoutVisible(!isFlyoutVisible)
   }
@@ -135,7 +141,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
       aria-expanded={isFlyoutVisible}
       aria-haspopup="true"
       aria-label={'Alerts feed: Updates available'}
-      onClick={() => showFlyout()}
+      onClick={showFlyout}
       notification={hasNewNotifications}
       notificationColor={bellButtonNotificationColor}
     >
@@ -210,7 +216,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
         <EuiFlyoutFooter>
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
             <EuiFlexItem grow={false}>
-              <EuiButton size="s" fill>
+              <EuiButton size="s" fill onClick={loadMoreNotifications}>
                 Load more
               </EuiButton>
             </EuiFlexItem>

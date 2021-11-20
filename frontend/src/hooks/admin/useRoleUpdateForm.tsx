@@ -8,7 +8,7 @@ import { ROLE_PERMISSIONS } from 'src/utils/permissions'
 import { _getFormErrors } from 'src/utils/validation'
 import { useGlobalNotifications } from '../ui/useGlobalNotifications'
 
-export function useGlobalNotificationsForm() {
+export function useRoleUpdateForm() {
   // grab functionality as needed
 
   const dispatch = useAppDispatch()

@@ -120,7 +120,7 @@ export default function Navbar() {
 
           <EuiFlexGroup direction="column" alignItems="center" className="avatar-dropdown-actions">
             <EuiFlexItem grow={2}>
-              <EuiLink onClick={() => handleLogout()} color="danger" data-test-subj="logout">
+              <EuiLink onClick={handleLogout} color="danger" data-test-subj="logout">
                 Log out
               </EuiLink>
             </EuiFlexItem>

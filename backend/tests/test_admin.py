@@ -6,11 +6,11 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 
 
 """
-
-
+import os
 import json
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
+from databases.core import Connection, Transaction
 
 import jwt
 import pytest
@@ -19,6 +19,7 @@ from fastapi import FastAPI, HTTPException, status
 from httpx import AsyncClient
 from loguru import logger
 from pydantic import ValidationError
+from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import close_all_sessions
 from starlette.datastructures import Secret
 from starlette.status import (
@@ -33,6 +34,7 @@ from starlette.status import (
 
 from app.core.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    DATABASE_URL,
     JWT_ALGORITHM,
     JWT_AUDIENCE,
     JWT_TOKEN_PREFIX,
@@ -270,7 +272,7 @@ class TestAdminUserModification:
 
 
 class TestAdminGlobalNotifications:
-    n_notifications_start = 40
+    _n_notifications = 40
 
     async def test_admin_can_create_notifications(
         self,
@@ -285,9 +287,9 @@ class TestAdminGlobalNotifications:
         global_notification_repo = GlobalNotificationsRepository(db)
 
         # required to test proper pagination later
-        assert self.n_notifications_start > global_notification_repo.page_chunk_size
+        assert self._n_notifications > global_notification_repo.page_chunk_size
 
-        for i in range(1, self.n_notifications_start + 1):
+        for i in range(1, self._n_notifications + 1):
             notification = GlobalNotificationCreate(
                 sender=test_admin_user.email,
                 receiver_role=Role.user.value,
@@ -308,34 +310,7 @@ class TestAdminGlobalNotifications:
         query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
         logger.critical(f"query: {query}")
         n_notifications = await db.fetch_val(query)
-        assert n_notifications == self.n_notifications_start
-
-    async def test_admin_can_delete_a_notification(
-        self,
-        app: FastAPI,
-        create_authorized_client: Callable,
-        authorized_client: AsyncClient,
-        superuser_client: AsyncClient,
-        test_admin_user: UserInDB,
-        test_user: UserPublic,
-        db: Database,
-    ) -> None:
-        global_notification_repo = GlobalNotificationsRepository(db)
-        async with global_notification_repo.db.transaction(force_rollback=True):
-            # get the last one
-            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
-            notification_id = await db.fetch_val(query)
-            assert notification_id is not None
-
-            res = await superuser_client.delete(
-                app.url_path_for("admin:delete-notification", id=notification_id),
-            )
-            assert res.status_code == HTTP_200_OK
-
-            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
-            n_notifications = await db.fetch_val(query)
-
-            assert n_notifications == self.n_notifications_start - 1
+        assert n_notifications == self._n_notifications
 
     async def test_user_receives_has_new_notification_alert(
         self,
@@ -348,7 +323,7 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert res.json() is True
 
-    async def test_user_can_fetch_chunk_of_notifications(
+    async def test_user_can_fetch_all_unread_notifications(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
@@ -359,7 +334,7 @@ class TestAdminGlobalNotifications:
         res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         global_notification_repo = GlobalNotificationsRepository(db)
-        assert len(res.json()) == global_notification_repo.page_chunk_size
+        assert len(res.json()) == self._n_notifications
 
     async def test_user_does_not_receive_a_has_new_notification_alert_for_old_notifications(
         self, app: FastAPI, authorized_client: AsyncClient, test_user
@@ -369,7 +344,7 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert res.json() is False
 
-    async def test_user_gets_no_new_notifications_if_all_read(
+    async def test_user_gets_no_new_notifications_when_loading_more_if_all_are_read(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
@@ -434,7 +409,7 @@ class TestAdminGlobalNotifications:
         combos: List[Set[str]] = []
         total_feed_items_to_fetch = 30
 
-        assert self.n_notifications_start > total_feed_items_to_fetch
+        assert self._n_notifications > total_feed_items_to_fetch
 
         for _ in range(total_feed_items_to_fetch // global_notification_repo.page_chunk_size):
             res = await authorized_client.get(
@@ -453,3 +428,35 @@ class TestAdminGlobalNotifications:
         id_set: Set[str] = set.union(*combos)
         assert len(id_set) == length_of_all_id_combos
         assert len(id_set) == total_feed_items_to_fetch
+
+    # TODO find out how to remove AUTOCOMMIT level in arbitrary tests and handle transactions manually
+    # creating a new engine inplace
+    # tests will fail if this function is not the last
+    async def test_admin_can_delete_a_notification(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: UserInDB,
+        test_user: UserPublic,
+        db: Database,
+    ) -> None:
+        # default_engine = create_engine(os.environ["TEST_DB_URL"], isolation_level="SERIALIZABLE")
+        # with default_engine.connect() as default_conn:
+
+        query = (
+            f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
+        )
+        notification_id = await db.fetch_val(query)
+        assert notification_id is not None
+
+        res = await superuser_client.delete(
+            app.url_path_for("admin:delete-notification", id=notification_id),
+        )
+        assert res.status_code == HTTP_200_OK
+
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
+        n_notifications = await db.fetch_val(query)
+
+        assert n_notifications == self._n_notifications - 1

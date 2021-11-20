@@ -177,7 +177,7 @@ class GlobalNotificationsRepository(BaseRepository):
                     _fetch_notifications_query(date_condition),
                     values={
                         "last_notification_at": last_notification_at.replace(tzinfo=None),
-                        "page_chunk_size": page_chunk_size or self.page_chunk_size,
+                        "page_chunk_size": 99999,
                         "roles": ROLE_PERMISSIONS[role],
                     },
                 )
