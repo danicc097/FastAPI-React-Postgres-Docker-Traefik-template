@@ -318,10 +318,9 @@ class TestAdminGlobalNotifications:
         test_user: UserPublic,
         db: Database,
     ) -> None:
-        # this test should run in a transaction for readability
-        # database = Database(os.environ["TEST_DB_URL"], force_rollback=True)
-        # await database.connect()
-        # app.state._db = database
+        # we need to use db through app.state._db or replace the app.state._db
+        # Database object with a new one that has ``force_rollback=True`` for transactions
+        # to work properly
         async with app.state._db.transaction(force_rollback=True):
             query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
             notification_id = await db.fetch_val(query)
@@ -355,12 +354,10 @@ class TestAdminGlobalNotifications:
         app: FastAPI,
         authorized_client: AsyncClient,
         test_user: UserPublic,
-        db: Database,
     ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
-        global_notification_repo = GlobalNotificationsRepository(db)
         assert len(res.json()) == self._n_notifications
 
     async def test_user_does_not_receive_a_has_new_notification_alert_for_old_notifications(
