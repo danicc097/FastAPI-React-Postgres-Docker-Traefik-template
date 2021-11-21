@@ -1,12 +1,13 @@
 from fastapi import HTTPException
 from loguru import logger
+from starlette.responses import Response
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
-
+from functools import wraps
 import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
@@ -17,7 +18,22 @@ BASE_EXCEPTION = HTTPException(
 )
 
 
-def exception_handler(e: Exception) -> HTTPException:
+async def exception_handler(f):
+    """
+    Wrapper for routes to handle its exceptions.
+    """
+
+    @wraps(f)
+    async def _wrapper(*args, **kwargs):
+        try:
+            return await f(*args, **kwargs)
+        except Exception as e:
+            raise _exception_handler(e) from e
+
+    return _wrapper
+
+
+def _exception_handler(e: Exception) -> HTTPException:
     """
     Handles repo errors by mapping them to HTTP exceptions.
     """
@@ -38,20 +54,20 @@ def users_repo_exception_to_response(e: Exception) -> HTTPException:
     Map ``UsersRepoException`` to HTTP exceptions.
     """
     if isinstance(e, users_repo.EmailAlreadyExistsError):
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTP_409_CONFLICT,
             detail=e.msg,
-        )
+        ) from e
     elif isinstance(e, users_repo.UsernameAlreadyExistsError):
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTP_409_CONFLICT,
             detail=e.msg,
-        )
+        ) from e
     elif isinstance(e, users_repo.UserNotFoundError):
         raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=e.msg,
-        )
+        ) from e
     elif isinstance(e, users_repo.InvalidUpdateError):
         raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
@@ -64,7 +80,7 @@ def users_repo_exception_to_response(e: Exception) -> HTTPException:
         ) from e
     else:
         logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+        raise BASE_EXCEPTION from e
 
 
 def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
@@ -72,18 +88,18 @@ def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
     Map ``UsersRepoException`` to HTTP exceptions.
     """
     if isinstance(e, pwd_reset_req_repo.RequestDoesNotExistError):
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=e.msg,
-        )
+        ) from e
     elif isinstance(e, pwd_reset_req_repo.UserAlreadyRequestedError):
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTP_409_CONFLICT,
             detail=e.msg,
-        )
+        ) from e
     else:
         logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+        raise BASE_EXCEPTION from e
 
 
 def global_notifications_repo_exception_to_response(e: Exception) -> HTTPException:
@@ -91,15 +107,15 @@ def global_notifications_repo_exception_to_response(e: Exception) -> HTTPExcepti
     Map ``GlobalNotificationsRepoException`` to HTTP exceptions.
     """
     if isinstance(e, global_notif_repo.InvalidGlobalNotificationError):
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail=e.msg,
-        )
+        ) from e
     if isinstance(e, global_notif_repo.InvalidParametersError):
-        return HTTPException(
+        raise HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail=e.msg,
-        )
+        ) from e
     else:
         logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+        raise BASE_EXCEPTION from e

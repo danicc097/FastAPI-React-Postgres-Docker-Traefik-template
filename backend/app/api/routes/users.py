@@ -18,7 +18,7 @@ from app.api.dependencies.auth import (
     get_current_active_user,
 )
 from app.api.dependencies.database import get_repository
-from app.api.routes.utils.errors import exception_handler
+from app.api.routes.utils.errors import _exception_handler, exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
@@ -39,6 +39,7 @@ from app.services import auth_service
 router = APIRouter()
 
 
+@exception_handler
 @router.post(
     "/",
     response_model=UserPublic,
@@ -49,12 +50,7 @@ async def register_new_user(
     new_user: UserCreate = Body(..., embed=True),
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
 ) -> UserPublic:
-    created_user = None
-    try:
-        created_user = await user_repo.register_new_user(new_user=new_user, to_public=True)
-    # only way to bubble up correctly
-    except Exception as e:
-        exception_handler(e)
+    created_user = await user_repo.register_new_user(new_user=new_user, to_public=True)
 
     if not created_user:
         raise HTTPException(
@@ -77,7 +73,7 @@ async def register_new_user(
 # Instead of parsing the request ourselves and searching
 # for that token, we're going to hand that responsibility over to FastAPI.
 # We'll create an auth dependency that grabs the currently authenticated
-# user from our database and injects that user into our route.
+@exception_handler  # user from our database and injects that user into our route.
 @router.get(
     "/me/",
     response_model=UserPublic,
@@ -91,6 +87,7 @@ async def get_currently_authenticated_user(
     return current_user
 
 
+@exception_handler
 @router.put(
     "/me/",
     response_model=UserPublic,
@@ -106,14 +103,10 @@ async def update_user_by_id(
     """
     Update the user's profile.
     """
-    try:
-        updated_user = await users_repo.update_user(user_id=current_user.id, user_update=user_update)
-    except Exception as e:
-        exception_handler(e)
-
-    return updated_user if updated_user else None
+    return await users_repo.update_user(user_id=current_user.id, user_update=user_update)
 
 
+@exception_handler
 @router.post("/login/token/", response_model=AccessToken, name="users:login-email-and-password")
 async def user_login_with_email_and_password(
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
@@ -136,6 +129,7 @@ async def user_login_with_email_and_password(
     return access_token
 
 
+@exception_handler
 @router.post(
     "/request-password-reset/",
     name="users:request-password-reset",
@@ -157,16 +151,13 @@ async def request_password_reset(
             status_code=HTTP_404_NOT_FOUND,
             detail=f"User with email {password_request.email} not found",
         )
-    try:
-        pwd_reset_req = await user_pwd_req_repo.create_password_reset_request(
-            email=password_request.email,
-            message=password_request.message,
-        )
-    except Exception as e:
-        exception_handler(e)
-    return pwd_reset_req
+    return await user_pwd_req_repo.create_password_reset_request(
+        email=password_request.email,
+        message=password_request.message,
+    )
 
 
+@exception_handler
 @router.get(
     "/notifications-by-last-read/",
     response_model=List[GlobalNotificationFeedItem],
@@ -185,6 +176,7 @@ async def get_notification_feed_for_user_by_last_read(
     )
 
 
+@exception_handler
 @router.get(
     "/notifications/",
     response_model=List[GlobalNotificationFeedItem],
@@ -213,6 +205,7 @@ async def get_notification_feed_for_user_by_date(
     )
 
 
+@exception_handler
 @router.get(
     "/check-user-has-unread-notifications/",
     response_model=bool,
