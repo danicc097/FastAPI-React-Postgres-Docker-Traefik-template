@@ -82,7 +82,7 @@ describe('Test verification and access to admin panel for user', () => {
     for (const page of pages) {
       await page.go()
       await page.getElementTextBySelector('body').then((text) => {
-        expect(text).toEqual(expect.stringMatching(/You are not authorized/i))
+        expect(text).toEqual(expect.stringMatching(/required permissions to access this content/i))
       })
     }
   })

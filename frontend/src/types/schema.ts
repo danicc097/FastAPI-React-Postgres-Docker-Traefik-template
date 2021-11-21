@@ -69,7 +69,7 @@ export interface paths {
   };
   "/api/admin/update-user-role/": {
     /** Change role of user */
-    post: operations["admin_update_user_role_api_admin_update_user_role__post"];
+    put: operations["admin_update_user_role_api_admin_update_user_role__put"];
   };
 }
 
@@ -86,7 +86,7 @@ export interface components {
     Body_admin_reset_user_password_by_email_api_admin_reset_user_password__post: {
       email: string;
     };
-    Body_admin_update_user_role_api_admin_update_user_role__post: {
+    Body_admin_update_user_role_api_admin_update_user_role__put: {
       role_update: components["schemas"]["RoleUpdate"];
     };
     Body_admin_verify_users_by_email_api_admin_users_unverified__post: {
@@ -562,7 +562,7 @@ export interface operations {
     };
   };
   /** Change role of user */
-  admin_update_user_role_api_admin_update_user_role__post: {
+  admin_update_user_role_api_admin_update_user_role__put: {
     responses: {
       /** Successful Response */
       200: {
@@ -579,7 +579,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_admin_update_user_role_api_admin_update_user_role__post"];
+        "application/json": components["schemas"]["Body_admin_update_user_role_api_admin_update_user_role__put"];
       };
     };
   };
