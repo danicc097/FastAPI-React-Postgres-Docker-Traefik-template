@@ -11,6 +11,10 @@ from app.models.token import AccessToken
 
 
 class Role(str, Enum):
+    """
+    Access level for users.
+    """
+
     user = "user"
     manager = "manager"
     admin = "admin"
@@ -70,16 +74,12 @@ class UserUpdate(CoreModel):
 
 
 class RoleUpdate(CoreModel):
+    """
+    Admin users can update the role of other users
+    """
 
     email: EmailStr
     role: Role
-
-    # @validator("role")
-    # def role_must_be_in_roles(cls, role):
-    #     roles = Role._member_names_
-    #     if role not in roles:
-    #         raise ValueError(f"role {role} is not in {roles}")
-    #     return role
 
 
 class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):

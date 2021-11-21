@@ -26,10 +26,10 @@ import { useGeneratedHtmlId } from '@elastic/eui'
 import { EuiSuperSelectProps } from '@elastic/eui/src/components'
 import { schema } from 'src/types/schema_override'
 import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificationsForm'
-import { handleInputChange, validateInput } from 'src/utils/validation'
+import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { GlobalNotificationsActionType } from '../../../redux/modules/feed/globalNotifications'
 import { useGlobalNotificationsFeed } from '../../../hooks/feed/useGlobalNotificationsFeed'
-import { capitalize } from 'lodash'
+import { capitalize, some } from 'lodash'
 
 export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFlyout?: () => void }) {
   const { getFormErrors, createNotification, form, setForm, errors, setErrors, setHasSubmitted } =
@@ -37,9 +37,26 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [receiverRole, setReceiverRole] = useState('user' as schema['Role'])
 
+  const emptyForm = () => {
+    setForm({
+      ...form,
+      title: '',
+      body: '',
+      label: '',
+      link: '',
+    })
+  }
+
   // don't forget async...
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    const optionalFields = ['link']
+
+    const isValid = validateFormBeforeSubmit(form, optionalFields, setErrors)
+    if (!isValid) {
+      return
+    }
 
     setHasSubmitted(true)
 
@@ -50,13 +67,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
       setErrors((errors) => ({ ...errors, form: 'There was an error creating the notification' }))
     } else {
       closeModal()
-      setForm({
-        ...form,
-        title: '',
-        body: '',
-        label: '',
-        link: '',
-      })
+      emptyForm()
       if (closeFlyout) {
         closeFlyout()
       }
@@ -65,7 +76,11 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
 
   const modalFormId = useGeneratedHtmlId({ prefix: 'modalForm' })
 
-  const closeModal = () => setIsModalVisible(false)
+  const closeModal = () => {
+    setIsModalVisible(false)
+    emptyForm()
+    setErrors({})
+  }
   const showModal = () => setIsModalVisible(true)
 
   const roleOptions: EuiSuperSelectProps<string>['options'] = Object.keys(ROLE_PERMISSIONS).map(

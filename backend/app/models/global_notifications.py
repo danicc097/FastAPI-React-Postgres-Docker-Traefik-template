@@ -11,7 +11,7 @@ from app.models.user import Role
 
 class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
     """
-    Admins and authorized roles can send notifications to users based on role.
+    Admins and authorized roles can send notifications to all users based on role.
     """
 
     sender: EmailStr
@@ -23,6 +23,9 @@ class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
 
 
 class GlobalNotificationCreate(CoreModel):
+    """
+    Admins and authorized roles can send notifications to all users based on role.
+    """
 
     sender: EmailStr
     receiver_role: Role
