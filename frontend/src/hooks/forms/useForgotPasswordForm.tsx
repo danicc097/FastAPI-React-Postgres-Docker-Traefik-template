@@ -1,13 +1,14 @@
 import { SetStateAction, useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { AuthActionCreators } from 'src/redux/modules/auth/auth'
+import { schema } from 'src/types/schema_override'
 import { extractErrorMessages } from 'src/utils/errors'
 import { _getFormErrors } from 'src/utils/validation'
 
 export const useForgotPasswordForm = () => {
   const dispatch = useAppDispatch()
   // define keys meant to be passed to API with original snake_case
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<schema['PasswordResetRequestCreate']>({
     email: '',
     message: '',
   })

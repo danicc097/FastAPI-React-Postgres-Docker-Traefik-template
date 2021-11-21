@@ -24,10 +24,10 @@ import loginIcon from 'src/assets/img/loginIcon.svg'
 import styled from 'styled-components'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import UserAvatar from '../UserAvatar/UserAvatar'
-import CollapsibleNav from './CollapsibleNav'
-import Notifications from './PersonalNotifications'
+import CollapsibleNav from './CollapsibleNav/CollapsibleNav'
+import Notifications from './PersonalNotifications/PersonalNotifications'
 import GlobalNotifications from 'src/components/Navbar/GlobalNotifications/GlobalNotifications'
-import PersonalNotifications from './PersonalNotifications'
+import PersonalNotifications from './PersonalNotifications/PersonalNotifications'
 
 const LogoSection = styled(EuiHeaderLink)`
   &&& {
@@ -120,7 +120,7 @@ export default function Navbar() {
 
           <EuiFlexGroup direction="column" alignItems="center" className="avatar-dropdown-actions">
             <EuiFlexItem grow={2}>
-              <EuiLink onClick={() => handleLogout()} color="danger" data-test-subj="logout">
+              <EuiLink onClick={handleLogout} color="danger" data-test-subj="logout">
                 Log out
               </EuiLink>
             </EuiFlexItem>

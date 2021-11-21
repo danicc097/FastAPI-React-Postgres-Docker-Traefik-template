@@ -37,13 +37,12 @@ def run_migrations_online() -> None:
         logger.critical(f"{DATABASE_URL=}")
         logger.critical(f"{POSTGRES_DB=}")
         logger.critical(f"{DB_URL=}")
-        # Avoid manual transaction management when creating a database by setting AUTOCOMMIT
         # Sqlalchemy always tries to run queries in a transaction, and postgres does not
         # allow users to create databases inside a transaction, so testing will be run without
         # automatic transaction management.
         # More references (2014): https://www.oddbird.net/2014/06/14/sqlalchemy-postgres-autocommit/
-
-        # default_engine is using the regular database, we simply use it execute stuff on the testing db
+        # default_engine is using the regular database, we simply use this to execute stuff on the testing db
+        # Avoid manual transaction management when creating a database by setting AUTOCOMMIT
         default_engine = create_engine(str(DATABASE_URL), isolation_level="AUTOCOMMIT")
         with default_engine.connect() as default_conn:
             # ! drop testing db if it exists and create a fresh one

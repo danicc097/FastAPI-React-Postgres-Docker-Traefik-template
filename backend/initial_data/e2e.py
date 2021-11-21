@@ -1,12 +1,15 @@
 import asyncio
+import time
 from typing import Dict
 
 from loguru import logger
 
+from app.models.global_notifications import GlobalNotificationCreate
 from app.models.pwd_reset_req import PasswordResetRequestCreate
-from app.models.user import Roles, RoleUpdate, UserCreate
+from app.models.user import Role, RoleUpdate, UserCreate
 from initial_data.utils import (
     change_user_role,
+    create_global_notification,
     create_password_reset_request,
     create_user,
     init_database,
@@ -65,7 +68,7 @@ async def main():
         verified=True,
     )
     logger.info(f'Created superuser {USERS["admin"].email}') if not err else logger.exception(err)
-    err = await change_user_role(database, RoleUpdate(email=USERS["admin"].email, role=Roles.admin))
+    err = await change_user_role(database, RoleUpdate(email=USERS["admin"].email, role=Role.admin))
     logger.info(f'Changed role for {USERS["admin"].email}') if not err else logger.exception(err)
 
     err = await create_user(
@@ -75,7 +78,7 @@ async def main():
         verified=True,
     )
     logger.info(f'Created superuser {USERS["manager"].email}') if not err else logger.exception(err)
-    err = await change_user_role(database, RoleUpdate(email=USERS["manager"].email, role=Roles.manager))
+    err = await change_user_role(database, RoleUpdate(email=USERS["manager"].email, role=Role.manager))
     logger.info(f'Changed role for {USERS["manager"].email}') if not err else logger.exception(err)
 
     err = await create_user(
@@ -128,6 +131,36 @@ async def main():
             ),
         )
         logger.info(f"Created password reset request for {user.email}") if not err else logger.exception(err)
+
+    ##################################################
+    # GLOBAL NOTIFICATIONS
+    ##################################################
+    for i in range(1, 21):
+        notification = GlobalNotificationCreate(
+            sender=USERS["admin"].email,
+            receiver_role=Role.user.value,
+            title=f"Test notification {i}",
+            body=f"""
+                This is test notification {i}.\n
+                As you can observe the body is getting bigger as I write this unnecessarily long sentence but it should
+                come out nicely in the frontend nevertheless.
+                """,
+            label=f"Test label {i}",
+            link="https://www.google.com",
+        )
+
+        err = await create_global_notification(database, notification)
+        logger.info(f"Created global notification {notification.title}") if not err else logger.exception(err)
+
+        # fabricate time to make tests easier
+        await database.execute(
+            f"""
+            UPDATE global_notifications
+            SET created_at = created_at - interval '{i} hour',
+                updated_at = updated_at - interval '{i} hour'
+            WHERE id = {i}
+            """
+        )
 
 
 if __name__ == "__main__":

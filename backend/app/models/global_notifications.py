@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import EmailStr, constr
 
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
-from app.models.user import Roles
+from app.models.user import Role
 
 # ? until constr fixed
 # mypy: ignore-errors
@@ -11,11 +11,11 @@ from app.models.user import Roles
 
 class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
     """
-    Admins and authorized roles can send notifications to users based on role.
+    Admins and authorized roles can send notifications to all users based on role.
     """
 
     sender: EmailStr
-    receiver_role: Roles
+    receiver_role: Role
     title: str
     body: str
     label: str
@@ -23,9 +23,12 @@ class GlobalNotification(CoreModel, DateTimeModelMixin, IDModelMixin):
 
 
 class GlobalNotificationCreate(CoreModel):
+    """
+    Admins and authorized roles can send notifications to all users based on role.
+    """
 
     sender: EmailStr
-    receiver_role: Roles
+    receiver_role: Role
     title: str
     body: str
     label: str

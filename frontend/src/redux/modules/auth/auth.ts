@@ -55,6 +55,7 @@ export default function authReducer(
   switch (action.type) {
     case AuthActionType.REQUEST_LOGIN:
       return loadingState(state)
+
     case AuthActionType.REQUEST_LOGIN_FAILURE:
       return {
         ...state,
@@ -62,15 +63,19 @@ export default function authReducer(
         error: action.error,
         user: { id: null },
       }
+
     case AuthActionType.REQUEST_LOGIN_SUCCESS:
       return successState(state)
     // remove data when user logs out
+
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return {
         ...initialState.auth,
       }
+
     case AuthActionType.FETCHING_USER_FROM_TOKEN:
       return loadingState(state)
+
     case AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS:
       return {
         ...state,
@@ -79,6 +84,7 @@ export default function authReducer(
         isLoading: false,
         user: action.data,
       }
+
     case AuthActionType.FETCHING_USER_FROM_TOKEN_FAILURE:
       return {
         ...state,
@@ -88,10 +94,13 @@ export default function authReducer(
         error: action.error,
         user: { id: null },
       }
+
     case AuthActionType.REQUEST_USER_SIGN_UP:
       return loadingState(state)
+
     case AuthActionType.REQUEST_USER_SIGN_UP_SUCCESS:
       return successState(state)
+
     case AuthActionType.REQUEST_USER_SIGN_UP_FAILURE:
       return {
         ...state,
@@ -99,14 +108,17 @@ export default function authReducer(
         isAuthenticated: false,
         error: action.error,
       }
+
     case AuthActionType.REQUEST_PASSWORD_RESET:
       return loadingState(state)
+
     case AuthActionType.REQUEST_PASSWORD_RESET_SUCCESS:
       return {
         ...state,
         isLoading: false,
         pwdResetError: null,
       }
+
     case AuthActionType.REQUEST_PASSWORD_RESET_FAILURE:
       return {
         ...state,
@@ -127,7 +139,7 @@ export type AuthActionsParams = {
 }
 
 // make optional properties to allow easier usage of actions inside other actions in this file.
-type ActionCreatorsType = {
+type ActionCreators = {
   requestUserLogin: ({ email, password }: AuthActionsParams) => any
   fetchUserFromToken: () => any
   logUserOut: () => any
@@ -135,7 +147,7 @@ type ActionCreatorsType = {
   requestPasswordReset: ({ email, message }: AuthActionsParams) => any
 }
 
-export const AuthActionCreators: Partial<ActionCreatorsType> = {}
+export const AuthActionCreators: Partial<ActionCreators> = {}
 
 // make our action creators return asynchronous functions to take advantage
 // of fastAPI async capabilities.

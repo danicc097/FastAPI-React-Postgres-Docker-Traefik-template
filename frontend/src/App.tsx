@@ -13,6 +13,7 @@ import LandingPage from './views/Home/LandingPage/LandingPage'
 import UnverifiedUsersPage from './views/Admin/UnverifiedUsersPage/UnverifiedUsersPage'
 import PasswordResetPage from './views/Admin/PasswordResetPage/PasswordResetPage'
 import PasswordResetRequestsPage from './views/Admin/PasswordResetRequestsPage/PasswordResetRequestsPage'
+import UserPermissionsPage from 'src/views/Admin/UserPermissionsPage/UserPermissionsPage'
 
 export default function App() {
   return (
@@ -30,6 +31,10 @@ export default function App() {
           <Route
             path="/admin/password-reset"
             element={<ProtectedRoute component={PasswordResetPage} adminRoute={true} />}
+          />
+          <Route
+            path="/admin/user-permissions-management"
+            element={<ProtectedRoute component={UserPermissionsPage} adminRoute={true} />}
           />
           <Route
             path="/admin/password-reset-requests"

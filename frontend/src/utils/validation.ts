@@ -62,6 +62,13 @@ export const validationFunctions = {
 
 type validationFunction = keyof typeof validationFunctions
 
+/**
+ * Run validation function on input if it exists, else assume the input is valid
+ */
+export const validateInput = (label: string, value: string): boolean => {
+  return validationFunctions[label] ? validationFunctions[label](value) : true
+}
+
 interface handleInputChangeParams {
   label: validationFunction
   value: string
@@ -71,13 +78,7 @@ interface handleInputChangeParams {
 }
 
 /**
- * Run validation function on input if it exists, else assume the input is valid
- */
-export const validateInput = (label: string, value: string): boolean => {
-  return validationFunctions[label] ? validationFunctions[label](value) : true
-}
-
-/**
+ * Handle input change and update form state accordingly
  * @param label key that maps to a validation function
  * @param value string to validate
  * @param formLabel specify form key to validate if it differs from validation function label
@@ -92,7 +93,7 @@ export const handleInputChange = ({ label, value, formLabel, setForm, setErrors 
 }
 
 export function _getFormErrors(
-  form,
+  form: any,
   errors: FormErrors<typeof form>,
   hasSubmitted: boolean,
   ...errorLists: Array<Array<unknown>>
@@ -108,4 +109,41 @@ export function _getFormErrors(
   }
 
   return formErrors
+}
+
+type validateFormBeforeSubmitParams = {
+  form: any
+  setErrors: SetStateAction<any>
+  optionalFields?: Array<string>
+}
+
+/**
+ * Generic form error handler
+ *
+ * @param form form state
+ * @param optionalFields fields that are optional and can be empty
+ * @param setErrors function to set the form errors state
+ */
+export const validateFormBeforeSubmit = ({
+  form,
+  optionalFields,
+  setErrors,
+}: validateFormBeforeSubmitParams): boolean => {
+  setErrors({})
+
+  const _optionalFields = optionalFields || []
+
+  // show individual errors for each field by using isInvalid prop
+  Object.entries(form).forEach(([k, v]) => {
+    if (!v && !_optionalFields.includes(k)) {
+      setErrors((errors) => ({ ...errors, [k]: `${k} is required` }))
+    }
+  })
+
+  // main form validation
+  if (!Object.entries(form).every(([k, v]) => _optionalFields.includes(k) || Boolean(v) || v === null)) {
+    setErrors((errors) => ({ ...errors, form: 'You must fill out all required fields' }))
+    return false
+  }
+  return true
 }

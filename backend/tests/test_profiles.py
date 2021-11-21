@@ -1,3 +1,5 @@
+import os
+
 import pytest
 from databases import Database
 from fastapi import FastAPI

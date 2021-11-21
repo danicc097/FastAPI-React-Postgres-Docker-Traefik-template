@@ -45,7 +45,9 @@ export enum AdminActionType {
   VERIFY_USERS_SUCCESS = 'admin/VERIFY_USERS_SUCCESS',
   VERIFY_USERS_FAILURE = 'admin/VERIFY_USERS_FAILURE',
 
-  // REMOVE_VERIFIED_USERS_FROM_STORE = 'admin/REMOVE_VERIFIED_USERS_FROM_STORE',
+  UPDATE_USER_ROLE = 'admin/UPDATE_USER_ROLE',
+  UPDATE_USER_ROLE_SUCCESS = 'admin/UPDATE_USER_ROLE_SUCCESS',
+  UPDATE_USER_ROLE_FAILURE = 'admin/UPDATE_USER_ROLE_FAILURE',
 
   FETCH_ALL_PASSWORD_RESET_REQUESTS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS',
   FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS = 'admin/FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS',
@@ -124,6 +126,7 @@ export default function adminReducer(
   switch (action.type) {
     case AdminActionType.FETCH_ALL_USERS:
       return loadingState(state)
+
     case AdminActionType.FETCH_ALL_USERS_SUCCESS:
       return {
         ...state,
@@ -143,23 +146,32 @@ export default function adminReducer(
 
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS:
       return loadingState(state)
+
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS:
       return updateStateOfUnverifiedUsers(state, action.data, false)
+
     case AdminActionType.FETCH_ALL_UNVERIFIED_USERS_FAILURE:
       return errorState(state, action)
+
     case AdminActionType.VERIFY_USERS_SUCCESS:
       return updateStateOfUnverifiedUsers(state, action.data, true)
+
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS:
       return loadingState(state)
+
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS:
       return updateStateOfPasswordResetRequests(state, action.data, false)
+
     case AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_FAILURE:
       return errorState(state, action)
+
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
+
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.admin
+
     default:
       return state
   }
@@ -170,9 +182,10 @@ type AdminActionsParams = {
   users?: Array<schema['UserPublic']>
   email?: string
   request?: schema['PasswordResetRequest']
+  role_update?: schema['RoleUpdate']
 }
 
-type ActionCreatorsType = {
+type ActionCreators = {
   fetchAllUsers: () => any
   fetchAllNonVerifiedUsers: () => any
   verifyUsers: ({ userEmails }: AdminActionsParams) => any
@@ -187,9 +200,10 @@ type ActionCreatorsType = {
    */
   deletePasswordResetRequest: ({ request }: AdminActionsParams) => any
   _removeResetPasswordRequestFromStore: ({ email }: AdminActionsParams) => any
+  updateUserRole: ({ role_update }: AdminActionsParams) => any
 }
 
-export const AdminActionCreators: Partial<ActionCreatorsType> = {}
+export const AdminActionCreators: Partial<ActionCreators> = {}
 
 AdminActionCreators.fetchAllUsers = () => {
   return async (dispatch: AppDispatch) => {
@@ -304,13 +318,6 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
     )
   }
 }
-
-// // we can directly dispatch an action that edits the store
-// AdminActionCreators.removeVerifiedUsersFromStore = ({ users }) => {
-//   return async (dispatch: AppDispatch) => {
-//     return dispatch({ type: AdminActionType.REMOVE_VERIFIED_USERS_FROM_STORE, data: users })
-//   }
-// }
 
 AdminActionCreators.fetchAllPasswordResetUsers = () => {
   return async (dispatch: AppDispatch) => {
@@ -443,5 +450,56 @@ AdminActionCreators.deletePasswordResetRequest = ({ request }) => {
 AdminActionCreators._removeResetPasswordRequestFromStore = ({ email }) => {
   return (dispatch: AppDispatch) => {
     return dispatch({ type: AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE, data: [email] })
+  }
+}
+
+AdminActionCreators.updateUserRole = ({ role_update }) => {
+  return async (dispatch: AppDispatch) => {
+    const headers = {}
+    return dispatch(
+      apiClient({
+        url: `/admin/update-user-role/`,
+        method: 'put',
+        types: {
+          REQUEST: AdminActionType.UPDATE_USER_ROLE,
+          SUCCESS: AdminActionType.UPDATE_USER_ROLE_SUCCESS,
+          FAILURE: AdminActionType.UPDATE_USER_ROLE_FAILURE,
+        },
+        options: {
+          headers,
+          // fastapi will only grab 'role_update' key from body
+          data: { role_update },
+          params: {},
+        },
+        onSuccess: (res) => {
+          dispatch(
+            UiActionCreators.addToast({
+              id: 'update-user-role-success',
+              title: `Successfully updated user role!`,
+              color: 'success',
+              iconType: 'checkInCircleFilled',
+              toastLifeTimeMs: 5000,
+              text: `User with email:'${role_update.email}' has had its role updated to '${role_update.role}'.`,
+            }),
+          )
+          return {
+            type: AdminActionType.UPDATE_USER_ROLE_SUCCESS,
+            success: true,
+            status: res.status,
+            data: res.data,
+          }
+        },
+        onFailure: (res) => {
+          console.log('onFailure: ', res)
+          return {
+            type: AdminActionType.UPDATE_USER_ROLE_FAILURE,
+            success: false,
+            status: res.status,
+            data: res.data,
+            error: res.error?.data?.detail,
+          }
+        },
+      }),
+    )
   }
 }

@@ -12,7 +12,7 @@ import styled from 'styled-components'
 import React, { useState } from 'react'
 
 import { AuthActionType } from 'src/redux/modules/auth/auth'
-import { handleInputChange, validateInput } from 'src/utils/validation'
+import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { useForgotPasswordForm } from 'src/hooks/forms/useForgotPasswordForm'
 
 const ForgotPasswordFormWrapper = styled.div`
@@ -29,13 +29,12 @@ export default function ForgotPasswordForm() {
   // don't forget async...
   const handleSubmit = async (e) => {
     e.preventDefault()
-    // validate inputs before submitting
-    Object.keys(form).forEach((label) => validateInput(label, form[label]))
-    // if any input hasn't been entered in, return early
-    if (!Object.values(form).every((value) => Boolean(value) || value === null)) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))
+
+    const isValid = validateFormBeforeSubmit({ form, setErrors })
+    if (!isValid) {
       return
     }
+
     setHasSubmitted(true)
 
     const action = await requestPasswordReset({ email: form.email, message: form.message })
@@ -47,6 +46,7 @@ export default function ForgotPasswordForm() {
       setIsDisabled(true)
     }
   }
+
   return (
     <ForgotPasswordFormWrapper>
       {/* EuiForm component renders as a div by default, but we can pass in component="form"

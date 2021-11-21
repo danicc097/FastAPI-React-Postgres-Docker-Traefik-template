@@ -6,7 +6,7 @@ repos:
       # requires dev compose up and running
       - id: get-updated-api-schema
         name: get-updated-api-schema
-        entry: frontend/scripts/generate-ts-types.sh
+        entry: frontend/scripts/frontend-generate-ts-types.sh
         language: script
         types: [text]
         pass_filenames: false

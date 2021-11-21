@@ -10,7 +10,11 @@ from app.models.profile import ProfilePublic
 from app.models.token import AccessToken
 
 
-class Roles(str, Enum):
+class Role(str, Enum):
+    """
+    Access level for users.
+    """
+
     user = "user"
     manager = "manager"
     admin = "admin"
@@ -27,7 +31,7 @@ class UserBase(CoreModel):
     is_verified: bool = False
     is_active: bool = True
     is_superuser: bool = False
-    role: Roles = Roles.user
+    role: Role = Role.user
     last_notification_at: datetime = datetime.utcnow()
 
     @validator("last_notification_at", pre=True)
@@ -70,16 +74,12 @@ class UserUpdate(CoreModel):
 
 
 class RoleUpdate(CoreModel):
+    """
+    Admin users can update the role of other users
+    """
 
     email: EmailStr
-    role: Roles
-
-    # @validator("role")
-    # def role_must_be_in_roles(cls, role):
-    #     roles = Roles._member_names_
-    #     if role not in roles:
-    #         raise ValueError(f"role {role} is not in {roles}")
-    #     return role
+    role: Role
 
 
 class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):

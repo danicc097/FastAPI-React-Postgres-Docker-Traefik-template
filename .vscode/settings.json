@@ -7,6 +7,7 @@
   "eslint.nodePath": "frontend/.yarn/sdks",
   "prettier.prettierPath": "frontend/.yarn/sdks/prettier/index.js",
   "typescript.tsdk": "frontend/.yarn/sdks/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
 
   // backend
   "python.analysis.extraPaths": ["backend"],
@@ -33,7 +34,7 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "terminal.integrated.env.linux": {
-    "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/"
+    "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/:e2e/scripts/"
   },
   "python.formatting.provider": "black",
   "cSpell.words": ["ondelete", "psql"]

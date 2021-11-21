@@ -32,24 +32,26 @@ export default function uiReducer(
         ...state,
         toastList: [...state.toastList, action.toast],
       }
+
     case UiActionType.REMOVE_TOAST:
       return {
         ...state,
         // remove specified toast by id
         toastList: state.toastList.filter((toast) => toast.id !== action.toastId),
       }
+
     default:
       return state
   }
 }
 
-type ActionCreatorsType = {
+type ActionCreators = {
   addToast: (toast: Toast) => any
   removeToast: (toast: Toast) => any
   removeToastById: (toastId: string) => any
 }
 
-export const UiActionCreators: Partial<ActionCreatorsType> = {}
+export const UiActionCreators: Partial<ActionCreators> = {}
 
 UiActionCreators.addToast = (toast) => {
   return async (dispatch: AppDispatch, getState: () => initialStateType) => {

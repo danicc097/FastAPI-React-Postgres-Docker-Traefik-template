@@ -7,7 +7,7 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 
 
 """
-
+import os
 from typing import Callable, Dict, List, Optional, Type, Union
 
 import jwt
