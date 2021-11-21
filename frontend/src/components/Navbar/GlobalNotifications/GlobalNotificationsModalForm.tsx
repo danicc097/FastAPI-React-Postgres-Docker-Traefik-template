@@ -37,7 +37,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [receiverRole, setReceiverRole] = useState('user' as schema['Role'])
 
-  const emptyForm = () => {
+  const resetForm = () => {
     setForm({
       ...form,
       title: '',
@@ -53,7 +53,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
 
     const optionalFields = ['link']
 
-    const isValid = validateFormBeforeSubmit(form, optionalFields, setErrors)
+    const isValid = validateFormBeforeSubmit({ form, optionalFields, setErrors })
     if (!isValid) {
       return
     }
@@ -67,7 +67,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
       setErrors((errors) => ({ ...errors, form: 'There was an error creating the notification' }))
     } else {
       closeModal()
-      emptyForm()
+      resetForm()
       if (closeFlyout) {
         closeFlyout()
       }
@@ -78,7 +78,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
 
   const closeModal = () => {
     setIsModalVisible(false)
-    emptyForm()
+    resetForm()
     setErrors({})
   }
   const showModal = () => setIsModalVisible(true)

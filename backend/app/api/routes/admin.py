@@ -209,7 +209,7 @@ async def delete_notification(
         exception_handler(e)
 
 
-@router.post(
+@router.put(
     "/update-user-role/",
     response_model=UserPublic,
     name="admin:update-user-role",

@@ -112,7 +112,7 @@ export interface components {
     Body_users_update_user_by_id_api_users_me__put: {
       user_update: components["schemas"]["UserUpdate"];
     };
-    /** Admins and authorized roles can send notifications to users based on role. */
+    /** Admins and authorized roles can send notifications to all users based on role. */
     GlobalNotification: {
       id: number;
       created_at?: string;
@@ -124,7 +124,7 @@ export interface components {
       label: string;
       link?: string;
     };
-    /** Any common logic to be shared by all models goes here */
+    /** Admins and authorized roles can send notifications to all users based on role. */
     GlobalNotificationCreate: {
       sender: string;
       receiver_role: components["schemas"]["Role"];
@@ -133,7 +133,7 @@ export interface components {
       label: string;
       link?: string;
     };
-    /** Admins and authorized roles can send notifications to users based on role. */
+    /** Contains relevant information to display a global notification. */
     GlobalNotificationFeedItem: {
       row_number?: number;
       event_timestamp?: string;
@@ -184,9 +184,9 @@ export interface components {
       bio?: string;
       image?: string;
     };
-    /** An enumeration. */
+    /** Access level for users. */
     Role: "user" | "manager" | "admin";
-    /** Any common logic to be shared by all models goes here */
+    /** Admin users can update the role of other users */
     RoleUpdate: {
       email: string;
       role: components["schemas"]["Role"];

@@ -27,7 +27,9 @@ import { getAllowedRoles, ROLE_PERMISSIONS } from 'src/utils/permissions'
 import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 
 export default function UserPermissionsPage() {
-  const [emailSelection, setEmailSelection] = useState<any>('...')
+  const noSelection = '...'
+
+  const [emailSelection, setEmailSelection] = useState<any>(noSelection)
   const [roleSelection, setRoleSelection] = useState('user' as schema['Role'])
   const [userOptions, setUserOptions] = useState<Array<EuiSelectableOption<any>>>(undefined)
   const { allUsers } = useAllUsers()
@@ -53,10 +55,6 @@ export default function UserPermissionsPage() {
   const onEmailSelectableChange = (newOptions) => {
     setUserOptions(newOptions)
     setEmailSelection(newOptions.filter((option) => !!option?.checked)[0]?.label)
-    setForm({
-      ...form,
-      email: emailSelection,
-    })
   }
 
   const [isModalVisible, setIsModalVisible] = useState(false)
@@ -66,11 +64,10 @@ export default function UserPermissionsPage() {
   const submitRoleUpdate = async () => {
     setHasSubmitted(true)
     const action = await updateUserRole({ role_update: form })
-    if (action.type === AdminActionType.UPDATE_USER_ROLE_SUCCESS) {
-      closeModal()
-    } else {
+    if (action.type !== AdminActionType.UPDATE_USER_ROLE_SUCCESS) {
       setErrors(action.error)
     }
+    closeModal()
   }
 
   let modal
@@ -88,7 +85,7 @@ export default function UserPermissionsPage() {
       >
         <>
           {_.unescape(`You're about to update role to `)}
-          <strong>{}</strong> for <strong>{emailSelection}</strong>.
+          <strong>{roleSelection}</strong> for <strong>{emailSelection}</strong>.
         </>
 
         <p>Are you sure you want to do this?</p>
@@ -98,6 +95,9 @@ export default function UserPermissionsPage() {
 
   const onRoleUpdateSubmit = async (e) => {
     e.preventDefault()
+
+    // cant change form in modal
+    setForm((form) => ({ ...form, email: emailSelection }))
     console.log(`onRoleUpdateSubmit called with: ${emailSelection} and ${roleSelection}`)
     showModal()
   }
@@ -141,7 +141,7 @@ export default function UserPermissionsPage() {
     }),
   )
 
-  const onSuperSelectChange = (value) => {
+  const onRoleSuperSelectChange = (value) => {
     setRoleSelection(value)
     setForm({
       ...form,
@@ -154,7 +154,7 @@ export default function UserPermissionsPage() {
       <EuiForm component="form" onSubmit={onRoleUpdateSubmit}>
         <EuiFlexGroup direction="column">
           <EuiFlexItem grow={false}>
-            <EuiFormRow fullWidth label="Select the user's email">
+            <EuiFormRow fullWidth label="Select the user's email" error={getFormErrors()}>
               <EuiSelectable
                 aria-label="Searchable example"
                 data-test-subj="roleUpdateForm__selectable"
@@ -176,15 +176,18 @@ export default function UserPermissionsPage() {
                 )}
               </EuiSelectable>
             </EuiFormRow>
-            <EuiFormRow fullWidth label="Select the new role">
+
+            <EuiFormRow
+              label="Role"
+              helpText="Select the new role."
+              isInvalid={Boolean(errors.role)}
+              error="Please select a valid role"
+            >
               <EuiSuperSelect
-                data-test-subj="roleUpdateForm__roleSelect"
-                // don't show current role
-                options={roleOptions.filter(
-                  (option) => option.value !== userOptions?.filter((option) => !!option?.checked)[0]?.role,
-                )}
-                onSelect={onSuperSelectChange}
+                name="role"
+                options={roleOptions}
                 valueOfSelected={roleSelection}
+                onChange={onRoleSuperSelectChange}
                 itemLayoutAlign="top"
                 hasDividers
                 isInvalid={Boolean(errors.role)}
@@ -196,7 +199,7 @@ export default function UserPermissionsPage() {
             <EuiButton
               fill
               type="submit"
-              isDisabled={emailSelection === '...'}
+              isDisabled={emailSelection === noSelection}
               color="warning"
               data-test-subj="roleUpdateForm__submit"
             >{`Update role for ${emailSelection}`}</EuiButton>

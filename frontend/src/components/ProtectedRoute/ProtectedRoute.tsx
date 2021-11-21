@@ -10,6 +10,9 @@ type ProtectedRouteProps = {
   verifiedUserRoute?: boolean
 }
 
+/**
+ * Restrict a route to specific users and protect against unauthenticated users
+ */
 export default function ProtectedRoute({
   component: Component,
   adminRoute = false,
@@ -31,7 +34,7 @@ export default function ProtectedRoute({
   const element = <Component {...props} />
 
   if (adminRoute) {
-    return <PagePermissions element={element} isAllowed={isAdmin} adminRoute={true}></PagePermissions>
+    return <PagePermissions element={element} isAllowed={isAdmin}></PagePermissions>
   } else if (verifiedUserRoute) {
     return <PagePermissions element={element} isAllowed={isVerifiedUser}></PagePermissions>
   } else {

@@ -258,7 +258,7 @@ class TestAdminUserModification:
 
         # actually any client can request it since the user won't know its own password
         # but there's no email server so this is as secure as we get
-        res = await superuser_client.post(
+        res = await superuser_client.put(
             app.url_path_for("admin:update-user-role"),
             json={"role_update": role_update.dict()},
         )

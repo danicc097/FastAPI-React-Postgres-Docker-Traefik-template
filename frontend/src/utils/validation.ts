@@ -111,26 +111,37 @@ export function _getFormErrors(
   return formErrors
 }
 
+type validateFormBeforeSubmitParams = {
+  form: any
+  setErrors: SetStateAction<any>
+  optionalFields?: Array<string>
+}
+
 /**
  * Generic form error handler
  *
  * @param form form state
  * @param optionalFields fields that are optional and can be empty
  * @param setErrors function to set the form errors state
- * @returns
  */
-export const validateFormBeforeSubmit = (form, optionalFields: string[], setErrors): boolean => {
+export const validateFormBeforeSubmit = ({
+  form,
+  optionalFields,
+  setErrors,
+}: validateFormBeforeSubmitParams): boolean => {
   setErrors({})
+
+  const _optionalFields = optionalFields || []
 
   // show individual errors for each field by using isInvalid prop
   Object.entries(form).forEach(([k, v]) => {
-    if (!v && !optionalFields.includes(k)) {
-      setErrors((errors) => ({ ...errors, [k]: true }))
+    if (!v && !_optionalFields.includes(k)) {
+      setErrors((errors) => ({ ...errors, [k]: `${k} is required` }))
     }
   })
 
   // main form validation
-  if (!Object.entries(form).every(([k, v]) => optionalFields.includes(k) || Boolean(v) || v === null)) {
+  if (!Object.entries(form).every(([k, v]) => _optionalFields.includes(k) || Boolean(v) || v === null)) {
     setErrors((errors) => ({ ...errors, form: 'You must fill out all required fields' }))
     return false
   }
