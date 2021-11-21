@@ -18,7 +18,7 @@ from app.api.dependencies.auth import (
     get_current_active_user,
 )
 from app.api.dependencies.database import get_repository
-from app.api.routes.utils.errors import _exception_handler, exception_handler
+from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
@@ -39,7 +39,6 @@ from app.services import auth_service
 router = APIRouter()
 
 
-@exception_handler
 @router.post(
     "/",
     response_model=UserPublic,
@@ -50,22 +49,23 @@ async def register_new_user(
     new_user: UserCreate = Body(..., embed=True),
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
 ) -> UserPublic:
-    created_user = await user_repo.register_new_user(new_user=new_user, to_public=True)
+    async with exception_handler():
+        created_user = await user_repo.register_new_user(new_user=new_user, to_public=True)
 
-    if not created_user:
-        raise HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail="User could not be created.",
+        if not created_user:
+            raise HTTPException(
+                status_code=HTTP_409_CONFLICT,
+                detail="User could not be created.",
+            )
+        created_user = cast(UserPublic, created_user)
+
+        access_token = AccessToken(
+            access_token=auth_service.create_access_token_for_user(user=created_user),
+            token_type="bearer",
         )
-    created_user = cast(UserPublic, created_user)
-
-    access_token = AccessToken(
-        access_token=auth_service.create_access_token_for_user(user=created_user),
-        token_type="bearer",
-    )
-    # we can return the access_token because we added it as
-    # an optional property in UserPublic
-    return created_user.copy(update={"access_token": access_token})
+        # we can return the access_token because we added it as
+        # an optional property in UserPublic
+        return created_user.copy(update={"access_token": access_token})
 
 
 # we only know the user is logged in by the token passed to our routes
@@ -73,7 +73,9 @@ async def register_new_user(
 # Instead of parsing the request ourselves and searching
 # for that token, we're going to hand that responsibility over to FastAPI.
 # We'll create an auth dependency that grabs the currently authenticated
-@exception_handler  # user from our database and injects that user into our route.
+# user from our database and injects that user into our route.
+
+
 @router.get(
     "/me/",
     response_model=UserPublic,
@@ -83,11 +85,11 @@ async def register_new_user(
 async def get_currently_authenticated_user(
     current_user: UserPublic = Depends(get_current_active_user),
 ) -> UserPublic:
-    logger.info(f"User logged in: {current_user.email}")
-    return current_user
+    async with exception_handler():
+        logger.info(f"User logged in: {current_user.email}")
+        return current_user
 
 
-@exception_handler
 @router.put(
     "/me/",
     response_model=UserPublic,
@@ -103,33 +105,33 @@ async def update_user_by_id(
     """
     Update the user's profile.
     """
-    return await users_repo.update_user(user_id=current_user.id, user_update=user_update)
+    async with exception_handler():
+        return await users_repo.update_user(user_id=current_user.id, user_update=user_update)
 
 
-@exception_handler
 @router.post("/login/token/", response_model=AccessToken, name="users:login-email-and-password")
 async def user_login_with_email_and_password(
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm),
 ) -> AccessToken:
-    # OAuth2 spec requires the exact field name "username"
-    user = await user_repo.authenticate_user(email=form_data.username, password=form_data.password)  # type: ignore
-    if not user:
-        raise HTTPException(
-            status_code=HTTP_401_UNAUTHORIZED,
-            detail="Authentication was unsuccessful.",
-            headers={"WWW-Authenticate": "Bearer"},
+    async with exception_handler():
+        # OAuth2 spec requires the exact field name "username"
+        user = await user_repo.authenticate_user(email=form_data.username, password=form_data.password)  # type: ignore
+        if not user:
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail="Authentication was unsuccessful.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        access_token = AccessToken(
+            access_token=auth_service.create_access_token_for_user(user=user),
+            token_type="bearer",
         )
 
-    access_token = AccessToken(
-        access_token=auth_service.create_access_token_for_user(user=user),
-        token_type="bearer",
-    )
-
-    return access_token
+        return access_token
 
 
-@exception_handler
 @router.post(
     "/request-password-reset/",
     name="users:request-password-reset",
@@ -144,20 +146,20 @@ async def request_password_reset(
     """
     Any client, including unauthorized, can request a password reset that needs admin approval.
     """
-    logger.warning(password_request)
-    user = await users_repo.get_user_by_email(email=password_request.email, to_public=True)
-    if not user:
-        raise HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=f"User with email {password_request.email} not found",
+    async with exception_handler():
+        logger.warning(password_request)
+        user = await users_repo.get_user_by_email(email=password_request.email, to_public=True)
+        if not user:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail=f"User with email {password_request.email} not found",
+            )
+        return await user_pwd_req_repo.create_password_reset_request(
+            email=password_request.email,
+            message=password_request.message,
         )
-    return await user_pwd_req_repo.create_password_reset_request(
-        email=password_request.email,
-        message=password_request.message,
-    )
 
 
-@exception_handler
 @router.get(
     "/notifications-by-last-read/",
     response_model=List[GlobalNotificationFeedItem],
@@ -168,15 +170,15 @@ async def get_notification_feed_for_user_by_last_read(
     user: UserPublic = Depends(get_current_active_user),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
 ) -> List[GlobalNotificationFeedItem]:
-    return await users_repo.fetch_notifications_by_last_read(
-        user_id=user.id,
-        last_notification_at=user.last_notification_at,
-        role=user.role,
-        now=datetime.utcnow(),
-    )
+    async with exception_handler():
+        return await users_repo.fetch_notifications_by_last_read(
+            user_id=user.id,
+            last_notification_at=user.last_notification_at,
+            role=user.role,
+            now=datetime.utcnow(),
+        )
 
 
-@exception_handler
 @router.get(
     "/notifications/",
     response_model=List[GlobalNotificationFeedItem],
@@ -198,14 +200,14 @@ async def get_notification_feed_for_user_by_date(
     user: UserPublic = Depends(get_current_active_user),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
 ) -> List[GlobalNotificationFeedItem]:
-    return await users_repo.fetch_notifications_by_date(
-        role=user.role,
-        starting_date=starting_date,
-        page_chunk_size=page_chunk_size,
-    )
+    async with exception_handler():
+        return await users_repo.fetch_notifications_by_date(
+            role=user.role,
+            starting_date=starting_date,
+            page_chunk_size=page_chunk_size,
+        )
 
 
-@exception_handler
 @router.get(
     "/check-user-has-unread-notifications/",
     response_model=bool,
@@ -220,4 +222,7 @@ async def check_has_new_notifications(
     Hit the server to check if the user has unread notifications.
     It won't update the user's ``last_notification_at`` field.
     """
-    return await global_notif_repo.has_new_notifications(last_notification_at=user.last_notification_at, role=user.role)
+    async with exception_handler():
+        return await global_notif_repo.has_new_notifications(
+            last_notification_at=user.last_notification_at, role=user.role
+        )

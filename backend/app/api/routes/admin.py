@@ -10,7 +10,7 @@ from starlette import status
 
 from app.api.dependencies.auth import RoleVerifier
 from app.api.dependencies.database import get_repository
-from app.api.routes.utils.errors import _exception_handler, exception_handler
+from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
@@ -43,7 +43,6 @@ from app.models.user import (
 router = APIRouter()
 
 
-@exception_handler
 @router.get(
     "/users/",
     response_model=List[UserPublic],
@@ -57,10 +56,10 @@ async def list_all_users(
     """
     List all users in the database.
     """
-    return await user_repo.list_all_users(to_public=True)
+    async with exception_handler():
+        return await user_repo.list_all_users(to_public=True)
 
 
-@exception_handler
 @router.get(
     "/users-unverified/",
     response_model=List[UserPublic],
@@ -74,10 +73,10 @@ async def list_unverified_users(
     """
     List all unverified users.
     """
-    return await user_repo.list_all_non_verified_users(to_public=True)
+    async with exception_handler():
+        return await user_repo.list_all_non_verified_users(to_public=True)
 
 
-@exception_handler
 @router.post(
     "/users-unverified/",
     response_model=List[UserPublic],
@@ -92,11 +91,11 @@ async def verify_user_by_email(
     """
     Verify registered users via an array of emails.
     """
-    logger.info(f"Verifying users: {user_emails}")
-    return await users_repo.verify_users(user_emails=user_emails)
+    async with exception_handler():
+        logger.info(f"Verifying users: {user_emails}")
+        return await users_repo.verify_users(user_emails=user_emails)
 
 
-@exception_handler
 @router.get(
     "/reset-user-password/",
     response_model=List[PasswordResetRequest],
@@ -110,10 +109,10 @@ async def list_password_request_users(
     """
     Return a list of users that have requested a password reset.
     """
-    return await user_pwd_req_repo.list_all_password_request_users()
+    async with exception_handler():
+        return await user_pwd_req_repo.list_all_password_request_users()
 
 
-@exception_handler
 @router.post(
     "/reset-user-password/",
     response_model=str,
@@ -128,24 +127,21 @@ async def reset_user_password_by_email(
     """
     Reset password for any user by email.
     """
-    # try:
-    logger.info(f"Resetting password for user: {email}")
-    async with users_repo.db.transaction():
-        new_password = await users_repo.reset_user_password(email=email)
+    async with exception_handler():
+        logger.info(f"Resetting password for user: {email}")
+        async with users_repo.db.transaction():
+            new_password = await users_repo.reset_user_password(email=email)
 
-        # do not return empty string or None.
-        if not new_password:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Could not reset password for user with email: {email}",
-            )
+            # do not return empty string or None.
+            if not new_password:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Could not reset password for user with email: {email}",
+                )
 
-        return new_password
-    # except Exception as e:
-    #     _exception_handler(e)
+            return new_password
 
 
-@exception_handler
 @router.delete(
     "/delete-password-reset-request/{id}/",
     response_model=List[PasswordResetRequest],
@@ -160,13 +156,10 @@ async def delete_password_reset_request(
     """
     Delete a password reset request with id: ``id``.
     """
-    try:
+    async with exception_handler():
         await user_pwd_req_repo.delete_password_reset_request(id=id)
-    except RequestDoesNotExistError as e:
-        _exception_handler(e)
 
 
-@exception_handler
 @router.post(
     "/create-notification/",
     name="admin:create-notification",
@@ -180,10 +173,10 @@ async def create_notification(
     """
     Create a new notification for selected user roles to receive.
     """
-    return await global_notif_repo.create_notification(notification=notification)
+    async with exception_handler():
+        return await global_notif_repo.create_notification(notification=notification)
 
 
-@exception_handler
 @router.delete(
     "/delete-notification/{id}/",
     name="admin:delete-notification",
@@ -198,11 +191,10 @@ async def delete_notification(
     """
     Delete a notification with id: ``id``.
     """
-    deleted_notification = await global_notif_repo.delete_notification_by_id(id=id)
-    return deleted_notification
+    async with exception_handler():
+        return await global_notif_repo.delete_notification_by_id(id=id)
 
 
-@exception_handler
 @router.put(
     "/update-user-role/",
     response_model=UserPublic,
@@ -217,4 +209,5 @@ async def change_user_role(
     """
     Change role of user
     """
-    return await users_repo.update_user_role(role_update=role_update)
+    async with exception_handler():
+        return await users_repo.update_user_role(role_update=role_update)
