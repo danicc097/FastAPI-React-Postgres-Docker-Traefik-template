@@ -1,10 +1,12 @@
 import { users } from '../data/users'
-import { PasswordResetPO, PasswordResetRequestsPO, UnverifiedUsersPO } from '../pages/admin.po'
+import { PasswordResetPO, PasswordResetRequestsPO, UnverifiedUsersPO, AdminPO } from '../pages/admin.po'
 import profilePo from '../pages/profile.po'
+import { schema } from '../types/schema_override'
 
 const passwordResetPo = new PasswordResetPO()
 const passwordResetRequestsPo = new PasswordResetRequestsPO()
 const unverifiedUsersPo = new UnverifiedUsersPO()
+const adminPo = new AdminPO()
 
 // afterEach(async () => {
 //   await profilePo.waitUntilHTMLRendered(page, 25)
@@ -67,6 +69,24 @@ describe('Test admin functionality', () => {
 
     await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser'].email, 'delete')
   })
+
+  // TODO notifications
+  // test('creating a global notification', async () => {
+  // const notification = {
+  //   sender: users['admin'].email,
+  //   title: 'Test notification',
+  //   body: 'Test body',
+  //   label: 'Test label',
+  //   link: 'https://www.google.com',
+  //   receiver_role: 'user',
+  // } as schema['GlobalNotificationCreate']
+
+  //   await adminPo.go()
+  //   await adminPo.clickOnAddNewGlobalNotification()
+  //   await adminPo.fillGlobalNotificationForm(notification)
+  //   await adminPo.clickOnPublishGlobalNotification()
+  //   await adminPo.waitUntilHTMLRendered(page, 100)
+  // })
 })
 
 describe('Test verification and access to admin panel for user', () => {
@@ -82,7 +102,7 @@ describe('Test verification and access to admin panel for user', () => {
     for (const page of pages) {
       await page.go()
       await page.getElementTextBySelector('body').then((text) => {
-        expect(text).toEqual(expect.stringMatching(/You are not authorized/i))
+        expect(text).toEqual(expect.stringMatching(/required permissions to access this content/i))
       })
     }
   })

@@ -8,8 +8,8 @@ from loguru import logger
 from pydantic.networks import EmailStr
 from starlette import status
 
+from app.api.dependencies.auth import RoleVerifier
 from app.api.dependencies.database import get_repository
-from app.api.dependencies.users import verify_user_is_admin
 from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
@@ -32,6 +32,7 @@ from app.models.pwd_reset_req import (
     PasswordResetRequestCreate,
 )
 from app.models.user import (
+    Role,
     RoleUpdate,
     UserCreate,
     UserInDB,
@@ -47,7 +48,7 @@ router = APIRouter()
     response_model=List[UserPublic],
     name="admin:list-users",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_all_users(
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
@@ -55,7 +56,8 @@ async def list_all_users(
     """
     List all users in the database.
     """
-    return await user_repo.list_all_users(to_public=True)
+    async with exception_handler():
+        return await user_repo.list_all_users(to_public=True)
 
 
 @router.get(
@@ -63,7 +65,7 @@ async def list_all_users(
     response_model=List[UserPublic],
     name="admin:list-unverified-users",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_unverified_users(
     user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
@@ -71,7 +73,8 @@ async def list_unverified_users(
     """
     List all unverified users.
     """
-    return await user_repo.list_all_non_verified_users(to_public=True)
+    async with exception_handler():
+        return await user_repo.list_all_non_verified_users(to_public=True)
 
 
 @router.post(
@@ -79,7 +82,7 @@ async def list_unverified_users(
     response_model=List[UserPublic],
     name="admin:verify-users-by-email",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def verify_user_by_email(
     user_emails: List[str] = Body(..., embed=True),  # consumer requires sending a data/payload/...: {user_emails: ...}
@@ -88,12 +91,9 @@ async def verify_user_by_email(
     """
     Verify registered users via an array of emails.
     """
-    logger.info(f"Verifying users: {user_emails}")
-    try:
+    async with exception_handler():
+        logger.info(f"Verifying users: {user_emails}")
         return await users_repo.verify_users(user_emails=user_emails)
-    except Exception as e:
-        exception_handler(e)
-    return None
 
 
 @router.get(
@@ -101,7 +101,7 @@ async def verify_user_by_email(
     response_model=List[PasswordResetRequest],
     name="admin:list-password-request-users",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_password_request_users(
     user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
@@ -109,11 +109,8 @@ async def list_password_request_users(
     """
     Return a list of users that have requested a password reset.
     """
-    try:
+    async with exception_handler():
         return await user_pwd_req_repo.list_all_password_request_users()
-    except Exception as e:
-        exception_handler(e)
-    return None
 
 
 @router.post(
@@ -121,7 +118,7 @@ async def list_password_request_users(
     response_model=str,
     name="admin:reset-user-password-by-email",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def reset_user_password_by_email(
     email: EmailStr = Body(..., embed=True),  # consumer requires sending a data/payload/...: {email: ...}
@@ -130,21 +127,19 @@ async def reset_user_password_by_email(
     """
     Reset password for any user by email.
     """
-    logger.info(f"Resetting password for user: {email}")
-    async with users_repo.db.transaction():
-        try:
+    async with exception_handler():
+        logger.info(f"Resetting password for user: {email}")
+        async with users_repo.db.transaction():
             new_password = await users_repo.reset_user_password(email=email)
-        except Exception as e:
-            exception_handler(e)
 
-        # do not return empty string or None.
-        if not new_password:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Could not reset password for user with email: {email}",
-            )
+            # do not return empty string or None.
+            if not new_password:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Could not reset password for user with email: {email}",
+                )
 
-        return new_password
+            return new_password
 
 
 @router.delete(
@@ -152,7 +147,7 @@ async def reset_user_password_by_email(
     response_model=List[PasswordResetRequest],
     name="admin:delete-password-reset-request",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def delete_password_reset_request(
     id: int = Path(..., ge=1),
@@ -161,17 +156,15 @@ async def delete_password_reset_request(
     """
     Delete a password reset request with id: ``id``.
     """
-    try:
+    async with exception_handler():
         await user_pwd_req_repo.delete_password_reset_request(id=id)
-    except RequestDoesNotExistError as e:
-        exception_handler(e)
 
 
 @router.post(
     "/create-notification/",
     name="admin:create-notification",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def create_notification(
     notification: GlobalNotificationCreate = Body(..., embed=True),
@@ -180,11 +173,8 @@ async def create_notification(
     """
     Create a new notification for selected user roles to receive.
     """
-    try:
+    async with exception_handler():
         return await global_notif_repo.create_notification(notification=notification)
-    except Exception as e:
-        exception_handler(e)
-    return None
 
 
 @router.delete(
@@ -192,7 +182,7 @@ async def create_notification(
     name="admin:delete-notification",
     response_model=GlobalNotification,
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def delete_notification(
     id: int = Path(..., ge=1),
@@ -201,19 +191,16 @@ async def delete_notification(
     """
     Delete a notification with id: ``id``.
     """
-    try:
-        deleted_notification = await global_notif_repo.delete_notification_by_id(id=id)
-        return deleted_notification
-    except Exception as e:
-        exception_handler(e)
+    async with exception_handler():
+        return await global_notif_repo.delete_notification_by_id(id=id)
 
 
-@router.post(
-    "/change-user-role/",
+@router.put(
+    "/update-user-role/",
     response_model=UserPublic,
-    name="admin:change-user-role",
+    name="admin:update-user-role",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(verify_user_is_admin)],
+    dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def change_user_role(
     role_update: RoleUpdate = Body(..., embed=True),
@@ -222,8 +209,5 @@ async def change_user_role(
     """
     Change role of user
     """
-    try:
+    async with exception_handler():
         return await users_repo.update_user_role(role_update=role_update)
-    except Exception as e:
-        exception_handler(e)
-    return None

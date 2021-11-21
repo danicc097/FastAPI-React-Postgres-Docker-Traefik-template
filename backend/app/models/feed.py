@@ -15,5 +15,9 @@ class FeedItem(CoreModel):
 
 
 class GlobalNotificationFeedItem(GlobalNotification, FeedItem):
+    """
+    Contains relevant information to display a global notification.
+    """
+
     # slightly more lightweight approach than using an Enum
     event_type: Optional[Literal["is_update", "is_create"]]

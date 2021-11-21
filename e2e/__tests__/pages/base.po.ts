@@ -98,6 +98,12 @@ export default abstract class BasePO {
     return Promise.all(errors.map((error) => error.evaluate((node) => node.textContent)))
   }
 
+  async waitForSelectorAndSelect($selector: string, value: string) {
+    await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForSelector($selector, { timeout: 5000 })
+    await page.select($selector, value)
+  }
+
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndClick($selector: string): Promise<void> {
     await this.waitUntilHTMLRendered(page, 100)

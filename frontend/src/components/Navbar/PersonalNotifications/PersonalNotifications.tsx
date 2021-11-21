@@ -21,6 +21,7 @@ import { useGeneratedHtmlId } from '@elastic/eui'
 import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
 import moment from 'moment'
 import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
+import _ from 'lodash'
 
 export default function PersonalNotifications() {
   const [isPopoverVisible, setIsPopoverVisible] = useState(false)
@@ -61,7 +62,7 @@ export default function PersonalNotifications() {
         text: <EuiText size="m">{body}</EuiText>,
         action: link ? (
           <EuiLink href={link} target="_blank">
-            {label}
+            {_.truncate(link, { length: 30 })}
           </EuiLink>
         ) : null,
         date: moment.utc(event_timestamp).local().fromNow(),
@@ -88,7 +89,7 @@ export default function PersonalNotifications() {
   const showPopover = () => {
     if (!isPopoverVisible) {
       fetchFeedItemsByLastRead()
-      fetchFeedItems()
+      fetchFeedItems({})
     }
     setIsPopoverVisible(!isPopoverVisible)
   }
@@ -119,7 +120,7 @@ export default function PersonalNotifications() {
       panelPaddingSize="s"
     >
       <EuiPopoverTitle paddingSize="s">Reminders</EuiPopoverTitle>
-      <div style={{ maxHeight: '40vh', overflowY: 'auto', padding: 4 }}>
+      <div style={{ maxHeight: '40vh', maxWidth: '50vh', overflowY: 'auto', padding: 4 }}>
         <EuiSpacer size="s" />
         {isLoading ? (
           <InfiniteSpinner size="xl" />

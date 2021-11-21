@@ -1,4 +1,5 @@
 import { ElementHandle } from 'puppeteer'
+import { schema } from '../types/schema_override'
 import BasePO from './base.po'
 
 export class UnverifiedUsersPO extends BasePO {
@@ -59,5 +60,31 @@ export class PasswordResetRequestsPO extends BasePO {
       default:
         throw new Error(`Unknown ResetRequestsTable action: ${action}`)
     }
+  }
+}
+
+/**
+ * Page to test generic admin functionality not specific to any one page
+ */
+export class AdminPO extends BasePO {
+  async go() {
+    await this.navigate('/')
+  }
+  async clickOnAddNewGlobalNotification() {
+    await this.waitForVisibleSelectorAndClick('[data-test-subj="addGlobalNotification"]')
+  }
+
+  async fillGlobalNotificationForm(notification: schema['GlobalNotificationCreate']) {
+    await this.waitForSelectorAndType('[data-test-subj="notificationTitle"]', notification.title)
+    await this.waitForSelectorAndType('[data-test-subj="notificationBody"]', notification.body)
+    await this.waitForSelectorAndType('[data-test-subj="notificationLabel"]', notification.label)
+    notification.link
+      ? await this.waitForSelectorAndType('[data-test-subj="notificationLink"]', notification.link)
+      : null
+    await this.waitForSelectorAndSelect('[data-test-subj="notificationReceiverRole"]', notification.receiver_role)
+  }
+
+  async clickOnPublishGlobalNotification() {
+    await this.waitForVisibleSelectorAndClick('[data-test-subj="publishGlobalNotification"]')
   }
 }

@@ -115,6 +115,12 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
         navigate('/admin/password-reset-requests')
       },
     },
+    {
+      label: 'User permissions management',
+      onClick: () => {
+        navigate('/admin/user-permissions-management')
+      },
+    },
   ]
 
   const [navIsOpen, setNavIsOpen] = useState<boolean>(
@@ -295,13 +301,13 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
         </EuiCollapsibleNavGroup>
       </EuiFlexItem>
 
-      {/* use eui-yScroll to fix position of items _below_ */}
+      {/* use className="eui-yScroll" to allow scrolling for current item */}
       <EuiFlexItem className="eui-yScroll">
         {/* Learn section */}
         <EuiCollapsibleNavGroup
           title={
             <a
-              className="eui-textInheritColor"
+              className="eui-textInheritColor eui-yScroll"
               // href="#/navigation/collapsible-nav"
               onClick={(e) => {
                 e.stopPropagation()
@@ -331,6 +337,7 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
         {/* Admin section */}
         {user?.profile && user?.is_superuser ? (
           <EuiCollapsibleNavGroup
+            className="eui-yScroll"
             title={
               <a
                 className="eui-textInheritColor"

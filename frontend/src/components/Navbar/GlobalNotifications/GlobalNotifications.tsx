@@ -20,6 +20,7 @@ import {
   EuiPortal,
   EuiText,
   EuiTitle,
+  EuiToolTip,
 } from '@elastic/eui'
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotificationsFeed'
@@ -63,26 +64,18 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
     fetchFeedItems,
   } = useGlobalNotificationsFeed()
 
+  const loadMoreNotifications = async () => {
+    // get the last item in the list
+    const lastDateUTC = globalNotificationsFeedItems[globalNotificationsFeedItems.length - 1].event_timestamp
+    await fetchFeedItems({ starting_date: new Date(moment.utc(lastDateUTC).format()) })
+  }
   const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
 
   type AlertProps = EuiHeaderAlertProps & { notificationId: number }
 
-  const globalNotificationsAlerts: Array<EuiHeaderAlertProps> = globalNotificationsFeedItems.map(
+  const globalNotificationsAlerts: Array<AlertProps> = globalNotificationsFeedItems.map(
     (item: ArrayElement<typeof globalNotificationsFeedItems>) => {
-      const {
-        row_number,
-        event_timestamp,
-        id,
-        created_at,
-        updated_at,
-        sender,
-        receiver_role,
-        title,
-        body,
-        label,
-        link,
-        event_type,
-      } = item
+      const { event_timestamp, id, title, body, label, link, event_type } = item
 
       const alertProps = {
         notificationId: id,
@@ -126,7 +119,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
   const showFlyout = () => {
     if (!isFlyoutVisible) {
       fetchFeedItemsByLastRead()
-      fetchFeedItems()
+      fetchFeedItems({})
     }
     setIsFlyoutVisible(!isFlyoutVisible)
   }
@@ -148,7 +141,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
       aria-expanded={isFlyoutVisible}
       aria-haspopup="true"
       aria-label={'Alerts feed: Updates available'}
-      onClick={() => showFlyout()}
+      onClick={showFlyout}
       notification={hasNewNotifications}
       notificationColor={bellButtonNotificationColor}
     >
@@ -164,6 +157,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
         id={newsFeedFlyoutId}
         aria-labelledby={newsFeedFlyoutTitleId}
         paddingSize="m"
+        maxWidth={500}
       >
         {/* HEADER */}
         <EuiFlyoutHeader hasBorder>
@@ -184,15 +178,23 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
                 action={
                   <EuiFlexGroup alignItems="center" gutterSize="xs" justifyContent="spaceBetween">
                     <EuiFlexItem grow={false}>{alert.action}</EuiFlexItem>
-                    <EuiFlexItem grow={false}>
-                      <EuiButtonIcon
-                        iconType="trash"
-                        size="xs"
-                        color="danger"
-                        aria-label="Delete notification"
-                        onClick={() => deleteNotification({ id: alert.notificationId })}
-                      />
-                    </EuiFlexItem>
+                    <ComponentPermissions
+                      requiredRole="admin"
+                      user={user}
+                      element={
+                        <EuiFlexItem grow={false}>
+                          <EuiToolTip position="top" content="Delete Notification" display="block">
+                            <EuiButtonIcon
+                              iconType="trash"
+                              size="xs"
+                              color="danger"
+                              aria-label="Delete notification"
+                              onClick={() => deleteNotification({ id: alert.notificationId })}
+                            />
+                          </EuiToolTip>
+                        </EuiFlexItem>
+                      }
+                    ></ComponentPermissions>
                   </EuiFlexGroup>
                 }
                 text={alert.text}
@@ -216,7 +218,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
         <EuiFlyoutFooter>
           <EuiFlexGroup justifyContent="spaceBetween" alignItems="center">
             <EuiFlexItem grow={false}>
-              <EuiButton size="s" fill>
+              <EuiButton size="s" fill onClick={loadMoreNotifications}>
                 Load more
               </EuiButton>
             </EuiFlexItem>
@@ -224,7 +226,7 @@ export default function GlobalNotifications({ user }: GlobalNotificationsProps) 
               requiredRole={'admin'}
               element={
                 <EuiFlexItem grow={false}>
-                  <GlobalNotificationsModalForm />
+                  <GlobalNotificationsModalForm closeFlyout={closeFlyout} />
                 </EuiFlexItem>
               }
               user={user}

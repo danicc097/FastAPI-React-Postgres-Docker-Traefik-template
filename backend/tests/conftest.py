@@ -15,8 +15,9 @@ from sqlalchemy.orm.session import close_all_sessions
 
 from app.core.config import JWT_TOKEN_PREFIX, UNIQUE_KEY, is_testing
 from app.db.repositories.users import UsersRepository
-from app.models.user import UserCreate, UserInDB, UserPublic
+from app.models.user import Role, RoleUpdate, UserCreate, UserInDB, UserPublic
 from app.services import auth_service
+from initial_data.utils import change_user_role
 
 os.environ["TESTING"] = "1"
 
@@ -214,6 +215,8 @@ async def user_fixture_helper(
     user = await user_repo.register_new_user(new_user=new_user, to_public=to_public, admin=admin, verified=verified)
     if not user:
         raise Exception("Failed to return user from fixture")
+    if admin:
+        await change_user_role(db, RoleUpdate(email=user.email, role=Role.admin))
     return user
 
 

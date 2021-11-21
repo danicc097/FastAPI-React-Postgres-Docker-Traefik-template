@@ -24,8 +24,9 @@ import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
  * Explicitly reset a user's password by email
  */
 export default function PasswordResetPage() {
+  const noSelection = '...'
   const [passwordResetUsersWithLabel, setPasswordResetUsersWithLabel] = useState<any>()
-  const [selection, setSelection] = useState<any>('...')
+  const [selection, setSelection] = useState<any>(noSelection)
   const { resetPasswordForUser } = usePasswordResetUsers()
   const { allUsers } = useAllUsers()
 
@@ -144,7 +145,7 @@ export default function PasswordResetPage() {
             <EuiButton
               fill
               type="submit"
-              isDisabled={selection === '...'}
+              isDisabled={selection === noSelection}
               color="warning"
               data-test-subj="passwordResetForm__submit"
             >{`Reset password for ${selection}`}</EuiButton>

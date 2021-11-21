@@ -6,7 +6,7 @@ import { getAllowedRoles } from 'src/utils/permissions'
 
 type ComponentPermissionsProps = {
   element: JSX.Element
-  requiredRole?: schema['Roles']
+  requiredRole?: schema['Role']
   user: schema['UserPublic']
 }
 

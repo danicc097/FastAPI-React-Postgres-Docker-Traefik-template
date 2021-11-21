@@ -5,6 +5,7 @@ import { AppDispatch } from '../../store'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { schema } from 'src/types/schema_override'
 import { errorState, loadingState, successState } from 'src/redux/utils/slices'
+import { UiActionCreators } from 'src/redux/modules/ui/ui'
 
 type initialStateType = {
   feed: {
@@ -69,13 +70,16 @@ export default function globalNotificationsReducer(
         ...state,
         canLoadMore: action.canLoadMore,
       }
+
     case GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS:
       return {
         ...state,
         hasNewNotifications: action.hasNewNotifications,
       }
+
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS:
       return loadingState(state)
+
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_SUCCESS:
       return {
         ...state,
@@ -83,10 +87,13 @@ export default function globalNotificationsReducer(
         error: null,
         data: [...(state.data || []), ...action.data],
       }
+
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE:
       return errorState(state, action)
+
     case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS:
       return loadingState(state)
+
     case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_SUCCESS:
       return {
         ...state,
@@ -94,21 +101,28 @@ export default function globalNotificationsReducer(
         error: null,
         unreadData: [...action.data], // override each time
       }
+
     case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_FAILURE:
       return errorState(state, action)
+
     case GlobalNotificationsActionType.CLEAR_NOTIFICATIONS:
       return {
         ...state,
         data: [],
       }
+
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION:
       return loadingState(state)
+
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS:
       return successState(state)
+
     case GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE:
       return errorState(state, action)
+
     case GlobalNotificationsActionType.DELETE_NOTIFICATION:
       return loadingState(state)
+
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS:
       return {
         ...state,
@@ -116,12 +130,14 @@ export default function globalNotificationsReducer(
         error: null,
         data: state.data.filter((item: any) => item.id !== action.id),
       }
+
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_FAILURE:
       return errorState(state, action)
 
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.feed.globalNotifications
+
     default:
       return state
   }
@@ -133,7 +149,7 @@ type ActionCreatorsParams = {
   starting_date?: Date
 }
 
-type ActionCreatorsType = {
+type ActionCreators = {
   clearFeedItemsFromStore: () => any
   fetchFeedItems: ({ starting_date }: ActionCreatorsParams) => any
   fetchFeedItemsByLastRead: () => any
@@ -142,14 +158,15 @@ type ActionCreatorsType = {
   deleteNotification: ({ id }: ActionCreatorsParams) => any
 }
 
-export const GlobalNotificationsActionCreators: Partial<ActionCreatorsType> = {}
+export const GlobalNotificationsActionCreators: Partial<ActionCreators> = {}
 
 GlobalNotificationsActionCreators.clearFeedItemsFromStore = () => ({
   type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS,
 })
 
-GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date = new Date(moment().utc().format()) }) => {
-  const PAGE_CHUNK_SIZE = 10
+GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date }) => {
+  const PAGE_CHUNK_SIZE = 5
+  console.log(starting_date.toISOString())
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
@@ -247,11 +264,21 @@ GlobalNotificationsActionCreators.createNotification = ({ notification }) => {
           FAILURE: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE,
         },
         options: {
-          data: notification,
+          data: { notification },
           params: {},
         },
         onSuccess: (res) => {
-          return { success: true, status: res.status, data: res.data }
+          dispatch(
+            UiActionCreators.addToast({
+              id: 'create-global-notification-success',
+              title: `Successfully created the notification!`,
+              color: 'success',
+              iconType: 'checkInCircleFilled',
+              toastLifeTimeMs: 5000,
+              text: `Users with role '${notification.receiver_role}' will receive it.`,
+            }),
+          )
+          return dispatch({ type: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS })
         },
       }),
     )

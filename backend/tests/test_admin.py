@@ -6,9 +6,8 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 
 
 """
-
-
 import json
+import os
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
 
@@ -18,8 +17,6 @@ from databases import Database
 from fastapi import FastAPI, HTTPException, status
 from httpx import AsyncClient
 from loguru import logger
-from pydantic import ValidationError
-from sqlalchemy.orm import close_all_sessions
 from starlette.datastructures import Secret
 from starlette.status import (
     HTTP_200_OK,
@@ -33,6 +30,7 @@ from starlette.status import (
 
 from app.core.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    DATABASE_URL,
     JWT_ALGORITHM,
     JWT_AUDIENCE,
     JWT_TOKEN_PREFIX,
@@ -48,7 +46,7 @@ from app.models.pwd_reset_req import (
     PasswordResetRequestCreate,
 )
 from app.models.token import JWTCreds, JWTMeta, JWTPayload
-from app.models.user import Roles, RoleUpdate, UserCreate, UserInDB, UserPublic
+from app.models.user import Role, RoleUpdate, UserCreate, UserInDB, UserPublic
 from app.services import auth_service
 from tests.conftest import TEST_USERS
 
@@ -254,14 +252,14 @@ class TestAdminUserModification:
     ) -> None:
         user_repo = UsersRepository(db)
         role_update = RoleUpdate(
-            role=Roles.manager.value,
+            role=Role.manager.value,
             email=test_user7.email,
         )
 
         # actually any client can request it since the user won't know its own password
         # but there's no email server so this is as secure as we get
-        res = await superuser_client.post(
-            app.url_path_for("admin:change-user-role"),
+        res = await superuser_client.put(
+            app.url_path_for("admin:update-user-role"),
             json={"role_update": role_update.dict()},
         )
         assert res.status_code == HTTP_200_OK
@@ -270,7 +268,7 @@ class TestAdminUserModification:
 
 
 class TestAdminGlobalNotifications:
-    n_notifications_start = 40
+    _n_notifications = 40
 
     async def test_admin_can_create_notifications(
         self,
@@ -285,12 +283,12 @@ class TestAdminGlobalNotifications:
         global_notification_repo = GlobalNotificationsRepository(db)
 
         # required to test proper pagination later
-        assert self.n_notifications_start > global_notification_repo.page_chunk_size
+        assert self._n_notifications > global_notification_repo.page_chunk_size
 
-        for i in range(1, self.n_notifications_start + 1):
+        for i in range(1, self._n_notifications + 1):
             notification = GlobalNotificationCreate(
                 sender=test_admin_user.email,
-                receiver_role=Roles.user.value,
+                receiver_role=Role.user.value,
                 title=f"Test notification {i}",
                 body=f"This is test notification {i}",
                 label=f"Test label {i}",
@@ -305,10 +303,10 @@ class TestAdminGlobalNotifications:
             logger.info(res.json())
             assert res.status_code == HTTP_200_OK
 
-        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Roles.user.value}'"
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
         logger.critical(f"query: {query}")
         n_notifications = await db.fetch_val(query)
-        assert n_notifications == self.n_notifications_start
+        assert n_notifications == self._n_notifications
 
     async def test_admin_can_delete_a_notification(
         self,
@@ -320,10 +318,11 @@ class TestAdminGlobalNotifications:
         test_user: UserPublic,
         db: Database,
     ) -> None:
-        global_notification_repo = GlobalNotificationsRepository(db)
-        async with global_notification_repo.db.transaction(force_rollback=True):
-            # get the last one
-            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Roles.user.value}' ORDER BY id DESC LIMIT 1"
+        # we need to use db through app.state._db or replace the app.state._db
+        # Database object with a new one that has ``force_rollback=True`` for transactions
+        # to work properly
+        async with app.state._db.transaction(force_rollback=True):
+            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
             notification_id = await db.fetch_val(query)
             assert notification_id is not None
 
@@ -331,11 +330,13 @@ class TestAdminGlobalNotifications:
                 app.url_path_for("admin:delete-notification", id=notification_id),
             )
             assert res.status_code == HTTP_200_OK
+            assert res.json()["id"] == notification_id
 
-            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Roles.user.value}'"
+            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
             n_notifications = await db.fetch_val(query)
 
-            assert n_notifications == self.n_notifications_start - 1
+            # transaction should have been rolled back
+            assert n_notifications == self._n_notifications
 
     async def test_user_receives_has_new_notification_alert(
         self,
@@ -348,18 +349,16 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert res.json() is True
 
-    async def test_user_can_fetch_chunk_of_notifications(
+    async def test_user_can_fetch_all_unread_notifications(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
         test_user: UserPublic,
-        db: Database,
     ) -> None:
         # this will fail if the user is created after the notification is sent
         res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
-        global_notification_repo = GlobalNotificationsRepository(db)
-        assert len(res.json()) == global_notification_repo.page_chunk_size
+        assert len(res.json()) == self._n_notifications
 
     async def test_user_does_not_receive_a_has_new_notification_alert_for_old_notifications(
         self, app: FastAPI, authorized_client: AsyncClient, test_user
@@ -369,7 +368,7 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert res.json() is False
 
-    async def test_user_gets_no_new_notifications_if_all_read(
+    async def test_user_gets_no_new_notifications_when_loading_more_if_all_are_read(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
@@ -392,7 +391,7 @@ class TestAdminGlobalNotifications:
     ) -> None:
         notification = GlobalNotificationCreate(
             sender=test_admin_user.email,
-            receiver_role=Roles.manager.value,
+            receiver_role=Role.manager.value,
             title="Test notification for manager",
             body="This is test notification for manager",
             label="Test label for manager",
@@ -434,7 +433,7 @@ class TestAdminGlobalNotifications:
         combos: List[Set[str]] = []
         total_feed_items_to_fetch = 30
 
-        assert self.n_notifications_start > total_feed_items_to_fetch
+        assert self._n_notifications > total_feed_items_to_fetch
 
         for _ in range(total_feed_items_to_fetch // global_notification_repo.page_chunk_size):
             res = await authorized_client.get(

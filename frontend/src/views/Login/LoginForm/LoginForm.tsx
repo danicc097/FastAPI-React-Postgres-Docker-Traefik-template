@@ -6,7 +6,7 @@ import React from 'react'
 
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
-import { handleInputChange, validateInput } from 'src/utils/validation'
+import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { useLoginForm } from 'src/hooks/forms/useLoginForm'
 
 const LoginFormWrapper = styled.div`
@@ -22,11 +22,11 @@ export default function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // if any input hasn't been entered in, return early
-    if (!Object.values(form).every((value) => Boolean(value) || value === null)) {
-      setErrors((errors) => ({ ...errors, form: 'You must fill out all fields' }))
+    const isValid = validateFormBeforeSubmit({ form, setErrors })
+    if (!isValid) {
       return
     }
+
     setHasSubmitted(true)
 
     const action = await requestUserLogin({ email: form.email, password: form.password })
