@@ -1,15 +1,18 @@
+from typing import Union
 from fastapi import HTTPException
 from loguru import logger
+from starlette.responses import Response
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
-
+from functools import wraps
 import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
+from contextlib import asynccontextmanager
 
 BASE_EXCEPTION = HTTPException(
     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
@@ -17,20 +20,32 @@ BASE_EXCEPTION = HTTPException(
 )
 
 
-def exception_handler(e: Exception) -> HTTPException:
+@asynccontextmanager
+async def exception_handler():
+    """
+    Context manager to handle route exceptions that arise from repositories
+    """
+    try:
+        yield
+    except Exception as e:
+        raise _exception_handler(e) from e
+
+
+def _exception_handler(e: Union[Exception, HTTPException]) -> Union[Exception, HTTPException]:
     """
     Handles repo errors by mapping them to HTTP exceptions.
     """
-    # ensure to check for origin repo first to avoid unnecessary checks
+    # handle repo exceptions
     if isinstance(e, users_repo.UsersRepoException):
-        raise users_repo_exception_to_response(e) from e
+        return users_repo_exception_to_response(e)
     if isinstance(e, pwd_reset_req_repo.UserPwdReqRepoException):
-        raise pwd_reset_req_repo_exception_to_response(e) from e
+        return pwd_reset_req_repo_exception_to_response(e)
     if isinstance(e, global_notif_repo.GlobalNotificationsRepoException):
-        raise global_notifications_repo_exception_to_response(e) from e
+        return global_notifications_repo_exception_to_response(e)
+    # but return rest of http exceptions as they come
     else:
         logger.opt(exception=True).error(e)
-        raise BASE_EXCEPTION from e
+        return e
 
 
 def users_repo_exception_to_response(e: Exception) -> HTTPException:
@@ -48,20 +63,20 @@ def users_repo_exception_to_response(e: Exception) -> HTTPException:
             detail=e.msg,
         )
     elif isinstance(e, users_repo.UserNotFoundError):
-        raise HTTPException(
+        return HTTPException(
             status_code=HTTP_404_NOT_FOUND,
             detail=e.msg,
         )
     elif isinstance(e, users_repo.InvalidUpdateError):
-        raise HTTPException(
+        return HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail=e.msg,
-        ) from e
+        )
     elif isinstance(e, users_repo.IncorrectPasswordError):
-        raise HTTPException(
+        return HTTPException(
             status_code=HTTP_400_BAD_REQUEST,
             detail=e.msg,
-        ) from e
+        )
     else:
         logger.opt(exception=True).error(e)
         return BASE_EXCEPTION
