@@ -1,4 +1,7 @@
+from contextlib import asynccontextmanager
+from functools import wraps
 from typing import Union
+
 from fastapi import HTTPException
 from loguru import logger
 from starlette.responses import Response
@@ -8,11 +11,10 @@ from starlette.status import (
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
-from functools import wraps
+
 import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
-from contextlib import asynccontextmanager
 
 BASE_EXCEPTION = HTTPException(
     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
@@ -42,10 +44,15 @@ def _exception_handler(e: Union[Exception, HTTPException]) -> Union[Exception, H
         return pwd_reset_req_repo_exception_to_response(e)
     if isinstance(e, global_notif_repo.GlobalNotificationsRepoException):
         return global_notifications_repo_exception_to_response(e)
-    # but return rest of http exceptions as they come
     else:
-        logger.opt(exception=True).error(e)
-        return e
+        # but return HTTPExceptions as they come (already handled elsewhere)
+        if isinstance(e, HTTPException):
+            return e
+        # and return a base exception for any other Exceptions we didn't handle
+        # for further processing through its traceback
+        else:
+            logger.opt(exception=True).error(e)
+            return BASE_EXCEPTION
 
 
 def users_repo_exception_to_response(e: Exception) -> HTTPException:

@@ -68,6 +68,10 @@ function err {
   echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
 }
 
+function log {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
+}
+
 function _confirm {
   local _prompt _response
 
