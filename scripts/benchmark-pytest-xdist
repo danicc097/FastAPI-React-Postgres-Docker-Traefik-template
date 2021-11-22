@@ -4,9 +4,9 @@ n_runs=$1
 n_workers=$2
 dist=$3
 
-for ((i = 0; i < n_runs; i++)); do
-
-  echo "[RUN $i/$n_runs] -n $n_workers --dist $dist" - >>./benchmark-pytest.log
-  run-tests.sh "-n $n_workers --dist $dist" | grep "===========" >>./benchmark-pytest.log
-  # append the command itself to the log file
+for ((i = 1; i < n_workers + 1; i++)); do
+  for ((j = 1; j < n_runs + 1; j++)); do
+    echo "[RUN $j/$n_runs] -n $i --dist $dist" - >>./benchmark-pytest.log
+    docker exec backend_myapp_dev /bin/bash -c "pytest -n $i --dist $dist" | grep "===========" >>./benchmark-pytest.log
+  done
 done

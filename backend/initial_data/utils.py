@@ -21,7 +21,7 @@ from app.models.user import Role, RoleUpdate, UserCreate
 
 
 async def init_database():
-    pytest_worker = os.environ.get("PYTEST_XDIST_WORKER")
+    pytest_worker = os.environ.get("PYTEST_XDIST_WORKER") or "0"
     DB_URL = f"{DATABASE_URL}_test_{pytest_worker}" if is_testing() else DATABASE_URL
 
     database = Database(DB_URL, min_size=2, max_size=10)

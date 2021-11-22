@@ -28,8 +28,10 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
-    pytest_worker = os.environ.get("PYTEST_XDIST_WORKER")
+    pytest_worker = os.environ.get("PYTEST_XDIST_WORKER") or "0"
     DB_URL = f"{DATABASE_URL}_test_{pytest_worker}" if is_testing() else str(DATABASE_URL)
+    logger.critical(f"{DATABASE_URL=}")
+    logger.critical(f"{DB_URL=}")
 
     # handle testing config for migrations
     if is_testing():
@@ -47,6 +49,7 @@ def run_migrations_online() -> None:
         with default_engine.connect() as default_conn:
             # ! drop testing db if it exists and create a fresh one
             DB_NAME = f"{POSTGRES_DB}_test_{pytest_worker}"
+            logger.critical(f"{DB_NAME=}")
             default_conn.execute(f"select pg_terminate_backend(pid) from pg_stat_activity where datname='{DB_NAME}'")
             default_conn.execute(f"DROP DATABASE IF EXISTS {DB_NAME}")
             default_conn.execute(f"CREATE DATABASE {DB_NAME}")

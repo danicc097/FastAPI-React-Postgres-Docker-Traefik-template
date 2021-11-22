@@ -10,8 +10,9 @@ from app.core.config import DATABASE_URL, is_testing
 
 
 async def connect_to_db(app: FastAPI) -> None:
+    # do not use uppercase for database names (None -> None...)
+    pytest_worker = os.environ.get("PYTEST_XDIST_WORKER") or "0"
 
-    pytest_worker = os.environ.get("PYTEST_XDIST_WORKER")
     TEST_DB_URL = f"{DATABASE_URL}_test_{pytest_worker}"
     os.environ["TEST_DB_URL"] = TEST_DB_URL
 
@@ -27,8 +28,8 @@ async def connect_to_db(app: FastAPI) -> None:
         except Exception as e:
             logger.warning("--- DB CONNECTION ERROR ---")
             logger.warning(e)
-            logger.warning("--- END DB CONNECTION ERROR ---")
-            sleep(5)
+            logger.warning("--- END DB CONNECTION ERROR. Retrying... ---")
+            sleep(1)
 
 
 async def close_db_connection(app: FastAPI) -> None:

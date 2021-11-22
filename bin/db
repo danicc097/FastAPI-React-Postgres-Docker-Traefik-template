@@ -38,7 +38,6 @@ restore)
   gunzip -c "$last_bkp_file" | docker exec -i postgres_db_myapp_"$ENV" psql -U postgres
 
   ;;
-# create a help case with --h or -h or --help
 *)
   echo "Usage: $0 {dump|restore} [env]"
   exit 1
