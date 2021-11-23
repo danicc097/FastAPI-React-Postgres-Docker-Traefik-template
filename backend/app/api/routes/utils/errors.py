@@ -39,23 +39,23 @@ def _exception_handler(e: Union[Exception, HTTPException]) -> Union[Exception, H
     """
     # handle repo exceptions
     if isinstance(e, users_repo.UsersRepoException):
-        return users_repo_exception_to_response(e)
+        return _users_repo_exception_handler(e)
     if isinstance(e, pwd_reset_req_repo.UserPwdReqRepoException):
-        return pwd_reset_req_repo_exception_to_response(e)
+        return _pwd_reset_req_repo_exception_handler(e)
     if isinstance(e, global_notif_repo.GlobalNotificationsRepoException):
-        return global_notifications_repo_exception_to_response(e)
+        return _global_notifications_repo_exception_handler(e)
     else:
         # but return HTTPExceptions as they come (already handled elsewhere)
         if isinstance(e, HTTPException):
             return e
         # and return a base exception for any other Exceptions we didn't handle
-        # for further processing through its traceback
+        # for further analysis through its traceback
         else:
             logger.opt(exception=True).error(e)
             return BASE_EXCEPTION
 
 
-def users_repo_exception_to_response(e: Exception) -> HTTPException:
+def _users_repo_exception_handler(e: Exception) -> HTTPException:
     """
     Map ``UsersRepoException`` to HTTP exceptions.
     """
@@ -89,7 +89,7 @@ def users_repo_exception_to_response(e: Exception) -> HTTPException:
         return BASE_EXCEPTION
 
 
-def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
+def _pwd_reset_req_repo_exception_handler(e: Exception) -> HTTPException:
     """
     Map ``UsersRepoException`` to HTTP exceptions.
     """
@@ -108,7 +108,7 @@ def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
         return BASE_EXCEPTION
 
 
-def global_notifications_repo_exception_to_response(e: Exception) -> HTTPException:
+def _global_notifications_repo_exception_handler(e: Exception) -> HTTPException:
     """
     Map ``GlobalNotificationsRepoException`` to HTTP exceptions.
     """

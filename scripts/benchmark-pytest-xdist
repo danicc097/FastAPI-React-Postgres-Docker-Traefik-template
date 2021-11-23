@@ -17,6 +17,6 @@ for ((i = 1; i < n_workers + 1; i++)); do
   done
   total_time=$(grep -o '[0-9]*\.[0-9]*s' "$tmpfile" | awk '{sum+=$1} END {print sum}')
   average_time=$(echo "scale=2; $total_time / $n_runs" | bc)
-  log "Average time spent for $n_runs runs with $i workers: $average_time" >>./benchmark-pytest-xdist.log
+  log "Average time spent for $n_runs runs with $i workers: $average_time s" >>./benchmark-pytest-xdist.log
   rm "$tmpfile"
 done

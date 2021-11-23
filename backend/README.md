@@ -34,18 +34,17 @@ If tests start taking more than 2 minutes to run, consider using ``pytest-xdist`
 DB_NAME = f"{POSTGRES_DB}_test_{pytest_worker}"
 ```
 
-Tests must be run with the appropiate ``dist`` flag depending on tests themselves and how they modify global state, if they do. See <https://github.com/pytest-dev/pytest-xdist>
-benchmark those to figure out which one yields the fastest results depending on ``-n NUM_WORKERS``. A good place to start is ``-n MACHINE_CORE_COUNT``.
+Tests must be run with the appropiate ``dist`` flag depending on tests themselves and how they modify the ``app`` state or database data, if they do.
+See <https://github.com/pytest-dev/pytest-xdist> and benchmark those to figure out which one yields the fastest results depending on ``-n NUM_WORKERS``. A good place to start is ``-n MACHINE_CORE_COUNT``.
 
-VM Cores: 4
-| n workers | Average test run (s) |
-| --------- | -------------------- |
-| 1         | 116                  |
-| 2         | 99                   |
-| 4         | 66                   |
-| 6         | 52                   |
-| 8         | 54                   |
-| 10        | 52                   |
+
+(VM Cores: 4) Run ``benchmark-pytest-xdist 15 4 loadscope``. Even with tests that take just a few seconds, there's improvement.
+```log
+[2021-11-22T18:42:40+0100]: Average time spent for 15 runs with 1 workers: 21.20s
+[2021-11-22T18:47:22+0100]: Average time spent for 15 runs with 2 workers: 16.86s
+[2021-11-22T18:51:27+0100]: Average time spent for 15 runs with 3 workers: 14.40s
+[2021-11-22T18:55:40+0100]: Average time spent for 15 runs with 4 workers: 14.93s
+```
 
 ## Software recommendations
 
