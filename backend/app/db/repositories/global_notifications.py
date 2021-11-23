@@ -5,7 +5,7 @@ from databases import Database
 from loguru import logger
 from pydantic import EmailStr
 
-from app.db.repositories.base import BaseRepository
+from app.db.repositories.base import BaseRepoException, BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.feed import GlobalNotificationFeedItem
 from app.models.global_notifications import (
@@ -15,6 +15,7 @@ from app.models.global_notifications import (
 from app.models.profile import ProfileCreate
 from app.models.user import Role
 from app.services.authorization import ROLE_PERMISSIONS
+from starlette.status import HTTP_400_BAD_REQUEST
 
 # The OFFSET clause is going to cause your SQL query plan to read all the results
 # anyway and then discard most of it until reaching the offset count.
@@ -77,8 +78,6 @@ WHERE id = :id
 RETURNING *;
 """
 
-# check where any :roles in a array of
-# in the form ['admin', 'user'] is present
 CHECK_NEW_NOTIFICATIONS_QUERY = """
 SELECT
   EXISTS(
@@ -95,20 +94,14 @@ SELECT
 ###############################################################
 
 
-class GlobalNotificationsRepoException(Exception):  # do NOT use BaseException
-    def __init__(self, msg="", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
-        self.msg = msg
+class InvalidGlobalNotificationError(BaseRepoException):
+    def __init__(self, msg="Invalid notification format.", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class InvalidGlobalNotificationError(GlobalNotificationsRepoException):
-    def __init__(self, msg="Invalid notification format.", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
-
-
-class InvalidParametersError(GlobalNotificationsRepoException):
-    def __init__(self, msg="", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
+class InvalidParametersError(BaseRepoException):
+    def __init__(self, msg="", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 ###############################################################

@@ -23,8 +23,8 @@ from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
 from app.db.repositories.password_reset_requests import (
-    UserAlreadyRequestedError,
     PwdResetReqRepository,
+    UserAlreadyRequestedError,
 )
 from app.db.repositories.users import UsersRepository
 from app.models.feed import GlobalNotificationFeedItem

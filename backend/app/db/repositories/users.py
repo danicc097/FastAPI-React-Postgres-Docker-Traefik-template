@@ -6,13 +6,15 @@ from typing import List, Mapping, Optional, Set, Union, cast
 import loguru
 from databases import Database
 from pydantic import EmailStr
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
-from app.db.repositories.profiles import ProfilesRepository
+from app.db.repositories.base import BaseRepoException
 from app.db.repositories.password_reset_requests import PwdResetReqRepository
+from app.db.repositories.profiles import ProfilesRepository
 from app.models.feed import GlobalNotificationFeedItem
 from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
@@ -74,7 +76,7 @@ UPDATE_USER_BY_ID_QUERY = """
 
 LIST_ALL_USERS_QUERY = """
     SELECT *
-    FROM users;
+    FROM users
 """
 
 LIST_ALL_NON_VERIFIED_USERS_QUERY = """
@@ -116,41 +118,29 @@ UPDATE_USER_ROLE_QUERY = """
 ###############################################################################
 
 
-class UsersRepoException(Exception):  # do NOT use BaseException
-    def __init__(self, msg="", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
-        self.msg = msg
+class EmailAlreadyExistsError(BaseRepoException):
+    def __init__(self, msg="Email already exists.", status_code=HTTP_409_CONFLICT, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class EmailAlreadyExistsError(UsersRepoException):
-    def __init__(self, msg="Email already exists.", email="", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
-        self.email = email
+class UsernameAlreadyExistsError(BaseRepoException):
+    def __init__(self, msg="Username already exists.", status_code=HTTP_409_CONFLICT, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class UsernameAlreadyExistsError(UsersRepoException):
-    def __init__(self, msg="Username already exists.", username="", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
+class UserNotFoundError(BaseRepoException):
+    def __init__(self, msg="Could not find user.", status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class UserCreationError(UsersRepoException):
-    def __init__(self, msg="Could not create user.", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
+class IncorrectPasswordError(BaseRepoException):
+    def __init__(self, msg="Incorrect password.", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class UserNotFoundError(UsersRepoException):
-    def __init__(self, msg="Could not find user.", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
-
-
-class IncorrectPasswordError(UsersRepoException):
-    def __init__(self, msg="Incorrect password.", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
-
-
-class InvalidUpdateError(UsersRepoException):
-    def __init__(self, msg="Invalid update.", *args, **kwargs):
-        super().__init__(msg, *args, **kwargs)
+class InvalidUpdateError(BaseRepoException):
+    def __init__(self, msg="Invalid update.", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+        super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 ###############################################################################
