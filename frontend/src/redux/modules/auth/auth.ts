@@ -215,7 +215,7 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
     }
-    const password_request: schema['PasswordResetRequestCreate'] = {
+    const reset_request: schema['PasswordResetRequestCreate'] = {
       email,
       message,
     }
@@ -229,7 +229,7 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
           FAILURE: AuthActionType.REQUEST_PASSWORD_RESET_FAILURE,
         },
         options: {
-          data: { password_request },
+          data: { reset_request },
           headers,
           params: {},
         },

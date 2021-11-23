@@ -12,7 +12,7 @@ from starlette.status import (
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate
-from app.models.pwd_reset_req import PasswordResetRequest
+from app.models.pwd_reset_req import PasswordResetRequest, PasswordResetRequestCreate
 
 CREATE_PASSWORD_RESET_REQUEST_QUERY = """
     INSERT INTO pwd_reset_req (email, message)
@@ -59,22 +59,24 @@ class UserPwdReqRepository(BaseRepository):
         self.profiles_repo = ProfilesRepository(db)
         # self.users_repo = UsersRepository(db) # circular dep can be avoided so far
 
-    async def create_password_reset_request(self, *, email: EmailStr, message: str) -> Optional[PasswordResetRequest]:
+    async def create_password_reset_request(
+        self, *, reset_request: PasswordResetRequestCreate
+    ) -> Optional[PasswordResetRequest]:
         try:
-            password_reset_request = await self.db.fetch_one(
+            prr = await self.db.fetch_one(
                 query=CREATE_PASSWORD_RESET_REQUEST_QUERY,
                 values={
-                    "email": email,
-                    "message": message,
+                    "email": reset_request.email,
+                    "message": reset_request.message,
                 },
             )
         # non existent email is to be handled in route before requesting
         except Exception as e:
             raise UserAlreadyRequestedError
 
-        if not password_reset_request:
+        if not prr:
             return None
-        return PasswordResetRequest(**password_reset_request)
+        return PasswordResetRequest(**prr)
 
     async def list_all_password_request_users(self) -> List[PasswordResetRequest]:
         user_records = await self.db.fetch_all(query=LIST_ALL_PASSWORD_REQUEST_USERS_QUERY)

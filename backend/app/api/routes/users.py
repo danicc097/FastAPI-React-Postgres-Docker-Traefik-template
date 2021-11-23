@@ -139,7 +139,7 @@ async def user_login_with_email_and_password(
     response_model=PasswordResetRequest,
 )
 async def request_password_reset(
-    password_request: PasswordResetRequestCreate = Body(..., embed=True),
+    reset_request: PasswordResetRequestCreate = Body(..., embed=True),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
 ):
@@ -147,17 +147,13 @@ async def request_password_reset(
     Any client, including unauthorized, can request a password reset that needs admin approval.
     """
     async with exception_handler():
-        logger.warning(password_request)
-        user = await users_repo.get_user_by_email(email=password_request.email, to_public=True)
+        user = await users_repo.get_user_by_email(email=reset_request.email, to_public=True)
         if not user:
             raise HTTPException(
                 status_code=HTTP_404_NOT_FOUND,
-                detail=f"User with email {password_request.email} not found",
+                detail=f"User with email {reset_request.email} not found",
             )
-        return await user_pwd_req_repo.create_password_reset_request(
-            email=password_request.email,
-            message=password_request.message,
-        )
+        return await user_pwd_req_repo.create_password_reset_request(reset_request=reset_request)
 
 
 @router.get(

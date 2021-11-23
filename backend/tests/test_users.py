@@ -593,14 +593,14 @@ class TestUserPasswordReset:
         )
         res = await client.post(
             app.url_path_for("users:request-password-reset"),
-            json={"password_request": pwd_reset_req.dict()},
+            json={"reset_request": pwd_reset_req.dict()},
         )
         assert res.status_code == HTTP_200_OK
         assert res.json()["email"] == pwd_reset_req.email
         assert res.json()["message"] == pwd_reset_req.message
         res = await client.post(
             app.url_path_for("users:request-password-reset"),
-            json={"password_request": pwd_reset_req.dict()},
+            json={"reset_request": pwd_reset_req.dict()},
         )
         assert res.status_code == HTTP_409_CONFLICT
 
@@ -610,6 +610,6 @@ class TestUserPasswordReset:
         pwd_reset_req = PasswordResetRequestCreate(email="imcertainthisdoesntexist@mail.com", message="Help me")
         res = await client.post(
             app.url_path_for("users:request-password-reset"),
-            json={"password_request": pwd_reset_req.dict()},
+            json={"reset_request": pwd_reset_req.dict()},
         )
         assert res.status_code == HTTP_404_NOT_FOUND

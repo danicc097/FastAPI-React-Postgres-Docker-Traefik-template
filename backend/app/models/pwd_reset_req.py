@@ -14,7 +14,7 @@ class PasswordResetRequest(CoreModel, DateTimeModelMixin, IDModelMixin):
     """
 
     email: EmailStr
-    message: constr(min_length=2)
+    message: str
 
 
 class PasswordResetRequestCreate(CoreModel):
@@ -23,4 +23,4 @@ class PasswordResetRequestCreate(CoreModel):
     """
 
     email: EmailStr
-    message: constr(min_length=2)
+    message: str

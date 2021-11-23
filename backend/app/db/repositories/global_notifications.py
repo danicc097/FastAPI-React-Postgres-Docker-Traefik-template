@@ -148,7 +148,6 @@ class GlobalNotificationsRepository(BaseRepository):
             return GlobalNotificationFeedItem(**deleted_notification)
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Role) -> bool:
-        logger.critical("has_new_notifications", ROLE_PERMISSIONS[role])
         return await self.db.fetch_val(
             CHECK_NEW_NOTIFICATIONS_QUERY,
             values={

@@ -155,7 +155,7 @@ class TestAdminUserModification:
             # but there's no email server so this is as secure as we get
             res = await test_user_client.post(
                 app.url_path_for("users:request-password-reset"),
-                json={"password_request": pwd_reset_req.dict()},
+                json={"reset_request": pwd_reset_req.dict()},
             )
 
         # ensure we didn't break conftest client generators somehow
@@ -229,7 +229,7 @@ class TestAdminUserModification:
         # but there's no email server so this is as secure as we get
         res = await superuser_client.post(
             app.url_path_for("users:request-password-reset"),
-            json={"password_request": pwd_reset_req.dict()},
+            json={"reset_request": pwd_reset_req.dict()},
         )
         request_id = res.json()["id"]
         # delete the made request

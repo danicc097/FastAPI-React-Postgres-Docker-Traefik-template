@@ -51,19 +51,17 @@ async def create_user(database: Database, new_user: UserCreate, admin=False, ver
         return f"REGISTRATION ERROR FOR {new_user.email}: \n{e}"
 
 
-async def create_password_reset_request(database: Database, request: PasswordResetRequestCreate) -> Optional[str]:
+async def create_password_reset_request(database: Database, reset_request: PasswordResetRequestCreate) -> Optional[str]:
     user_pwd_reset_req_repo = UserPwdReqRepository(database)
     try:
-        created_request = await user_pwd_reset_req_repo.create_password_reset_request(
-            email=request.email, message=request.message
-        )
+        created_request = await user_pwd_reset_req_repo.create_password_reset_request(reset_request=reset_request)
         if not created_request:
-            return f"Failed to create password reset request for {request.email}"
-        assert created_request.email == request.email
-        assert created_request.message == request.message
+            return f"Failed to create password reset request for {reset_request.email}"
+        assert created_request.email == reset_request.email
+        assert created_request.message == reset_request.message
         return None
     except Exception as e:
-        return f"PASSWORD RESET REQUEST ERROR FOR {request.email}: \n{e}"
+        return f"PASSWORD RESET REQUEST ERROR FOR {reset_request.email}: \n{e}"
 
 
 async def change_user_role(database: Database, role_update: RoleUpdate) -> Optional[str]:

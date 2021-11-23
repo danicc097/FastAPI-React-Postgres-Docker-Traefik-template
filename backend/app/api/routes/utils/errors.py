@@ -16,7 +16,7 @@ import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
 
-BASE_EXCEPTION = HTTPException(
+UNHANDLED_EXCEPTION = HTTPException(
     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
     detail="An unknown error occurred.",
 )
@@ -48,11 +48,11 @@ def _exception_handler(e: Union[Exception, HTTPException]) -> Union[Exception, H
         # but return HTTPExceptions as they come (already handled elsewhere)
         if isinstance(e, HTTPException):
             return e
-        # and return a base exception for any other Exceptions we didn't handle
+        # and return a generic 500 exception for any other Exceptions we didn't handle
         # for further analysis through its traceback
         else:
             logger.opt(exception=True).error(e)
-            return BASE_EXCEPTION
+            return UNHANDLED_EXCEPTION
 
 
 def _users_repo_exception_handler(e: Exception) -> HTTPException:
@@ -86,7 +86,7 @@ def _users_repo_exception_handler(e: Exception) -> HTTPException:
         )
     else:
         logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+        return UNHANDLED_EXCEPTION
 
 
 def _pwd_reset_req_repo_exception_handler(e: Exception) -> HTTPException:
@@ -105,7 +105,7 @@ def _pwd_reset_req_repo_exception_handler(e: Exception) -> HTTPException:
         )
     else:
         logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+        return UNHANDLED_EXCEPTION
 
 
 def _global_notifications_repo_exception_handler(e: Exception) -> HTTPException:
@@ -124,4 +124,4 @@ def _global_notifications_repo_exception_handler(e: Exception) -> HTTPException:
         )
     else:
         logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+        return UNHANDLED_EXCEPTION
