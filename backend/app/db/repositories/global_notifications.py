@@ -4,11 +4,6 @@ from typing import List, Mapping, Optional, Set, Union, cast
 from databases import Database
 from loguru import logger
 from pydantic import EmailStr
-from starlette.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
@@ -136,16 +131,13 @@ class GlobalNotificationsRepository(BaseRepository):
         return GlobalNotificationFeedItem(**new_notification)
 
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotificationFeedItem]:
-        async with self.db.transaction():
-            deleted_notification = await self.db.fetch_one(
-                DELETE_NOTIFICATION_QUERY,
-                values={"id": id},
-            )
-            if not deleted_notification:
-                return None
-            if deleted_notification["id"] != id:
-                raise GlobalNotificationsRepoException(f"Could not delete notification with id {id}")
-            return GlobalNotificationFeedItem(**deleted_notification)
+        deleted_notification = await self.db.fetch_one(
+            DELETE_NOTIFICATION_QUERY,
+            values={"id": id},
+        )
+        if not deleted_notification:
+            return None
+        return GlobalNotificationFeedItem(**deleted_notification)
 
     async def has_new_notifications(self, *, last_notification_at: datetime, role: Role) -> bool:
         return await self.db.fetch_val(
@@ -170,32 +162,25 @@ class GlobalNotificationsRepository(BaseRepository):
         """
         if by_last_read and last_notification_at is not None:
             date_condition = "> :last_notification_at"
-            notifications = [
-                GlobalNotificationFeedItem(**notification)
-                for notification in await self.db.fetch_all(
-                    _fetch_notifications_query(date_condition),
-                    values={
-                        "last_notification_at": last_notification_at.replace(tzinfo=None),
-                        "page_chunk_size": 99999,
-                        "roles": ROLE_PERMISSIONS[role],
-                    },
-                )
-            ]
-            return notifications
+            values = {
+                "last_notification_at": last_notification_at.replace(tzinfo=None),
+                "page_chunk_size": 99999,
+                "roles": ROLE_PERMISSIONS[role],
+            }
         elif not by_last_read and starting_date is not None:
             date_condition = "< :starting_date"
-            notifications = [
-                GlobalNotificationFeedItem(**notification)
-                for notification in await self.db.fetch_all(
-                    _fetch_notifications_query(date_condition),
-                    values={
-                        "starting_date": starting_date.replace(tzinfo=None),
-                        "page_chunk_size": page_chunk_size or self.page_chunk_size,
-                        "roles": ROLE_PERMISSIONS[role],
-                    },
-                )
-            ]
-            logger.critical(f"{notifications=}")
-            return notifications
+            values = {
+                "starting_date": starting_date.replace(tzinfo=None),
+                "page_chunk_size": page_chunk_size or self.page_chunk_size,
+                "roles": ROLE_PERMISSIONS[role],
+            }
         else:
             raise InvalidParametersError("Either last_notification_at or starting_date must be provided")
+
+        return [
+            GlobalNotificationFeedItem(**notification)
+            for notification in await self.db.fetch_all(
+                _fetch_notifications_query(date_condition),
+                values=values,
+            )
+        ]

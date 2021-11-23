@@ -3,16 +3,14 @@ from typing import List, Mapping, Optional, Set, Union, cast
 import loguru
 from databases import Database
 from pydantic import EmailStr
-from starlette.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate
-from app.models.pwd_reset_req import PasswordResetRequest, PasswordResetRequestCreate
+from app.models.password_reset_requests import (
+    PasswordResetRequest,
+    PasswordResetRequestCreate,
+)
 
 CREATE_PASSWORD_RESET_REQUEST_QUERY = """
     INSERT INTO pwd_reset_req (email, message)
@@ -34,18 +32,18 @@ LIST_ALL_PASSWORD_REQUEST_USERS_QUERY = """
 ###############################################################
 
 
-class UserPwdReqRepoException(Exception):  # do NOT use BaseException
+class PwdResetReqRepoException(Exception):  # do NOT use BaseException
     def __init__(self, msg="", *args, **kwargs):
         super().__init__(msg, *args, **kwargs)
         self.msg = msg
 
 
-class UserAlreadyRequestedError(UserPwdReqRepoException):
+class UserAlreadyRequestedError(PwdResetReqRepoException):
     def __init__(self, msg="A request to reset your password already exists.", *args, **kwargs):
         super().__init__(msg, *args, **kwargs)
 
 
-class RequestDoesNotExistError(UserPwdReqRepoException):
+class RequestDoesNotExistError(PwdResetReqRepoException):
     def __init__(self, msg="The given password reset request does not exist.", *args, **kwargs):
         super().__init__(msg, *args, **kwargs)
 
@@ -53,7 +51,7 @@ class RequestDoesNotExistError(UserPwdReqRepoException):
 ###############################################################
 
 
-class UserPwdReqRepository(BaseRepository):
+class PwdResetReqRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
         self.profiles_repo = ProfilesRepository(db)

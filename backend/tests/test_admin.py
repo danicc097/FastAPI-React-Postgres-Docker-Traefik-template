@@ -41,7 +41,7 @@ from app.db.repositories.global_notifications import (
 )
 from app.db.repositories.users import UsersRepository
 from app.models.global_notifications import GlobalNotificationCreate
-from app.models.pwd_reset_req import (
+from app.models.password_reset_requests import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )

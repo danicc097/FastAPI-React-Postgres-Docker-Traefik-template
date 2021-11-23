@@ -13,7 +13,7 @@ from starlette.status import (
 )
 
 import app.db.repositories.global_notifications as global_notif_repo
-import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
+import app.db.repositories.password_reset_requests as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
 
 UNHANDLED_EXCEPTION = HTTPException(
@@ -40,7 +40,7 @@ def _exception_handler(e: Union[Exception, HTTPException]) -> Union[Exception, H
     # handle repo exceptions
     if isinstance(e, users_repo.UsersRepoException):
         return _users_repo_exception_handler(e)
-    if isinstance(e, pwd_reset_req_repo.UserPwdReqRepoException):
+    if isinstance(e, pwd_reset_req_repo.PwdResetReqRepoException):
         return _pwd_reset_req_repo_exception_handler(e)
     if isinstance(e, global_notif_repo.GlobalNotificationsRepoException):
         return _global_notifications_repo_exception_handler(e)

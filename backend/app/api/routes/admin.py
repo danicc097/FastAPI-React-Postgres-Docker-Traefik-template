@@ -14,9 +14,9 @@ from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
-from app.db.repositories.pwd_reset_req import (
+from app.db.repositories.password_reset_requests import (
     RequestDoesNotExistError,
-    UserPwdReqRepository,
+    PwdResetReqRepository,
 )
 from app.db.repositories.users import (
     InvalidUpdateError,
@@ -27,7 +27,7 @@ from app.models.global_notifications import (
     GlobalNotification,
     GlobalNotificationCreate,
 )
-from app.models.pwd_reset_req import (
+from app.models.password_reset_requests import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
@@ -104,7 +104,7 @@ async def verify_user_by_email(
     dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def list_password_request_users(
-    user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
+    user_pwd_req_repo: PwdResetReqRepository = Depends(get_repository(PwdResetReqRepository)),
 ) -> Optional[List[PasswordResetRequest]]:
     """
     Return a list of users that have requested a password reset.
@@ -151,7 +151,7 @@ async def reset_user_password_by_email(
 )
 async def delete_password_reset_request(
     id: int = Path(..., ge=1),
-    user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
+    user_pwd_req_repo: PwdResetReqRepository = Depends(get_repository(PwdResetReqRepository)),
 ):
     """
     Delete a password reset request with id: ``id``.

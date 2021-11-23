@@ -6,18 +6,13 @@ from typing import List, Mapping, Optional, Set, Union, cast
 import loguru
 from databases import Database
 from pydantic import EmailStr
-from starlette.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
-    HTTP_500_INTERNAL_SERVER_ERROR,
-)
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
 from app.db.repositories.profiles import ProfilesRepository
-from app.db.repositories.pwd_reset_req import UserPwdReqRepository
+from app.db.repositories.password_reset_requests import PwdResetReqRepository
 from app.models.feed import GlobalNotificationFeedItem
 from app.models.global_notifications import GlobalNotification
 from app.models.profile import ProfileCreate
@@ -168,7 +163,7 @@ class UsersRepository(BaseRepository):
         # make sure that when a new user is created, our UsersRepository
         # will also create_profile_for_user below
         self.profiles_repo = ProfilesRepository(db)
-        self.user_pwd_req_repo = UserPwdReqRepository(db)
+        self.user_pwd_req_repo = PwdResetReqRepository(db)
         self.global_notif_repo = GlobalNotificationsRepository(db)
 
     # ? Exceptions are to be raised outside

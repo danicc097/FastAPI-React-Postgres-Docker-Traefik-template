@@ -38,7 +38,7 @@ from app.core.config import (
 from app.db.repositories.users import (  # tests shouldnt know these exist -> bad implementation and tests; EmailAlreadyExistsError,; UserCreationError,; UsernameAlreadyExistsError,; UsersRepoException,
     UsersRepository,
 )
-from app.models.pwd_reset_req import (
+from app.models.password_reset_requests import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )

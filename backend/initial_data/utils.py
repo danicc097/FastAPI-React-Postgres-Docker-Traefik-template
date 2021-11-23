@@ -13,10 +13,10 @@ from app.core.config import DATABASE_URL, is_testing
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
-from app.db.repositories.pwd_reset_req import UserPwdReqRepository
+from app.db.repositories.password_reset_requests import PwdResetReqRepository
 from app.db.repositories.users import UsersRepository
 from app.models.global_notifications import GlobalNotificationCreate
-from app.models.pwd_reset_req import PasswordResetRequestCreate
+from app.models.password_reset_requests import PasswordResetRequestCreate
 from app.models.user import Role, RoleUpdate, UserCreate
 
 
@@ -52,7 +52,7 @@ async def create_user(database: Database, new_user: UserCreate, admin=False, ver
 
 
 async def create_password_reset_request(database: Database, reset_request: PasswordResetRequestCreate) -> Optional[str]:
-    user_pwd_reset_req_repo = UserPwdReqRepository(database)
+    user_pwd_reset_req_repo = PwdResetReqRepository(database)
     try:
         created_request = await user_pwd_reset_req_repo.create_password_reset_request(reset_request=reset_request)
         if not created_request:

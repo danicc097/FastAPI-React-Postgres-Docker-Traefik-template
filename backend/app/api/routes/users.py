@@ -22,13 +22,13 @@ from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
-from app.db.repositories.pwd_reset_req import (
+from app.db.repositories.password_reset_requests import (
     UserAlreadyRequestedError,
-    UserPwdReqRepository,
+    PwdResetReqRepository,
 )
 from app.db.repositories.users import UsersRepository
 from app.models.feed import GlobalNotificationFeedItem
-from app.models.pwd_reset_req import (
+from app.models.password_reset_requests import (
     PasswordResetRequest,
     PasswordResetRequestCreate,
 )
@@ -141,7 +141,7 @@ async def user_login_with_email_and_password(
 async def request_password_reset(
     reset_request: PasswordResetRequestCreate = Body(..., embed=True),
     users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-    user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
+    user_pwd_req_repo: PwdResetReqRepository = Depends(get_repository(PwdResetReqRepository)),
 ):
     """
     Any client, including unauthorized, can request a password reset that needs admin approval.
