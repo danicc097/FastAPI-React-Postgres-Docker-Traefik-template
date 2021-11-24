@@ -9,10 +9,8 @@ from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
 router = APIRouter()
 
 
-# Notice we're validating the username in the same way as in our
-# UserCreate and UserUpdate models.
-# By including the get_current_active_user dependency,
-# we protect this route from unauthenticated requests
+# NOTE: by including the get_current_active_user dependency,
+# we are also protecting this route from unauthenticated requests
 @router.get(
     "/{username}/",
     response_model=ProfilePublic,

@@ -63,7 +63,6 @@ class PwdResetReqRepository(BaseRepository):
                     "message": reset_request.message,
                 },
             )
-        # non existent email is to be handled in route before requesting
         except Exception as e:
             raise UserAlreadyRequestedError("A request to reset your password already exists.")
 

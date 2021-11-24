@@ -11,7 +11,6 @@ from asgi_lifespan import LifespanManager
 from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
-from sqlalchemy.orm.session import close_all_sessions
 
 from app.core.config import JWT_TOKEN_PREFIX, UNIQUE_KEY, is_testing
 from app.db.repositories.users import UsersRepository

@@ -156,10 +156,9 @@ class UsersRepository(BaseRepository):
         # make sure that when a new user is created, our UsersRepository
         # will also create_profile_for_user below
         self.profiles_repo = ProfilesRepository(db)
-        self.user_pwd_req_repo = PwdResetReqRepository(db)
+        self.pwd_reset_req_repo = PwdResetReqRepository(db)
         self.global_notif_repo = GlobalNotificationsRepository(db)
 
-    # ? Exceptions are to be raised outside
     async def get_user_by_email(
         self, *, email: EmailStr, to_public: bool = True
     ) -> Optional[Union[UserPublic, UserInDB]]:
@@ -174,7 +173,6 @@ class UsersRepository(BaseRepository):
             return await self.populate_user(user=user)
         return user
 
-    # ? Exceptions are to be raised outside
     async def get_user_by_username(
         self, *, username: str, to_public: bool = True
     ) -> Optional[Union[UserPublic, UserInDB]]:
@@ -186,7 +184,6 @@ class UsersRepository(BaseRepository):
             return await self.populate_user(user=user)
         return user
 
-    # ? Exceptions are to be raised outside
     async def get_user_by_id(self, *, user_id: int, to_public: bool = True) -> Optional[Union[UserPublic, UserInDB]]:
         user_record = await self.db.fetch_one(query=GET_USER_BY_ID_QUERY, values={"id": user_id})
         if not user_record:
@@ -265,13 +262,11 @@ class UsersRepository(BaseRepository):
                 update={**user_password_update, "id": user_id}, exclude={"old_password"}
             )
 
-        if user_update.email:
-            if await self.get_user_by_email(email=user_update.email):
-                raise EmailAlreadyExistsError(f"User with email {user_update.email} already exists")
+        if user_update.email and await self.get_user_by_email(email=user_update.email):
+            raise EmailAlreadyExistsError(f"User with email {user_update.email} already exists")
 
-        if user_update.username:
-            if await self.get_user_by_username(username=user_update.username):
-                raise UsernameAlreadyExistsError(f"User with username {user_update.username} already exists")
+        if user_update.username and await self.get_user_by_username(username=user_update.username):
+            raise UsernameAlreadyExistsError(f"User with username {user_update.username} already exists")
 
         updated_user = await self.db.fetch_one(
             query=UPDATE_USER_BY_ID_QUERY,
@@ -356,7 +351,7 @@ class UsersRepository(BaseRepository):
         # it might be useful to let us reset a password without a existing request
         if id:
             try:
-                await self.user_pwd_req_repo.delete_password_reset_request(id=id)
+                await self.pwd_reset_req_repo.delete_password_reset_request(id=id)
             except AssertionError as e:
                 raise e
             # no need to handle any other error
@@ -370,9 +365,7 @@ class UsersRepository(BaseRepository):
         """ """
         async with self.db.transaction():
             notifications = await self.global_notif_repo.fetch_notification_feed(
-                last_notification_at=last_notification_at,
-                role=role,
-                by_last_read=True,
+                last_notification_at=last_notification_at, role=role, condition="by last read"
             )
             await self.db.execute(
                 query=UPDATE_LAST_NOTIFICATION_AT_QUERY,
@@ -387,9 +380,7 @@ class UsersRepository(BaseRepository):
         Fetch arbitrarily paginated notifications without updating the user's ``last_notification_at`` field.
         """
         return await self.global_notif_repo.fetch_notification_feed(
-            starting_date=starting_date,
-            page_chunk_size=page_chunk_size,
-            role=role,
+            starting_date=starting_date, page_chunk_size=page_chunk_size, role=role, condition="by starting date"
         )
 
     async def update_user_role(self, *, role_update: RoleUpdate) -> None:

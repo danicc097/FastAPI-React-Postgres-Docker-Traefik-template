@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import List, Mapping, Optional, Set, Union, cast
+from typing import List, Literal, Mapping, Optional, Set, Union, cast
 
 from databases import Database
 from loguru import logger
@@ -26,6 +26,7 @@ from app.services.authorization import ROLE_PERMISSIONS
 
 def _fetch_notifications_query(date_condition: str) -> str:
     return f"""
+--sql
 SELECT
   *,
   ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
@@ -148,19 +149,19 @@ class GlobalNotificationsRepository(BaseRepository):
         page_chunk_size: int = None,
         starting_date: datetime = None,
         role: Role = Role.user,
-        by_last_read: bool = False,
+        condition: Literal["by last read", "by starting date"] = "by starting date",
     ) -> List[GlobalNotificationFeedItem]:
         """
         Fetch the notification feed for a given role.
         """
-        if by_last_read and last_notification_at is not None:
+        if condition == "by last read" and last_notification_at is not None:
             date_condition = "> :last_notification_at"
             values = {
                 "last_notification_at": last_notification_at.replace(tzinfo=None),
                 "page_chunk_size": 99999,
                 "roles": ROLE_PERMISSIONS[role],
             }
-        elif not by_last_read and starting_date is not None:
+        elif condition == "by starting date" and starting_date is not None:
             date_condition = "< :starting_date"
             values = {
                 "starting_date": starting_date.replace(tzinfo=None),
