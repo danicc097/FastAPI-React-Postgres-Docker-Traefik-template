@@ -18,9 +18,10 @@ export function useRoleUpdateForm() {
     email: '',
     role: 'user',
   })
+  const error = useAppSelector((state) => state.admin.error, shallowEqual)
   const [errors, setErrors] = useState<FormErrors<typeof form>>({})
   const [hasSubmitted, setHasSubmitted] = useState(false)
-  const [errorList, setErrorList] = useState<string[]>([])
+  const errorList = extractErrorMessages(error)
 
   /**
    * Retrieve form errors specific to the current form.

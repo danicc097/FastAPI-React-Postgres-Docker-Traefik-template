@@ -16,7 +16,7 @@ import {
   EuiTitle,
 } from '@elastic/eui'
 import _, { capitalize } from 'lodash'
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useEffect, useReducer, useState } from 'react'
 import { useAllUsers } from 'src/hooks/admin/useAllUsers'
 import { useRoleUpdateForm } from 'src/hooks/admin/useRoleUpdateForm'
 import { AdminActionType } from 'src/redux/modules/admin/admin'
@@ -29,14 +29,15 @@ import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 export default function UserPermissionsPage() {
   const noSelection = '...'
 
+  const [forceRerender, setForceRerender] = useState(false)
   const [emailSelection, setEmailSelection] = useState<any>(noSelection)
   const [roleSelection, setRoleSelection] = useState('user' as schema['Role'])
   const [userOptions, setUserOptions] = useState<Array<EuiSelectableOption<any>>>(undefined)
-  const { allUsers } = useAllUsers()
+  const { allUsers, fetchAllUsers } = useAllUsers()
   const { updateUserRole, getFormErrors, form, setForm, errors, setErrors, setHasSubmitted } = useRoleUpdateForm()
 
   useEffect(() => {
-    if (userOptions === undefined) {
+    if (userOptions === undefined || forceRerender) {
       setUserOptions(
         allUsers
           ? allUsers.map((user) => ({
@@ -47,6 +48,7 @@ export default function UserPermissionsPage() {
             }))
           : undefined,
       )
+      setForceRerender(!forceRerender)
     } else {
       setUserOptions(userOptions)
     }
@@ -65,8 +67,9 @@ export default function UserPermissionsPage() {
     setHasSubmitted(true)
     const action = await updateUserRole({ role_update: form })
     if (action.type !== AdminActionType.UPDATE_USER_ROLE_SUCCESS) {
-      setErrors(action.error)
+      setErrors((errors) => ({ ...errors, form: 'There was an error updating the user role' }))
     }
+    setForceRerender(!forceRerender)
     closeModal()
   }
 

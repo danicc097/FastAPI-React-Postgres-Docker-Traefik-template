@@ -100,7 +100,7 @@ export function _getFormErrors(
 ) {
   const formErrors = []
 
-  if (errors.form) {
+  if (errors?.form) {
     formErrors.push(errors.form)
   }
 

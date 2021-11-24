@@ -168,6 +168,25 @@ export default function adminReducer(
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
 
+    case AdminActionType.UPDATE_USER_ROLE_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        data: {
+          ...state.data,
+          allUsers: state.data.allUsers?.map((user) => {
+            if (user.email === action.data?.email) {
+              return {
+                ...user,
+                role: action.data?.role,
+              }
+            }
+            return user
+          }),
+        },
+      }
+
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.admin
@@ -482,12 +501,12 @@ AdminActionCreators.updateUserRole = ({ role_update }) => {
               text: `User with email:'${role_update.email}' has had its role updated to '${role_update.role}'.`,
             }),
           )
-          return {
+          return dispatch({
             type: AdminActionType.UPDATE_USER_ROLE_SUCCESS,
             success: true,
             status: res.status,
-            data: res.data,
-          }
+            data: role_update,
+          })
         },
         onFailure: (res) => {
           console.log('onFailure: ', res)

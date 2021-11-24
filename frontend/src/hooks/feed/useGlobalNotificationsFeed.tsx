@@ -15,12 +15,12 @@ export function useGlobalNotificationsFeed() {
 
   const dispatch = useAppDispatch()
   const isLoading = useAppSelector((state) => state.feed.globalNotifications.isLoading)
-  const error = useAppSelector((state) => state.feed.globalNotifications.error, shallowEqual)
   const feedItems = useAppSelector((state) => state.feed.globalNotifications.data, shallowEqual)
   const unreadItems = useAppSelector((state) => state.feed.globalNotifications.unreadData, shallowEqual)
   const hasNewNotifications = useAppSelector((state) => Boolean(state.feed.globalNotifications.hasNewNotifications))
+  const notificationError = useAppSelector((state) => state.feed.globalNotifications.error, shallowEqual)
 
-  const errorList = extractErrorMessages(error)
+  const errorList = extractErrorMessages(notificationError)
 
   /**
    * Requires UTC dates.
