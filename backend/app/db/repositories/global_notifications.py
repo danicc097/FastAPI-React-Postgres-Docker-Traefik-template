@@ -4,6 +4,7 @@ from typing import List, Mapping, Optional, Set, Union, cast
 from databases import Database
 from loguru import logger
 from pydantic import EmailStr
+from starlette.status import HTTP_400_BAD_REQUEST
 
 from app.db.repositories.base import BaseRepoException, BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
@@ -15,7 +16,6 @@ from app.models.global_notifications import (
 from app.models.profile import ProfileCreate
 from app.models.user import Role
 from app.services.authorization import ROLE_PERMISSIONS
-from starlette.status import HTTP_400_BAD_REQUEST
 
 # The OFFSET clause is going to cause your SQL query plan to read all the results
 # anyway and then discard most of it until reaching the offset count.
@@ -95,12 +95,12 @@ SELECT
 
 
 class InvalidGlobalNotificationError(BaseRepoException):
-    def __init__(self, msg="Invalid notification format.", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 class InvalidParametersError(BaseRepoException):
-    def __init__(self, msg="", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
@@ -120,7 +120,7 @@ class GlobalNotificationsRepository(BaseRepository):
             values=notification.dict(exclude_unset=True),
         )
         if not new_notification:
-            raise InvalidGlobalNotificationError
+            raise InvalidGlobalNotificationError("Failed to create notification")
         return GlobalNotificationFeedItem(**new_notification)
 
     async def delete_notification_by_id(self, *, id: int) -> Optional[GlobalNotificationFeedItem]:

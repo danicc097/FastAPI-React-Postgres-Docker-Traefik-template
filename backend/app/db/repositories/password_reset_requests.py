@@ -34,16 +34,12 @@ LIST_ALL_PASSWORD_REQUEST_USERS_QUERY = """
 
 
 class UserAlreadyRequestedError(BaseRepoException):
-    def __init__(
-        self, msg="A request to reset your password already exists.", status_code=HTTP_409_CONFLICT, *args, **kwargs
-    ):
+    def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 class RequestDoesNotExistError(BaseRepoException):
-    def __init__(
-        self, msg="The given password reset request does not exist.", status_code=HTTP_404_NOT_FOUND, *args, **kwargs
-    ):
+    def __init__(self, msg, status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
@@ -69,7 +65,7 @@ class PwdResetReqRepository(BaseRepository):
             )
         # non existent email is to be handled in route before requesting
         except Exception as e:
-            raise UserAlreadyRequestedError
+            raise UserAlreadyRequestedError("A request to reset your password already exists.")
 
         if not prr:
             return None
@@ -89,5 +85,5 @@ class PwdResetReqRepository(BaseRepository):
                 },
             )
             if not deleted_request:
-                raise RequestDoesNotExistError
+                raise RequestDoesNotExistError("The given password reset request does not exist.")
             assert PasswordResetRequest(**deleted_request).id == id

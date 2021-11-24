@@ -6,13 +6,16 @@ from typing import List, Mapping, Optional, Set, Union, cast
 import loguru
 from databases import Database
 from pydantic import EmailStr
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_409_CONFLICT,
+)
 
-from app.db.repositories.base import BaseRepository
+from app.db.repositories.base import BaseRepoException, BaseRepository
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
-from app.db.repositories.base import BaseRepoException
 from app.db.repositories.password_reset_requests import PwdResetReqRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.feed import GlobalNotificationFeedItem
@@ -119,27 +122,27 @@ UPDATE_USER_ROLE_QUERY = """
 
 
 class EmailAlreadyExistsError(BaseRepoException):
-    def __init__(self, msg="Email already exists.", status_code=HTTP_409_CONFLICT, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 class UsernameAlreadyExistsError(BaseRepoException):
-    def __init__(self, msg="Username already exists.", status_code=HTTP_409_CONFLICT, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 class UserNotFoundError(BaseRepoException):
-    def __init__(self, msg="Could not find user.", status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 class IncorrectPasswordError(BaseRepoException):
-    def __init__(self, msg="Incorrect password.", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
 class InvalidUpdateError(BaseRepoException):
-    def __init__(self, msg="Invalid update.", status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
+    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
@@ -235,7 +238,7 @@ class UsersRepository(BaseRepository):
     async def update_user(self, *, user_id: int, user_update: UserUpdate) -> Optional[UserPublic]:
         user = await self.get_user_by_id(user_id=user_id, to_public=False)
         if not user:
-            raise UserNotFoundError
+            raise UserNotFoundError("User not found")
         user = cast(UserInDB, user)
 
         update = user_update.dict(exclude_unset=True)
@@ -251,7 +254,7 @@ class UsersRepository(BaseRepository):
                 salt=user.salt,
                 hashed_pw=user.password,
             ):
-                raise IncorrectPasswordError
+                raise IncorrectPasswordError("Incorrect current password")
 
             user_password_update = self.auth_service.create_salt_and_hashed_password(
                 plaintext_password=user_update.password
@@ -329,7 +332,7 @@ class UsersRepository(BaseRepository):
     async def reset_user_password(self, *, email: EmailStr, id: int = None) -> str:
         user = await self.get_user_by_email(email=email, to_public=False)
         if not user:
-            raise UserNotFoundError
+            raise UserNotFoundError(f"User with email {email} not found")
         user = cast(UserInDB, user)
 
         alphabet = string.ascii_letters + string.digits
@@ -392,7 +395,7 @@ class UsersRepository(BaseRepository):
     async def update_user_role(self, *, role_update: RoleUpdate) -> None:
         user = await self.get_user_by_email(email=role_update.email, to_public=False)
         if not user:
-            raise UserNotFoundError
+            raise UserNotFoundError(f"User with email {role_update.email} not found")
         await self.db.execute(
             query=UPDATE_USER_ROLE_QUERY,
             values={"id": user.id, "role": role_update.role},

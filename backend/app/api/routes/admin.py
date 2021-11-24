@@ -16,11 +16,8 @@ from app.db.repositories.global_notifications import (
 )
 from app.db.repositories.password_reset_requests import (
     PwdResetReqRepository,
-    RequestDoesNotExistError,
 )
 from app.db.repositories.users import (
-    InvalidUpdateError,
-    UserNotFoundError,
     UsersRepository,
 )
 from app.models.global_notifications import (
