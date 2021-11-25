@@ -11,6 +11,7 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
 )
+from app.core.config import is_prod
 
 from app.db.repositories.base import BaseRepoException, BaseRepository
 from app.db.repositories.global_notifications import (
@@ -387,7 +388,7 @@ class UsersRepository(BaseRepository):
         user = await self.get_user_by_email(email=role_update.email, to_public=False)
         if not user:
             raise UserNotFoundError(f"User with email {role_update.email} not found")
-        if user.is_superuser:
+        if user.is_superuser and is_prod():
             raise InvalidUpdateError("Cannot update role for a superuser")
         await self.db.execute(
             query=UPDATE_USER_ROLE_QUERY,
