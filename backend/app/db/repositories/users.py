@@ -387,6 +387,8 @@ class UsersRepository(BaseRepository):
         user = await self.get_user_by_email(email=role_update.email, to_public=False)
         if not user:
             raise UserNotFoundError(f"User with email {role_update.email} not found")
+        if user.is_superuser:
+            raise InvalidUpdateError("Cannot update role for a superuser")
         await self.db.execute(
             query=UPDATE_USER_ROLE_QUERY,
             values={"id": user.id, "role": role_update.role},

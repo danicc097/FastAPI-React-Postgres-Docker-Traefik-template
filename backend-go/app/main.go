@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/app/core"
+	"myapp-backend/app/core"
 )
 
 func main() {

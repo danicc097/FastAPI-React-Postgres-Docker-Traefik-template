@@ -168,6 +168,9 @@ export default function adminReducer(
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
 
+    case AdminActionType.UPDATE_USER_ROLE:
+      return loadingState(state)
+
     case AdminActionType.UPDATE_USER_ROLE_SUCCESS:
       return {
         ...state,
@@ -186,6 +189,9 @@ export default function adminReducer(
           }),
         },
       }
+
+    case AdminActionType.UPDATE_USER_ROLE_FAILURE:
+      return errorState(state, action)
 
     // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:

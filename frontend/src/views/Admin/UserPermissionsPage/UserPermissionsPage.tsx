@@ -154,10 +154,20 @@ export default function UserPermissionsPage() {
 
   const element = (
     <>
-      <EuiForm component="form" onSubmit={onRoleUpdateSubmit}>
+      <EuiForm
+        component="form"
+        onSubmit={onRoleUpdateSubmit}
+        isInvalid={Boolean(getFormErrors().length)}
+        error={getFormErrors()}
+      >
         <EuiFlexGroup direction="column">
           <EuiFlexItem grow={false}>
-            <EuiFormRow fullWidth label="Select the user's email" error={getFormErrors()}>
+            <EuiFormRow
+              fullWidth
+              label="Select the user's email"
+              error={getFormErrors()}
+              isInvalid={Boolean(errors.email)}
+            >
               <EuiSelectable
                 aria-label="Searchable example"
                 data-test-subj="roleUpdateForm__selectable"

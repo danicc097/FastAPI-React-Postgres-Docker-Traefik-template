@@ -1,10 +1,11 @@
 package services
 
 import (
-	"backend/app/models"
 	"os"
 	"strconv"
 	"time"
+
+	"myapp-backend/app/models"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"

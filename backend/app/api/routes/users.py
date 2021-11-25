@@ -124,12 +124,10 @@ async def user_login_with_email_and_password(
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        access_token = AccessToken(
+        return AccessToken(
             access_token=auth_service.create_access_token_for_user(user=user),
             token_type="bearer",
         )
-
-        return access_token
 
 
 @router.post(
