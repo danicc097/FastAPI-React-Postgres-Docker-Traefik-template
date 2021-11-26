@@ -11,8 +11,8 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
 )
-from app.core.config import is_prod
 
+from app.core.config import is_prod
 from app.db.repositories.base import BaseRepoException, BaseRepository
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,

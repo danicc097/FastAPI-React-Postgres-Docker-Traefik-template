@@ -23,7 +23,7 @@ import { AdminActionType } from 'src/redux/modules/admin/admin'
 import { schema } from 'src/types/schema_override'
 import { getColorForRole } from 'src/utils/colors'
 import { joinWithAnd } from 'src/utils/format'
-import { getAllowedRoles, ROLE_PERMISSIONS } from 'src/utils/permissions'
+import { getImplicitRoles, ROLE_PERMISSIONS } from 'src/utils/permissions'
 import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 
 export default function UserPermissionsPage() {
@@ -136,7 +136,7 @@ export default function UserPermissionsPage() {
           <strong>{capitalize(key)}</strong>
           <EuiText size="s" color="subdued">
             <p className="euiTextColor--subdued">
-              Has access privileges encompassing {joinWithAnd(getAllowedRoles(key))}.
+              Has access privileges encompassing {joinWithAnd(getImplicitRoles(key))}.
             </p>
           </EuiText>
         </Fragment>
