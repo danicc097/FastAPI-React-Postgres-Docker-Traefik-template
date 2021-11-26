@@ -18,7 +18,7 @@ Value object fields are to be immutable, the correct way to "update" them is to 
 This immutability means that we should not and there is no need to validate Value Object during its whole lifetime, only upon creation:
 
 ```go
-// wrong way 
+// wrong way
 func (m *Money) Deduct(other Money) {
   m.Amount -= other.Amount
 }
