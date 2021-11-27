@@ -14,13 +14,15 @@ from app.core.config import (
     JWT_TOKEN_PREFIX,
     UNIQUE_KEY,
 )
+from app.core.errors import BaseAppException
 from app.models.token import JWTCreds, JWTMeta, JWTPayload
 from app.models.user import UserBase, UserInDB, UserPasswordRegistration
+from app.services.base import BaseService
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class AuthException(Exception):
+class AuthException(BaseAppException):
     pass
 
 

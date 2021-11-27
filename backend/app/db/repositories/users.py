@@ -13,7 +13,8 @@ from starlette.status import (
 )
 
 from app.core.config import is_prod
-from app.db.repositories.base import BaseRepoException, BaseRepository
+from app.core.errors import BaseAppException
+from app.db.repositories.base import BaseRepository
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
 )
@@ -122,27 +123,27 @@ UPDATE_USER_ROLE_QUERY = """
 ###############################################################################
 
 
-class EmailAlreadyExistsError(BaseRepoException):
+class EmailAlreadyExistsError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class UsernameAlreadyExistsError(BaseRepoException):
+class UsernameAlreadyExistsError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class UserNotFoundError(BaseRepoException):
+class UserNotFoundError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class IncorrectPasswordError(BaseRepoException):
+class IncorrectPasswordError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class InvalidUpdateError(BaseRepoException):
+class InvalidUpdateError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
@@ -384,13 +385,10 @@ class UsersRepository(BaseRepository):
             starting_date=starting_date, page_chunk_size=page_chunk_size, role=role, condition="by starting date"
         )
 
-    async def update_user_role(self, *, role_update: RoleUpdate) -> None:
-        user = await self.get_user_by_email(email=role_update.email, to_public=False)
-        if not user:
-            raise UserNotFoundError(f"User with email {role_update.email} not found")
-        if user.is_superuser and is_prod():
-            raise InvalidUpdateError("Cannot update role for a superuser")
-        await self.db.execute(
+    async def update_user_role(self, *, id: int, role: Role):
+        _id = await self.db.execute(
             query=UPDATE_USER_ROLE_QUERY,
-            values={"id": user.id, "role": role_update.role},
+            values={"id": id, "role": role.value},
         )
+        if not _id:
+            raise InvalidUpdateError(f"Could not update role for user with {id=}")

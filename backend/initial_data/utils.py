@@ -66,8 +66,11 @@ async def create_password_reset_request(database: Database, reset_request: Passw
 
 async def change_user_role(database: Database, role_update: RoleUpdate) -> Optional[str]:
     user_repo = UsersRepository(database)
+    user = await user_repo.get_user_by_email(email=role_update.email)
+    if not user:
+        return f"COULD NOT FIND USER {role_update.email}"
     try:
-        await user_repo.update_user_role(role_update=role_update)
+        await user_repo.update_user_role(id=user.id, role=role_update.role)
     except Exception as e:
         return f"UPDATING USER ROLE ERROR FOR {role_update.email}: \n{e}"
     return None

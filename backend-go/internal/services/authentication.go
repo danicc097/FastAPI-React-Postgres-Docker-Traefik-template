@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"myapp-backend/internal/app/models"
+	"myapp-backend/internal/models"
 
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"

@@ -263,6 +263,7 @@ class TestAdminUserModification:
             json={"role_update": role_update.dict()},
         )
         assert res.status_code == HTTP_200_OK
+
         updated_user = await user_repo.get_user_by_email(email=role_update.email)
         assert cast(UserPublic, updated_user).role == "manager"
 

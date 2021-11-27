@@ -9,6 +9,10 @@
   "typescript.tsdk": "frontend/.yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
 
+  // go backend
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": ["-c", "./backend-go/.golangci.yml", "--issues-exit-code=0"],
+
   // backend
   "python.analysis.extraPaths": ["backend"],
   "python.analysis.autoSearchPaths": true,

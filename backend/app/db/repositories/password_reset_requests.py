@@ -4,8 +4,9 @@ import loguru
 from databases import Database
 from pydantic import EmailStr
 from starlette.status import HTTP_404_NOT_FOUND, HTTP_409_CONFLICT
+from app.core.errors import BaseAppException
 
-from app.db.repositories.base import BaseRepoException, BaseRepository
+from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.password_reset_requests import (
     PasswordResetRequest,
@@ -33,12 +34,12 @@ LIST_ALL_PASSWORD_REQUEST_USERS_QUERY = """
 ###############################################################
 
 
-class UserAlreadyRequestedError(BaseRepoException):
+class UserAlreadyRequestedError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 
 
-class RequestDoesNotExistError(BaseRepoException):
+class RequestDoesNotExistError(BaseAppException):
     def __init__(self, msg, status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
         super().__init__(msg, status_code=status_code, *args, **kwargs)
 

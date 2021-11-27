@@ -1,9 +1,5 @@
-package main
-
-import (
-	"myapp-backend/internal/app/core"
-)
+package app
 
 func main() {
-	core.ConfigureApp()
+	ConfigureApp()
 }

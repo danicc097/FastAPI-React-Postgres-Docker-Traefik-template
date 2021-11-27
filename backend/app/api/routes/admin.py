@@ -7,9 +7,11 @@ from fastapi.routing import APIRouter
 from loguru import logger
 from pydantic.networks import EmailStr
 from starlette import status
-
+from app.services.users import UsersService
 from app.api.dependencies.auth import RoleVerifier
 from app.api.dependencies.database import get_repository
+from app.api.dependencies.services import get_service
+
 from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
@@ -182,7 +184,7 @@ async def delete_notification(
     global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
 ):
     """
-    Delete a notification with id: ``id``.
+    Delete a notification by id.
     """
     async with exception_handler():
         return await global_notif_repo.delete_notification_by_id(id=id)
@@ -190,17 +192,16 @@ async def delete_notification(
 
 @router.put(
     "/update-user-role/",
-    response_model=UserPublic,
     name="admin:update-user-role",
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(RoleVerifier(Role.admin))],
 )
 async def change_user_role(
     role_update: RoleUpdate = Body(..., embed=True),
-    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> Optional[UserPublic]:
+    users_service: UsersService = Depends(get_service(UsersService)),
+) -> Optional[int]:
     """
-    Change role of user
+    Change the role of a user.
     """
     async with exception_handler():
-        return await users_repo.update_user_role(role_update=role_update)
+        await users_service.update_user_role(role_update=role_update)
