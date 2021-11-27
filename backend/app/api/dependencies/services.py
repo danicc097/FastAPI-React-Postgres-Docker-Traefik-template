@@ -4,8 +4,8 @@ from typing import Callable, Type
 from databases import Database
 from fastapi import Depends
 from starlette.requests import Request
-from app.api.dependencies.database import get_database
 
+from app.api.dependencies.database import get_database
 from app.services.base import BaseService
 
 

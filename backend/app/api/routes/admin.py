@@ -7,11 +7,10 @@ from fastapi.routing import APIRouter
 from loguru import logger
 from pydantic.networks import EmailStr
 from starlette import status
-from app.services.users import UsersService
+
 from app.api.dependencies.auth import RoleVerifier
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.services import get_service
-
 from app.api.routes.utils.errors import exception_handler
 from app.db.repositories.global_notifications import (
     GlobalNotificationsRepository,
@@ -34,6 +33,7 @@ from app.models.user import (
     UserPublic,
     UserUpdate,
 )
+from app.services.users import UsersService
 
 router = APIRouter()
 
@@ -199,7 +199,7 @@ async def delete_notification(
 async def change_user_role(
     role_update: RoleUpdate = Body(..., embed=True),
     users_service: UsersService = Depends(get_service(UsersService)),
-) -> Optional[int]:
+):
     """
     Change the role of a user.
     """

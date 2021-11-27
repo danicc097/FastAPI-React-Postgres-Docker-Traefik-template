@@ -1,1 +1,1 @@
-TODO Openapi schema v3 
+TODO Openapi schema v3

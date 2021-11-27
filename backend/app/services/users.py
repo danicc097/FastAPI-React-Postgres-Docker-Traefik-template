@@ -1,17 +1,22 @@
 from typing import Optional
+
 from databases.core import Database
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR
+from starlette.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+)
+
 from app.core.config import is_prod
 from app.core.errors import BaseAppException
 from app.db.repositories.users import UsersRepository
 from app.models.user import RoleUpdate, UserPublic
-
 from app.services.base import BaseService
 
 
 class UsersException(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_500_INTERNAL_SERVER_ERROR, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_500_INTERNAL_SERVER_ERROR):
+        super().__init__(msg, status_code=status_code)
 
 
 class UsersService(BaseService):

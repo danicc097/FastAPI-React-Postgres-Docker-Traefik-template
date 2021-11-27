@@ -5,8 +5,8 @@ from databases import Database
 from loguru import logger
 from pydantic import EmailStr
 from starlette.status import HTTP_400_BAD_REQUEST
-from app.core.errors import BaseAppException
 
+from app.core.errors import BaseAppException
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.feed import GlobalNotificationFeedItem
@@ -97,13 +97,13 @@ SELECT
 
 
 class InvalidGlobalNotificationError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_400_BAD_REQUEST):
+        super().__init__(msg, status_code=status_code)
 
 
 class InvalidParametersError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_400_BAD_REQUEST):
+        super().__init__(msg, status_code=status_code)
 
 
 ###############################################################

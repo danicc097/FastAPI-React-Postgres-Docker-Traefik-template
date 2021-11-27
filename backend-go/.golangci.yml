@@ -38,7 +38,7 @@ linters-settings:
       - internal.NewErrorf(
       - internal.WrapErrorf(
     ignorePackageGlobs:
-      - github.com/MarioCarrion/todo-api/* 
+      - github.com/MarioCarrion/todo-api/*
 issues:
   exclude-rules:
     # All tests

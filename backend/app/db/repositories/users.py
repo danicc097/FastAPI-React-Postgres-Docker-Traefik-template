@@ -124,28 +124,28 @@ UPDATE_USER_ROLE_QUERY = """
 
 
 class EmailAlreadyExistsError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_409_CONFLICT):
+        super().__init__(msg, status_code=status_code)
 
 
 class UsernameAlreadyExistsError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_409_CONFLICT, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_409_CONFLICT):
+        super().__init__(msg, status_code=status_code)
 
 
 class UserNotFoundError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_404_NOT_FOUND, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_404_NOT_FOUND):
+        super().__init__(msg, status_code=status_code)
 
 
 class IncorrectPasswordError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_400_BAD_REQUEST):
+        super().__init__(msg, status_code=status_code)
 
 
 class InvalidUpdateError(BaseAppException):
-    def __init__(self, msg, status_code=HTTP_400_BAD_REQUEST, *args, **kwargs):
-        super().__init__(msg, status_code=status_code, *args, **kwargs)
+    def __init__(self, msg, *, status_code=HTTP_400_BAD_REQUEST):
+        super().__init__(msg, status_code=status_code)
 
 
 ###############################################################################

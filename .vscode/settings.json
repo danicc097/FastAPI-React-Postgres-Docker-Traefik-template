@@ -1,45 +1,5 @@
 {
-  // frontend
-  "search.exclude": {
-    "**/.yarn": true,
-    "**/.pnp.*": true
-  },
-  "eslint.nodePath": "frontend/.yarn/sdks",
-  "prettier.prettierPath": "frontend/.yarn/sdks/prettier/index.js",
-  "typescript.tsdk": "frontend/.yarn/sdks/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-
-  // go backend
-  "go.lintTool": "golangci-lint",
-  "go.lintFlags": ["-c", "./backend-go/.golangci.yml", "--issues-exit-code=0"],
-
-  // backend
-  "python.analysis.extraPaths": ["backend"],
-  "python.analysis.autoSearchPaths": true,
-  "python.analysis.autoImportCompletions": true,
-  "python.analysis.useLibraryCodeForTypes": true,
-  "python.autoComplete.extraPaths": ["backend"],
-  "python.linting.pylintArgs": ["--init-hook='import sys; sys.path.append(\"/workspace\")'"],
-  "python.defaultInterpreterPath": "backend/.venv/bin/python",
-  "python.linting.flake8Path": "backend/.venv/bin/flake8",
-  "python.sortImports.path": "backend/.venv/bin/isort",
-  "python.linting.mypyEnabled": true,
-  "python.linting.flake8Enabled": true,
-  "python.linting.flake8Args": ["--config=backend/tox.ini"],
-  "python.formatting.blackPath": "backend/.venv/bin/black",
-  "pytest.pythonPath": "cd backend && .venv/bin/python",
-  "pytest.command": "cd backend && .venv/bin/pytest",
-  "python.linting.mypyArgs": [
-    "--ignore-missing-imports",
-    // "--follow-imports=silent",
-    "--show-column-numbers"
-  ],
-  "python.testing.pytestArgs": ["backend"],
-  "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
   "terminal.integrated.env.linux": {
     "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/:e2e/scripts/"
-  },
-  "python.formatting.provider": "black",
-  "cSpell.words": ["ondelete", "psql"]
+  }
 }

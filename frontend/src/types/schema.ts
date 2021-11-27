@@ -64,11 +64,11 @@ export interface paths {
     post: operations["admin_create_notification_api_admin_create_notification__post"];
   };
   "/api/admin/delete-notification/{id}/": {
-    /** Delete a notification with id: ``id``. */
+    /** Delete a notification by id. */
     delete: operations["admin_delete_notification_api_admin_delete_notification__id___delete"];
   };
   "/api/admin/update-user-role/": {
-    /** Change role of user */
+    /** Change the role of a user. */
     put: operations["admin_update_user_role_api_admin_update_user_role__put"];
   };
 }
@@ -539,7 +539,7 @@ export interface operations {
       };
     };
   };
-  /** Delete a notification with id: ``id``. */
+  /** Delete a notification by id. */
   admin_delete_notification_api_admin_delete_notification__id___delete: {
     parameters: {
       path: {
@@ -561,13 +561,13 @@ export interface operations {
       };
     };
   };
-  /** Change role of user */
+  /** Change the role of a user. */
   admin_update_user_role_api_admin_update_user_role__put: {
     responses: {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["UserPublic"];
+          "application/json": unknown;
         };
       };
       /** Validation Error */

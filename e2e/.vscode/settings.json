@@ -1,0 +1,8 @@
+{
+  "search.exclude": {
+    "**/node_modules": true
+  },
+  "eslint.nodePath": "node_modules/.bin/eslint",
+  "prettier.prettierPath": "node_modules/.bin/prettier",
+  "typescript.tsdk": "node_modules/.bin/typescript"
+}

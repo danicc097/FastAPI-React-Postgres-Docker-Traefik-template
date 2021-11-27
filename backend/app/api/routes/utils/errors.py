@@ -11,11 +11,11 @@ from starlette.status import (
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
 )
-from app.core.errors import BaseAppException
 
 import app.db.repositories.global_notifications as global_notif_repo
 import app.db.repositories.password_reset_requests as pwd_reset_req_repo
 import app.db.repositories.users as users_repo
+from app.core.errors import BaseAppException
 
 UNHANDLED_EXCEPTION = HTTPException(
     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
