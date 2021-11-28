@@ -29,7 +29,7 @@ func (p *PostgreSQLC) Close() {
 }
 
 func (p *PostgreSQLC) FindByNConst(nconst string) (Name, error) {
-	row, err := New(p.db).SelectName(context.Background(), sql.NullString{String: nconst, Valid: true})
+	row, err := New(p.db).GetUserByUsername(context.Background(), "admin")
 	fmt.Println(row, err)
 	if err != nil {
 		return Name{}, err

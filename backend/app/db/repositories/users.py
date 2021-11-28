@@ -81,7 +81,7 @@ UPDATE_USER_BY_ID_QUERY = """
 
 LIST_ALL_USERS_QUERY = """
     SELECT *
-    FROM users
+    FROM users;
 """
 
 LIST_ALL_NON_VERIFIED_USERS_QUERY = """

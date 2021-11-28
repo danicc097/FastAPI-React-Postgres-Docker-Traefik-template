@@ -51,6 +51,29 @@ services:
       - $DB_PORT_DEV:5432
     restart: unless-stopped
 
+  myapp_db_go_dev:
+    image: postgres:13-alpine
+    container_name: postgres_db_go_myapp_dev
+    user: postgres
+    networks:
+      - traefik-net
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+      PGDATA: /var/lib/postgresql/data
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: dbname
+
+    volumes:
+      - myapp_pg_data_go_dev:/var/lib/postgresql/data/
+    # env_file:
+    # - ./.env
+    # - ./backend-go/.env # requires same env as backend
+    ports:
+      - $DB_PORT_GO_DEV:5432
+    restart: unless-stopped
+
   myapp_frontend_dev:
     container_name: frontend_myapp_dev
     networks:
@@ -88,6 +111,7 @@ volumes:
   #   name: myapp_dev_node_modules
   myapp_pg_data_dev:
   myapp_logs_dev:
+  myapp_pg_data_go_dev:
 
 networks:
   traefik-net:

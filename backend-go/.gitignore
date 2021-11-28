@@ -1,5 +1,6 @@
 vendor/
 bin/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -13,6 +14,9 @@ bin/
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# environments
 .env
 
+# custom
 migrate
+dump_*

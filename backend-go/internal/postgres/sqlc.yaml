@@ -7,7 +7,7 @@ packages:
     path: "."
     queries:
       - "./queries"
-    schema: "./db/migrations/"
+    schema: "./migrations/"
     engine: "postgresql"
     emit_json_tags: false
     emit_db_tags: true

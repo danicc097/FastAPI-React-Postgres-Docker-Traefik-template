@@ -1,0 +1,42 @@
+name: Go
+on: [push, pull_request]
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:11
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        # postgres container does not provide a healthcheck by default
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Get dependencies
+        run: |
+          go get -v -t -d ./...
+
+      - name: Build
+        run: go build -v .
+
+      - name: Test ivents
+        run: go test -v ./...
+        env:
+          DB_HOST: localhost
+          DB_PORT: ${{ job.services.postgres.ports['5432'] }}
+          DB_USER: postgres
+          DB_TEST_NAME: postgres
+          DB_PASSWORD: postgres

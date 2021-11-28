@@ -1,1 +1,0 @@
-ALTER TABLE names DROP CONSTRAINT names_pkey;

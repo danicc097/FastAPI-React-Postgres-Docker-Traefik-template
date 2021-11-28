@@ -25,7 +25,7 @@ go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
 Then you can run `server.go` with the PostgreSQL and memcached configuration:
 
 ```
-DATABASE_URL=postgres://user:password@localhost:5432/dbname?sslmode=disable \
+DATABASE_URL=postgres://postgres:password@localhost:5432/dbname?sslmode=disable \
   go run .
 ```
 
@@ -58,9 +58,14 @@ curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.1/migr
 Then, assuming you used docker, you can run:
 
 ```
-./migrate -path internal/postgres/sqlc/db/migrations/ -database postgres://user:password@localhost:5432/dbname?sslmode=disable up
+./migrate -path internal/postgres/migrations/ -database postgres://postgres:password@localhost:5432/dbname?sslmode=disable up
 ```
 
+To create new migrations:
+
+```
+./migrate create -ext sql -dir internal/postgres/migrations/ -seq <FILENAME>
+```
 ### Load testing data
 
 You can use the tool I build during my [Implementing Complex Pipelines in Go](https://mariocarrion.com/2020/08/27/go-implementing-complex-pipelines-part-5.html) series, install it using:
@@ -72,7 +77,7 @@ go install github.com/MarioCarrion/complex-pipelines/part5
 Then run it using:
 
 ```
-DATABASE_URL="postgres://user:password@localhost:5432/dbname?sslmode=disable" part5
+DATABASE_URL="postgres://postgres:password@localhost:5432/dbname?sslmode=disable" part5
 ```
 
 Sadly, at the moment this tool does not provide any progress feedback; but it should finish after a couple of minutes.

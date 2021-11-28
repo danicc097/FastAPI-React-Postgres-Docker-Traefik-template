@@ -16,6 +16,17 @@ This file is run whenever the alembic migration tool is invoked and runs the app
 
 1. Execute `alembic upgrade head` to run all migrations
 
+## EXPORT MIGRATIONS AS PLAIN SQL
+
+Backup first with ``bin/db``, then inside the container run:
+
+```bash
+alembic downgrade <current_revision>:base --sql 
+alembic upgrade head --sql
+```
+
+**NOTE**: to export the whole schema, e.g. migrating from alembic to plain sql, export with ``pg_dumpall`` and remove alembic references. DBeaver can also be used.
+
 # Backup and restore data considering schema changes
 
 ## (not recommended) Inplace editing of a revision .py file
