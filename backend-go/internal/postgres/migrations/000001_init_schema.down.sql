@@ -9,4 +9,3 @@ DROP TABLE public.profiles;
 DROP TABLE public.users;
 
 DROP FUNCTION public.update_updated_at_column;
-

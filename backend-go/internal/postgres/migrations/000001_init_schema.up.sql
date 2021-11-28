@@ -362,4 +362,3 @@ ALTER TABLE ONLY public.profiles
 --
 ALTER TABLE ONLY public.pwd_reset_req
   ADD CONSTRAINT pwd_reset_req_email_fkey FOREIGN KEY (email) REFERENCES public.users (email) ON DELETE CASCADE;
-

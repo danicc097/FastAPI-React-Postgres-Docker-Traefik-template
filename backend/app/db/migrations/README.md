@@ -21,7 +21,7 @@ This file is run whenever the alembic migration tool is invoked and runs the app
 Backup first with ``bin/db``, then inside the container run:
 
 ```bash
-alembic downgrade <current_revision>:base --sql 
+alembic downgrade <current_revision>:base --sql
 alembic upgrade head --sql
 ```
 

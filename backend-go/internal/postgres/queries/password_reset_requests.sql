@@ -15,4 +15,3 @@ SELECT
   *
 FROM
   pwd_reset_req;
-

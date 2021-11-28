@@ -98,4 +98,3 @@ UNION (
 ORDER BY
   event_timestamp DESC
 LIMIT @page_chunk_size;
-
