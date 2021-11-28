@@ -29,48 +29,6 @@ func main() {
 		_ = json.NewEncoder(w).Encode(val)
 	}
 
-	//-
-
-	dbSQL, err := NewPostgreSQLsql()
-	if err != nil {
-		log.Fatalf("Could not initialize Database connection using sqlx %s", err)
-	}
-	defer dbSQL.Close()
-
-	router.HandleFunc("/names/sql/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-
-		name, err := dbSQL.FindByNConst(id)
-		if err != nil {
-			renderJSON(w, &Error{Message: err.Error()}, http.StatusInternalServerError)
-			return
-		}
-
-		renderJSON(w, &name, http.StatusOK)
-	})
-
-	//-
-
-	dbSQLX, err := NewPostgreSQLsqlx()
-	if err != nil {
-		log.Fatalf("Could not initialize Database connection using sqlx %s", err)
-	}
-	defer dbSQLX.Close()
-
-	router.HandleFunc("/names/sqlx/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
-
-		name, err := dbSQLX.FindByNConst(id)
-		if err != nil {
-			renderJSON(w, &Error{Message: err.Error()}, http.StatusInternalServerError)
-			return
-		}
-
-		renderJSON(w, &name, http.StatusOK)
-	})
-
-	//-
-
 	pgxDB, err := NewPostgreSQLpgx()
 	if err != nil {
 		log.Fatalf("Could not initialize Database connection using pgx %s", err)
@@ -88,14 +46,33 @@ func main() {
 
 		renderJSON(w, &name, http.StatusOK)
 	})
+	//-
+
+	dbSQLC, err := NewPostgreSQLC()
+	if err != nil {
+		log.Fatalf("Could not initialize Database connection using sqlc %s", err)
+	}
+	defer dbSQLC.Close()
+
+	router.HandleFunc("/names/sqlc/{id}", func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+
+		name, err := dbSQLC.FindByNConst(id)
+		if err != nil {
+			renderJSON(w, &Error{Message: err.Error()}, http.StatusInternalServerError)
+			return
+		}
+
+		renderJSON(w, &name, http.StatusOK)
+	})
 
 	//-
 
-	fmt.Println("Starting server :8080")
+	fmt.Println("Starting server :8081")
 
 	srv := &http.Server{
 		Handler:      router,
-		Addr:         ":8080",
+		Addr:         ":8081",
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
