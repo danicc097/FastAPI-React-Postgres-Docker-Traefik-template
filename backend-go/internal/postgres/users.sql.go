@@ -9,12 +9,9 @@ import (
 )
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
-FROM
-  users
-WHERE
-  email = $1
+SELECT id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+FROM users
+WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (Users, error) {
@@ -38,12 +35,9 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (Users, erro
 }
 
 const getUserById = `-- name: GetUserById :one
-SELECT
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
-FROM
-  users
-WHERE
-  id = $1
+SELECT id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+FROM users
+WHERE id = $1
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id int32) (Users, error) {
@@ -67,12 +61,9 @@ func (q *Queries) GetUserById(ctx context.Context, id int32) (Users, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
-FROM
-  users
-WHERE
-  username = $1
+SELECT id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+FROM users
+WHERE username = $1
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (Users, error) {
@@ -96,12 +87,9 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (Users
 }
 
 const listAllNonVerifiedUsers = `-- name: ListAllNonVerifiedUsers :many
-SELECT
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
-FROM
-  users
-WHERE
-  is_verified = 'false'
+SELECT id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+FROM users
+WHERE is_verified = 'false'
 `
 
 func (q *Queries) ListAllNonVerifiedUsers(ctx context.Context) ([]Users, error) {
@@ -141,10 +129,8 @@ func (q *Queries) ListAllNonVerifiedUsers(ctx context.Context) ([]Users, error) 
 }
 
 const listAllUsers = `-- name: ListAllUsers :many
-SELECT
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
-FROM
-  users
+SELECT id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+FROM users
 `
 
 func (q *Queries) ListAllUsers(ctx context.Context) ([]Users, error) {
@@ -184,10 +170,15 @@ func (q *Queries) ListAllUsers(ctx context.Context) ([]Users, error) {
 }
 
 const registerAdmin = `-- name: RegisterAdmin :one
-INSERT INTO users (username, email, "password", salt, is_superuser, is_verified)
-  VALUES ($1, $2, $3, $4, TRUE, TRUE)
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+INSERT INTO users (
+    username,
+    email,
+    password,
+    salt,
+    is_superuser,
+    is_verified
+  )
+VALUES ($1, $2, $3, $4, TRUE, TRUE) RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type RegisterAdminParams struct {
@@ -223,10 +214,8 @@ func (q *Queries) RegisterAdmin(ctx context.Context, arg RegisterAdminParams) (U
 }
 
 const registerNewUser = `-- name: RegisterNewUser :one
-INSERT INTO users (username, email, "password", salt)
-  VALUES ($1, $2, $3, $4)
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+INSERT INTO users (username, email, password, salt)
+VALUES ($1, $2, $3, $4) RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type RegisterNewUserParams struct {
@@ -262,10 +251,8 @@ func (q *Queries) RegisterNewUser(ctx context.Context, arg RegisterNewUserParams
 }
 
 const registerVerifiedUser = `-- name: RegisterVerifiedUser :one
-INSERT INTO users (username, email, "password", salt, is_verified)
-  VALUES ($1, $2, $3, $4, TRUE)
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+INSERT INTO users (username, email, password, salt, is_verified)
+VALUES ($1, $2, $3, $4, TRUE) RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type RegisterVerifiedUserParams struct {
@@ -301,15 +288,10 @@ func (q *Queries) RegisterVerifiedUser(ctx context.Context, arg RegisterVerified
 }
 
 const resetUserPassword = `-- name: ResetUserPassword :one
-UPDATE
-  users
-SET
-  "password" = $1,
+UPDATE users
+SET password = $1,
   salt = $2
-WHERE
-  email = $3
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+WHERE email = $3 RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type ResetUserPasswordParams struct {
@@ -339,14 +321,9 @@ func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordPa
 }
 
 const updateLastNotificationAt = `-- name: UpdateLastNotificationAt :one
-UPDATE
-  users
-SET
-  last_notification_at = $1
-WHERE
-  id = $2
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+UPDATE users
+SET last_notification_at = $1
+WHERE id = $2 RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type UpdateLastNotificationAtParams struct {
@@ -375,32 +352,47 @@ func (q *Queries) UpdateLastNotificationAt(ctx context.Context, arg UpdateLastNo
 }
 
 const updateUserById = `-- name: UpdateUserById :one
-UPDATE
-  users
-SET
-  "password" = $1,
-  salt = $2,
-  username = $3,
-  email = $4
-WHERE
-  id = $5
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+UPDATE users
+SET password = CASE
+    WHEN $1::boolean THEN $2
+    ELSE password
+  END,
+  salt = CASE
+    WHEN $3::boolean THEN $4
+    ELSE salt
+  END,
+  username = CASE
+    WHEN $5::boolean THEN $6
+    ELSE username
+  END,
+  email = CASE
+    WHEN $7::boolean THEN $8
+    ELSE email
+  END
+WHERE id = $9 RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type UpdateUserByIdParams struct {
-	Password string `db:"password"`
-	Salt     string `db:"salt"`
-	Username string `db:"username"`
-	Email    string `db:"email"`
-	ID       int32  `db:"id"`
+	PasswordDoUpdate bool   `db:"password_do_update"`
+	Password         string `db:"password"`
+	SaltDoUpdate     bool   `db:"salt_do_update"`
+	Salt             string `db:"salt"`
+	UsernameDoUpdate bool   `db:"username_do_update"`
+	Username         string `db:"username"`
+	EmailDoUpdate    bool   `db:"email_do_update"`
+	Email            string `db:"email"`
+	ID               int32  `db:"id"`
 }
 
 func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) (Users, error) {
 	row := q.db.QueryRowContext(ctx, updateUserById,
+		arg.PasswordDoUpdate,
 		arg.Password,
+		arg.SaltDoUpdate,
 		arg.Salt,
+		arg.UsernameDoUpdate,
 		arg.Username,
+		arg.EmailDoUpdate,
 		arg.Email,
 		arg.ID,
 	)
@@ -423,14 +415,9 @@ func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) 
 }
 
 const updateUserRole = `-- name: UpdateUserRole :one
-UPDATE
-  users
-SET
-  "role" = $1
-WHERE
-  id = $2
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+UPDATE users
+SET role = $1
+WHERE id = $2 RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type UpdateUserRoleParams struct {
@@ -459,14 +446,9 @@ func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) 
 }
 
 const verifyUserByEmail = `-- name: VerifyUserByEmail :one
-UPDATE
-  users
-SET
-  is_verified = 'true'
-WHERE
-  email = $1
-RETURNING
-  id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+UPDATE users
+SET is_verified = 'true'
+WHERE email = $1 RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 func (q *Queries) VerifyUserByEmail(ctx context.Context, email string) (Users, error) {

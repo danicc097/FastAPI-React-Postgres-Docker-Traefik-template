@@ -12,15 +12,12 @@ import (
 )
 
 const checkHasNewNotifications = `-- name: CheckHasNewNotifications :one
-SELECT
-  EXISTS (
-    SELECT
-      1
-    FROM
-      global_notifications
-    WHERE
-      updated_at > $1
-      AND receiver_role = ANY ($2::text[])) AS has_new_notifications
+SELECT EXISTS (
+    SELECT 1
+    FROM global_notifications
+    WHERE updated_at > $1
+      AND receiver_role = ANY ($2::text [ ])
+  ) AS has_new_notifications
 `
 
 type CheckHasNewNotificationsParams struct {
@@ -37,9 +34,14 @@ func (q *Queries) CheckHasNewNotifications(ctx context.Context, arg CheckHasNewN
 
 const createNotification = `-- name: CreateNotification :one
 INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
-  VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING
-  id, sender, receiver_role, title, body, label, link, created_at, updated_at
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6
+  ) RETURNING id, sender, receiver_role, title, body, label, link, created_at, updated_at
 `
 
 type CreateNotificationParams struct {
@@ -77,9 +79,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 
 const deleteNotification = `-- name: DeleteNotification :exec
 DELETE FROM global_notifications
-WHERE id = $1
-RETURNING
-  id, sender, receiver_role, title, body, label, link, created_at, updated_at
+WHERE id = $1 RETURNING id, sender, receiver_role, title, body, label, link, created_at, updated_at
 `
 
 func (q *Queries) DeleteNotification(ctx context.Context, id int32) error {
@@ -88,42 +88,39 @@ func (q *Queries) DeleteNotification(ctx context.Context, id int32) error {
 }
 
 const getNotificationsByLastRead = `-- name: GetNotificationsByLastRead :many
-SELECT
-  notifications_feed.id, notifications_feed.sender, notifications_feed.receiver_role, notifications_feed.title, notifications_feed.body, notifications_feed.label, notifications_feed.link, notifications_feed.created_at, notifications_feed.updated_at, event_timestamp, event_type, gn.id, gn.sender, gn.receiver_role, gn.title, gn.body, gn.label, gn.link, gn.created_at, gn.updated_at, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at,
-  ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
-FROM ((
-    -- Rows where the notification has been updated at some point.
-    SELECT
-      id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-      updated_at AS event_timestamp,
-      -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
-      'is_update' AS event_type
-    FROM
-      global_notifications AS gn
-    WHERE
-      gn.updated_at > $1
-      AND receiver_role = ANY ($2::text[])
-      AND updated_at != created_at
-    ORDER BY
-      updated_at DESC
-    LIMIT $3)
-UNION (
-  -- All rows.
-  SELECT
-    id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-    created_at AS event_timestamp,
-    -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
-    'is_create' AS event_type
-  FROM
-    global_notifications
-  WHERE
-    created_at > $1
-    AND receiver_role = ANY ($2::text[])
-  ORDER BY
-    created_at DESC
-  LIMIT $3)) AS notifications_feed
-ORDER BY
-  event_timestamp DESC
+SELECT notifications_feed.id, notifications_feed.sender, notifications_feed.receiver_role, notifications_feed.title, notifications_feed.body, notifications_feed.label, notifications_feed.link, notifications_feed.created_at, notifications_feed.updated_at, event_timestamp, event_type, gn.id, gn.sender, gn.receiver_role, gn.title, gn.body, gn.label, gn.link, gn.created_at, gn.updated_at, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at,
+  ROW_NUMBER() OVER (
+    ORDER BY event_timestamp DESC
+  ) AS row_number
+FROM (
+    (
+      -- Rows where the notification has been updated at some point.
+      SELECT id, sender, receiver_role, title, body, label, link, created_at, updated_at,
+        updated_at AS event_timestamp,
+        -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
+        'is_update' AS event_type
+      FROM global_notifications AS gn
+      WHERE gn.updated_at > $1
+        AND receiver_role = ANY ($2::text [ ])
+        AND updated_at != created_at
+      ORDER BY updated_at DESC
+      LIMIT $3
+    )
+    UNION
+    (
+      -- All rows.
+      SELECT id, sender, receiver_role, title, body, label, link, created_at, updated_at,
+        created_at AS event_timestamp,
+        -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
+        'is_create' AS event_type
+      FROM global_notifications
+      WHERE created_at > $1
+        AND receiver_role = ANY ($2::text [ ])
+      ORDER BY created_at DESC
+      LIMIT $3
+    )
+  ) AS notifications_feed
+ORDER BY event_timestamp DESC
 LIMIT $3
 `
 
@@ -221,42 +218,39 @@ func (q *Queries) GetNotificationsByLastRead(ctx context.Context, arg GetNotific
 }
 
 const getNotificationsByStartingDate = `-- name: GetNotificationsByStartingDate :many
-SELECT
-  notifications_feed.id, notifications_feed.sender, notifications_feed.receiver_role, notifications_feed.title, notifications_feed.body, notifications_feed.label, notifications_feed.link, notifications_feed.created_at, notifications_feed.updated_at, event_timestamp, event_type, gn.id, gn.sender, gn.receiver_role, gn.title, gn.body, gn.label, gn.link, gn.created_at, gn.updated_at, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at,
-  ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
-FROM ((
-    -- Rows where the notification has been updated at some point.
-    SELECT
-      id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-      updated_at AS event_timestamp,
-      -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
-      'is_update' AS event_type
-    FROM
-      global_notifications AS gn
-    WHERE
-      gn.updated_at < $1
-      AND receiver_role = ANY ($2::text[])
-      AND updated_at != created_at
-    ORDER BY
-      updated_at DESC
-    LIMIT $3)
-UNION (
-  -- All rows.
-  SELECT
-    id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-    created_at AS event_timestamp,
-    -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
-    'is_create' AS event_type
-  FROM
-    global_notifications
-  WHERE
-    created_at < $1
-    AND receiver_role = ANY ($2::text[])
-  ORDER BY
-    created_at DESC
-  LIMIT $3)) AS notifications_feed
-ORDER BY
-  event_timestamp DESC
+SELECT notifications_feed.id, notifications_feed.sender, notifications_feed.receiver_role, notifications_feed.title, notifications_feed.body, notifications_feed.label, notifications_feed.link, notifications_feed.created_at, notifications_feed.updated_at, event_timestamp, event_type, gn.id, gn.sender, gn.receiver_role, gn.title, gn.body, gn.label, gn.link, gn.created_at, gn.updated_at, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at,
+  ROW_NUMBER() OVER (
+    ORDER BY event_timestamp DESC
+  ) AS row_number
+FROM (
+    (
+      -- Rows where the notification has been updated at some point.
+      SELECT id, sender, receiver_role, title, body, label, link, created_at, updated_at,
+        updated_at AS event_timestamp,
+        -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
+        'is_update' AS event_type
+      FROM global_notifications AS gn
+      WHERE gn.updated_at < $1
+        AND receiver_role = ANY ($2::text [ ])
+        AND updated_at != created_at
+      ORDER BY updated_at DESC
+      LIMIT $3
+    )
+    UNION
+    (
+      -- All rows.
+      SELECT id, sender, receiver_role, title, body, label, link, created_at, updated_at,
+        created_at AS event_timestamp,
+        -- define a new column ` + "`" + `` + "`" + `event_type` + "`" + `` + "`" + ` and set its value
+        'is_create' AS event_type
+      FROM global_notifications
+      WHERE created_at < $1
+        AND receiver_role = ANY ($2::text [ ])
+      ORDER BY created_at DESC
+      LIMIT $3
+    )
+  ) AS notifications_feed
+ORDER BY event_timestamp DESC
 LIMIT $3
 `
 

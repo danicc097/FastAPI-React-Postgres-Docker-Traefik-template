@@ -57,7 +57,7 @@ func main() {
 	router.HandleFunc("/names/sqlc/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 
-		name, err := dbSQLC.FindByNConst(id)
+		name, err := dbSQLC.UpdateUser(id)
 		if err != nil {
 			renderJSON(w, &Error{Message: err.Error()}, http.StatusInternalServerError)
 			return

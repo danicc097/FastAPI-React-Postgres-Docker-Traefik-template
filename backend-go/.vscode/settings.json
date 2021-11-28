@@ -1,5 +1,18 @@
 {
   "go.lintTool": "golangci-lint",
   "go.lintFlags": ["-c", "./.golangci.yml", "--issues-exit-code=0"],
-  "go.lintOnSave": "file"
+  "go.lintOnSave": "file",
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "askForPassword": false,
+      "password": "password",
+      "driver": "PostgreSQL",
+      "name": "go-backend",
+      "database": "dbname",
+      "connectString": "postgres://postgres:password@localhost:5432/dbname?sslmode=disable"
+    }
+  ]
 }

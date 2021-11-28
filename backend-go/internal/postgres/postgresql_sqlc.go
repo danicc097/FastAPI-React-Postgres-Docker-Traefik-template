@@ -28,7 +28,7 @@ func (p *PostgreSQLC) Close() {
 	p.db.Close()
 }
 
-func (p *PostgreSQLC) FindByNConst(nconst string) (Name, error) {
+func (p *PostgreSQLC) UpdateUser(nconst string) (Name, error) {
 	row, err := New(p.db).GetUserByUsername(context.Background(), "admin")
 	fmt.Println(row, err)
 	if err != nil {

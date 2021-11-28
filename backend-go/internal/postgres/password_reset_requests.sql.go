@@ -10,9 +10,7 @@ import (
 
 const createPasswordResetRequest = `-- name: CreatePasswordResetRequest :one
 INSERT INTO pwd_reset_req (email, message)
-  VALUES ($1, $2)
-RETURNING
-  id, email, message, created_at, updated_at
+VALUES ($1, $2) RETURNING id, email, message, created_at, updated_at
 `
 
 type CreatePasswordResetRequestParams struct {
@@ -35,9 +33,7 @@ func (q *Queries) CreatePasswordResetRequest(ctx context.Context, arg CreatePass
 
 const deletePasswordResetRequest = `-- name: DeletePasswordResetRequest :exec
 DELETE FROM pwd_reset_req
-WHERE id = $1
-RETURNING
-  id, email, message, created_at, updated_at
+WHERE id = $1 RETURNING id, email, message, created_at, updated_at
 `
 
 func (q *Queries) DeletePasswordResetRequest(ctx context.Context, id int32) error {
@@ -46,10 +42,8 @@ func (q *Queries) DeletePasswordResetRequest(ctx context.Context, id int32) erro
 }
 
 const getPasswordResetRequests = `-- name: GetPasswordResetRequests :many
-SELECT
-  id, email, message, created_at, updated_at
-FROM
-  pwd_reset_req
+SELECT id, email, message, created_at, updated_at
+FROM pwd_reset_req
 `
 
 func (q *Queries) GetPasswordResetRequests(ctx context.Context) ([]PwdResetReq, error) {

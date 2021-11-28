@@ -11,9 +11,13 @@ import (
 
 const createProfile = `-- name: CreateProfile :one
 INSERT INTO profiles (full_name, phone_number, bio, image, user_id)
-  VALUES ($1, $2, $3, $4, $5)
-RETURNING
-  id, full_name, phone_number, bio, image, user_id, created_at, updated_at
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5
+  ) RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at
 `
 
 type CreateProfileParams struct {
@@ -47,12 +51,9 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (P
 }
 
 const getProfileById = `-- name: GetProfileById :one
-SELECT
-  id, full_name, phone_number, bio, image, user_id, created_at, updated_at
-FROM
-  profiles
-WHERE
-  user_id = $1
+SELECT id, full_name, phone_number, bio, image, user_id, created_at, updated_at
+FROM profiles
+WHERE user_id = $1
 `
 
 func (q *Queries) GetProfileById(ctx context.Context, userID sql.NullInt32) (Profiles, error) {
@@ -72,8 +73,7 @@ func (q *Queries) GetProfileById(ctx context.Context, userID sql.NullInt32) (Pro
 }
 
 const getProfileByUsername = `-- name: GetProfileByUsername :one
-SELECT
-  p.id,
+SELECT p.id,
   u.email AS email,
   u.username AS username,
   full_name,
@@ -83,17 +83,13 @@ SELECT
   user_id,
   p.created_at,
   p.updated_at
-FROM
-  profiles p
+FROM profiles p
   INNER JOIN users u ON p.user_id = u.id
-WHERE
-  user_id = (
-    SELECT
-      id
-    FROM
-      users
-    WHERE
-      username = $1::text)
+WHERE user_id = (
+    SELECT id
+    FROM users
+    WHERE username = $1::text
+  )
 `
 
 type GetProfileByUsernameRow struct {
@@ -128,32 +124,47 @@ func (q *Queries) GetProfileByUsername(ctx context.Context, username string) (Ge
 }
 
 const updateProfile = `-- name: UpdateProfile :one
-UPDATE
-  profiles
-SET
-  full_name = $1,
-  phone_number = $2,
-  bio = $3,
-  image = $4
-WHERE
-  user_id = $5
-RETURNING
-  id, full_name, phone_number, bio, image, user_id, created_at, updated_at
+UPDATE profiles
+SET full_name = CASE
+    WHEN $1::boolean THEN $2
+    ELSE full_name
+  END,
+  phone_number = CASE
+    WHEN $3::boolean THEN $4
+    ELSE phone_number
+  END,
+  bio = CASE
+    WHEN $5::boolean THEN $6
+    ELSE bio
+  END,
+  image = CASE
+    WHEN $7::boolean THEN $8
+    ELSE image
+  END
+WHERE user_id = $9 RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at
 `
 
 type UpdateProfileParams struct {
-	FullName    sql.NullString `db:"full_name"`
-	PhoneNumber sql.NullString `db:"phone_number"`
-	Bio         sql.NullString `db:"bio"`
-	Image       sql.NullString `db:"image"`
-	UserID      sql.NullInt32  `db:"user_id"`
+	FullNameDoUpdate    bool           `db:"full_name_do_update"`
+	FullName            sql.NullString `db:"full_name"`
+	PhoneNumberDoUpdate bool           `db:"phone_number_do_update"`
+	PhoneNumber         sql.NullString `db:"phone_number"`
+	BioDoUpdate         bool           `db:"bio_do_update"`
+	Bio                 sql.NullString `db:"bio"`
+	ImageDoUpdate       bool           `db:"image_do_update"`
+	Image               sql.NullString `db:"image"`
+	UserID              sql.NullInt32  `db:"user_id"`
 }
 
 func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) (Profiles, error) {
 	row := q.db.QueryRowContext(ctx, updateProfile,
+		arg.FullNameDoUpdate,
 		arg.FullName,
+		arg.PhoneNumberDoUpdate,
 		arg.PhoneNumber,
+		arg.BioDoUpdate,
 		arg.Bio,
+		arg.ImageDoUpdate,
 		arg.Image,
 		arg.UserID,
 	)
