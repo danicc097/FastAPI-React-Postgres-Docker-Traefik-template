@@ -3,8 +3,9 @@ version: "1"
 # https://docs.sqlc.dev/en/stable/reference/config.html
 
 packages:
-  - name: "main"
-    path: "."
+  - name: "db"
+    path: "db"
+    sql_package: "pgx/v4"
     queries:
       - "./queries"
     schema: "./migrations/"
