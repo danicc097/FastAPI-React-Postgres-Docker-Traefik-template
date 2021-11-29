@@ -27,7 +27,7 @@ RETURNING
   *;
 
 -- name: RegisterVerifiedUser :one
-INSERT INTO "users" ("username", "email", "password, salt", "is_verified")
+INSERT INTO "users" ("username", "email", "password", "salt", "is_verified")
   VALUES (@username, @email, @password, @salt, TRUE)
 RETURNING
   *;

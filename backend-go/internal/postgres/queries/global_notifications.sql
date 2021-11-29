@@ -30,12 +30,12 @@ FROM ((
     SELECT
       *,
       "updated_at" AS event_timestamp,
-      -- define a new column ``event_type`` and set its value
+      -- define a new column event_type and set its value
       'is_update' AS event_type
     FROM
-      "global_notifications" AS gn
+      "global_notifications"
     WHERE
-      gn.updated_at > @last_notification_at
+      "global_notifications"."updated_at" > @last_notification_at
       AND "receiver_role" = ANY (@roles::text[])
       AND "updated_at" != "created_at"
     ORDER BY
@@ -46,7 +46,7 @@ UNION (
   SELECT
     *,
     "created_at" AS event_timestamp,
-    -- define a new column ``event_type`` and set its value
+    -- define a new column event_type and set its value
     'is_create' AS event_type
   FROM
     "global_notifications"
@@ -69,12 +69,12 @@ FROM ((
     SELECT
       *,
       "updated_at" AS event_timestamp,
-      -- define a new column ``event_type`` and set its value
+      -- define a new column event_type and set its value
       'is_update' AS event_type
     FROM
-      "global_notifications" AS gn
+      "global_notifications"
     WHERE
-      gn.updated_at < @starting_date
+      "global_notifications"."updated_at" < @starting_date
       AND "receiver_role" = ANY (@roles::text[])
       AND "updated_at" != "created_at"
     ORDER BY
@@ -85,7 +85,7 @@ UNION (
   SELECT
     *,
     "created_at" AS event_timestamp,
-    -- define a new column ``event_type`` and set its value
+    -- define a new column event_type and set its value
     'is_create' AS event_type
   FROM
     "global_notifications"
