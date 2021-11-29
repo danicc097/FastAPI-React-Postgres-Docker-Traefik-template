@@ -1,8 +1,6 @@
 .mypy_cache/
 .pytest_cache/
 openapi.json
-# bug due to having backend out of vscode workspace
-/Pipfile
 myapp-logs
 backend/logs
 frontend/logs

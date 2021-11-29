@@ -27,7 +27,6 @@ from app.services.authorization import ROLE_PERMISSIONS
 
 def _fetch_notifications_query(date_condition: str) -> str:
     return f"""
---sql
 SELECT
   *,
   ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
