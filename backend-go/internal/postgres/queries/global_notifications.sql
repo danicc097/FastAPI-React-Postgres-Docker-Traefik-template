@@ -1,12 +1,12 @@
 -- name: CreateNotification :one
-INSERT INTO global_notifications (sender, receiver_role, title, body, label, link)
+INSERT INTO "global_notifications" ("sender", "receiver_role", "title", "body", "label", "link")
   VALUES (@sender, @receiver_role, @title, @body, @label, @link)
 RETURNING
   *;
 
 -- name: DeleteNotification :exec
-DELETE FROM global_notifications
-WHERE id = @id
+DELETE FROM "global_notifications"
+WHERE "id" = @id
 RETURNING
   *;
 
@@ -16,10 +16,10 @@ SELECT
     SELECT
       1
     FROM
-      global_notifications
+      "global_notifications"
     WHERE
-      updated_at > @last_notification_at
-      AND receiver_role = ANY (@roles::text[])) AS has_new_notifications;
+      "updated_at" > @last_notification_at
+      AND "receiver_role" = ANY (@roles::text[])) AS has_new_notifications;
 
 -- name: GetNotificationsByLastRead :many
 SELECT
@@ -29,32 +29,32 @@ FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
       *,
-      updated_at AS event_timestamp,
+      "updated_at" AS event_timestamp,
       -- define a new column ``event_type`` and set its value
       'is_update' AS event_type
     FROM
-      global_notifications AS gn
+      "global_notifications" AS gn
     WHERE
       gn.updated_at > @last_notification_at
-      AND receiver_role = ANY (@roles::text[])
-      AND updated_at != created_at
+      AND "receiver_role" = ANY (@roles::text[])
+      AND "updated_at" != "created_at"
     ORDER BY
-      updated_at DESC
+      "updated_at" DESC
     LIMIT @page_chunk_size)
 UNION (
   -- All rows.
   SELECT
     *,
-    created_at AS event_timestamp,
+    "created_at" AS event_timestamp,
     -- define a new column ``event_type`` and set its value
     'is_create' AS event_type
   FROM
-    global_notifications
+    "global_notifications"
   WHERE
-    created_at > @last_notification_at
+    "created_at" > @last_notification_at
     AND receiver_role = ANY (@roles::text[])
   ORDER BY
-    created_at DESC
+    "created_at" DESC
   LIMIT @page_chunk_size)) AS notifications_feed
 ORDER BY
   event_timestamp DESC
@@ -68,32 +68,32 @@ FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
       *,
-      updated_at AS event_timestamp,
+      "updated_at" AS event_timestamp,
       -- define a new column ``event_type`` and set its value
       'is_update' AS event_type
     FROM
-      global_notifications AS gn
+      "global_notifications" AS gn
     WHERE
       gn.updated_at < @starting_date
-      AND receiver_role = ANY (@roles::text[])
-      AND updated_at != created_at
+      AND "receiver_role" = ANY (@roles::text[])
+      AND "updated_at" != "created_at"
     ORDER BY
-      updated_at DESC
+      "updated_at" DESC
     LIMIT @page_chunk_size)
 UNION (
   -- All rows.
   SELECT
     *,
-    created_at AS event_timestamp,
+    "created_at" AS event_timestamp,
     -- define a new column ``event_type`` and set its value
     'is_create' AS event_type
   FROM
-    global_notifications
+    "global_notifications"
   WHERE
-    created_at < @starting_date
-    AND receiver_role = ANY (@roles::text[])
+    "created_at" < @starting_date
+    AND "receiver_role" = ANY (@roles::text[])
   ORDER BY
-    created_at DESC
+    "created_at" DESC
   LIMIT @page_chunk_size)) AS notifications_feed
 ORDER BY
   event_timestamp DESC

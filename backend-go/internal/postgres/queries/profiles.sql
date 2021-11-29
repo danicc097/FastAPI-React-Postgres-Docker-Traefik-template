@@ -1,5 +1,5 @@
 -- name: CreateProfile :one
-INSERT INTO profiles (full_name, phone_number, bio, image, user_id)
+INSERT INTO "profiles" ("full_name", "phone_number", "bio", "image", "user_id")
   VALUES (@full_name, @phone_number, @bio, @image, @user_id)
 RETURNING
   *;
@@ -8,60 +8,60 @@ RETURNING
 SELECT
   *
 FROM
-  profiles
+  "profiles"
 WHERE
-  user_id = @user_id;
+  "user_id" = @user_id;
 
 -- name: GetProfileByUsername :one
 SELECT
   p.id,
   u.email AS email,
   u.username AS username,
-  full_name,
-  phone_number,
-  bio,
-  image,
-  user_id,
+  "full_name",
+  "phone_number",
+  "bio",
+  "image",
+  "user_id",
   p.created_at,
   p.updated_at
 FROM
-  profiles p
-  INNER JOIN users u ON p.user_id = u.id
+  "profiles" p
+  INNER JOIN "users" u ON p.user_id = u.id
 WHERE
-  user_id = (
+  "user_id" = (
     SELECT
-      id
+      "id"
     FROM
-      users
+      "users"
     WHERE
-      username = @username::text);
+      "username" = @username::text);
 
 -- name: UpdateProfile :one
 UPDATE
-  profiles
+  "profiles"
 SET
-  full_name = CASE WHEN @full_name_do_update::boolean THEN
+  "full_name" = CASE WHEN @full_name_do_update::boolean THEN
     @full_name
   ELSE
-    full_name
+    "full_name"
   END,
-  phone_number = CASE WHEN @phone_number_do_update::boolean THEN
+  "phone_number" = CASE WHEN @phone_number_do_update::boolean THEN
     @phone_number
   ELSE
-    phone_number
+    "phone_number"
   END,
-  bio = CASE WHEN @bio_do_update::boolean THEN
+  "bio" = CASE WHEN @bio_do_update::boolean THEN
     @bio
   ELSE
-    bio
+    "bio"
   END,
-  image = CASE WHEN @image_do_update::boolean THEN
+  "image" = CASE WHEN @image_do_update::boolean THEN
     @image
   ELSE
-    image
+    "image"
   END
 WHERE
-  user_id = @user_id
+  "user_id" = @user_id
 RETURNING
   *;
 

@@ -2,32 +2,32 @@
 SELECT
   *
 FROM
-  users
+  "users"
 WHERE
-  email = @email;
+  "email" = @email;
 
 -- name: GetUserByUsername :one
 SELECT
   *
 FROM
-  users
+  "users"
 WHERE
-  username = @username;
+  "username" = @username;
 
 -- name: RegisterNewUser :one
-INSERT INTO users (username, email, PASSWORD, salt)
+INSERT INTO "users" ("username", "email", "password", "salt")
   VALUES (@username, @email, @password, @salt)
 RETURNING
   *;
 
 -- name: RegisterAdmin :one
-INSERT INTO users (username, email, PASSWORD, salt, is_superuser, is_verified)
+INSERT INTO "users" ("username", "email", "password", "salt", "is_superuser", "is_verified")
   VALUES (@username, @email, @password, @salt, TRUE, TRUE)
 RETURNING
   *;
 
 -- name: RegisterVerifiedUser :one
-INSERT INTO users (username, email, PASSWORD, salt, is_verified)
+INSERT INTO "users" ("username", "email", "password, salt", "is_verified")
   VALUES (@username, @email, @password, @salt, TRUE)
 RETURNING
   *;
@@ -36,36 +36,36 @@ RETURNING
 SELECT
   *
 FROM
-  users
+  "users"
 WHERE
-  id = @id;
+  "id" = @id;
 
 -- name: UpdateUserById :one
 UPDATE
-  users
+  "users"
 SET
-  PASSWORD = CASE WHEN @password_do_update::boolean THEN
+  "password" = CASE WHEN @password_do_update::boolean THEN
     @password
   ELSE
-    PASSWORD
+    "password"
   END,
-  salt = CASE WHEN @salt_do_update::boolean THEN
+  "salt" = CASE WHEN @salt_do_update::boolean THEN
     @salt
   ELSE
-    salt
+    "salt"
   END,
-  username = CASE WHEN @username_do_update::boolean THEN
+  "username" = CASE WHEN @username_do_update::boolean THEN
     @username
   ELSE
-    username
+    "username"
   END,
-  email = CASE WHEN @email_do_update::boolean THEN
+  "email" = CASE WHEN @email_do_update::boolean THEN
     @email
   ELSE
-    email
+    "email"
   END
 WHERE
-  id = @id
+  "id" = @id
 RETURNING
   *;
 
@@ -73,54 +73,54 @@ RETURNING
 SELECT
   *
 FROM
-  users;
+  "users";
 
 -- name: ListAllNonVerifiedUsers :many
 SELECT
   *
 FROM
-  users
+  "users"
 WHERE
-  is_verified = 'false';
+  "is_verified" = 'false';
 
 -- name: VerifyUserByEmail :one
 UPDATE
-  users
+  "users"
 SET
-  is_verified = 'true'
+  "is_verified" = 'true'
 WHERE
-  email = @email
+  "email" = @email
 RETURNING
   *;
 
 -- name: ResetUserPassword :one
 UPDATE
-  users
+  "users"
 SET
-  PASSWORD = @password,
-  salt = @salt
+  "password" = @password,
+  "salt" = @salt
 WHERE
-  email = @email
+  "email" = @email
 RETURNING
   *;
 
 -- name: UpdateLastNotificationAt :one
 UPDATE
-  users
+  "users"
 SET
-  last_notification_at = @last_notification_at
+  "last_notification_at" = @last_notification_at
 WHERE
-  id = @id
+  "id" = @id
 RETURNING
   *;
 
 -- name: UpdateUserRole :one
 UPDATE
-  users
+  "users"
 SET
-  ROLE = @role
+  "role" = @role
 WHERE
-  id = @id
+  "id" = @id
 RETURNING
   *;
 

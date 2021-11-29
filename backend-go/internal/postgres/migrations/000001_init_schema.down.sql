@@ -1,10 +1,10 @@
-DROP TABLE IF EXISTS public.global_notifications;
+DROP TABLE IF EXISTS "global_notifications";
 
-DROP TABLE IF EXISTS public.pwd_reset_req;
+DROP TABLE IF EXISTS "pwd_reset_req";
 
-DROP TABLE IF EXISTS public.profiles;
+DROP TABLE IF EXISTS "profiles";
 
-DROP TABLE IF EXISTS public.users;
+DROP TABLE IF EXISTS "users";
 
-DROP FUNCTION IF EXISTS public.update_updated_at_column;
+DROP FUNCTION IF EXISTS "update_updated_at_column";
 
