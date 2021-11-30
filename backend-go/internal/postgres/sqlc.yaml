@@ -5,7 +5,8 @@ version: "1"
 packages:
   - name: "db"
     path: "db"
-    sql_package: "pgx/v4"
+    #TODO check todo-api for more info
+    # sql_package: "pgx/v4"
     queries:
       - "./queries"
     schema: "./migrations/"

@@ -25,7 +25,7 @@ type CreateProfileParams struct {
 }
 
 func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (Profiles, error) {
-	row := q.db.QueryRow(ctx, createProfile,
+	row := q.db.QueryRowContext(ctx, createProfile,
 		arg.FullName,
 		arg.PhoneNumber,
 		arg.Bio,
@@ -56,7 +56,7 @@ WHERE
 `
 
 func (q *Queries) GetProfileById(ctx context.Context, userID sql.NullInt32) (Profiles, error) {
-	row := q.db.QueryRow(ctx, getProfileById, userID)
+	row := q.db.QueryRowContext(ctx, getProfileById, userID)
 	var i Profiles
 	err := row.Scan(
 		&i.ID,
@@ -110,7 +110,7 @@ type GetProfileByUsernameRow struct {
 }
 
 func (q *Queries) GetProfileByUsername(ctx context.Context, username string) (GetProfileByUsernameRow, error) {
-	row := q.db.QueryRow(ctx, getProfileByUsername, username)
+	row := q.db.QueryRowContext(ctx, getProfileByUsername, username)
 	var i GetProfileByUsernameRow
 	err := row.Scan(
 		&i.ID,
@@ -170,7 +170,7 @@ type UpdateProfileParams struct {
 }
 
 func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) (Profiles, error) {
-	row := q.db.QueryRow(ctx, updateProfile,
+	row := q.db.QueryRowContext(ctx, updateProfile,
 		arg.FullNameDoUpdate,
 		arg.FullName,
 		arg.PhoneNumberDoUpdate,

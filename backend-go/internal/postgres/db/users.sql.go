@@ -18,7 +18,7 @@ WHERE
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (Users, error) {
-	row := q.db.QueryRow(ctx, getUserByEmail, email)
+	row := q.db.QueryRowContext(ctx, getUserByEmail, email)
 	var i Users
 	err := row.Scan(
 		&i.ID,
@@ -47,7 +47,7 @@ WHERE
 `
 
 func (q *Queries) GetUserById(ctx context.Context, id int32) (Users, error) {
-	row := q.db.QueryRow(ctx, getUserById, id)
+	row := q.db.QueryRowContext(ctx, getUserById, id)
 	var i Users
 	err := row.Scan(
 		&i.ID,
@@ -76,7 +76,7 @@ WHERE
 `
 
 func (q *Queries) GetUserByUsername(ctx context.Context, username string) (Users, error) {
-	row := q.db.QueryRow(ctx, getUserByUsername, username)
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
 	var i Users
 	err := row.Scan(
 		&i.ID,
@@ -105,7 +105,7 @@ WHERE
 `
 
 func (q *Queries) ListAllNonVerifiedUsers(ctx context.Context) ([]Users, error) {
-	rows, err := q.db.Query(ctx, listAllNonVerifiedUsers)
+	rows, err := q.db.QueryContext(ctx, listAllNonVerifiedUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -130,6 +130,9 @@ func (q *Queries) ListAllNonVerifiedUsers(ctx context.Context) ([]Users, error) 
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -145,7 +148,7 @@ FROM
 `
 
 func (q *Queries) ListAllUsers(ctx context.Context) ([]Users, error) {
-	rows, err := q.db.Query(ctx, listAllUsers)
+	rows, err := q.db.QueryContext(ctx, listAllUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -170,6 +173,9 @@ func (q *Queries) ListAllUsers(ctx context.Context) ([]Users, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -192,7 +198,7 @@ type RegisterAdminParams struct {
 }
 
 func (q *Queries) RegisterAdmin(ctx context.Context, arg RegisterAdminParams) (Users, error) {
-	row := q.db.QueryRow(ctx, registerAdmin,
+	row := q.db.QueryRowContext(ctx, registerAdmin,
 		arg.Username,
 		arg.Email,
 		arg.Password,
@@ -231,7 +237,7 @@ type RegisterNewUserParams struct {
 }
 
 func (q *Queries) RegisterNewUser(ctx context.Context, arg RegisterNewUserParams) (Users, error) {
-	row := q.db.QueryRow(ctx, registerNewUser,
+	row := q.db.QueryRowContext(ctx, registerNewUser,
 		arg.Username,
 		arg.Email,
 		arg.Password,
@@ -270,7 +276,7 @@ type RegisterVerifiedUserParams struct {
 }
 
 func (q *Queries) RegisterVerifiedUser(ctx context.Context, arg RegisterVerifiedUserParams) (Users, error) {
-	row := q.db.QueryRow(ctx, registerVerifiedUser,
+	row := q.db.QueryRowContext(ctx, registerVerifiedUser,
 		arg.Username,
 		arg.Email,
 		arg.Password,
@@ -313,7 +319,7 @@ type ResetUserPasswordParams struct {
 }
 
 func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordParams) (Users, error) {
-	row := q.db.QueryRow(ctx, resetUserPassword, arg.Password, arg.Salt, arg.Email)
+	row := q.db.QueryRowContext(ctx, resetUserPassword, arg.Password, arg.Salt, arg.Email)
 	var i Users
 	err := row.Scan(
 		&i.ID,
@@ -349,7 +355,7 @@ type UpdateLastNotificationAtParams struct {
 }
 
 func (q *Queries) UpdateLastNotificationAt(ctx context.Context, arg UpdateLastNotificationAtParams) (Users, error) {
-	row := q.db.QueryRow(ctx, updateLastNotificationAt, arg.LastNotificationAt, arg.ID)
+	row := q.db.QueryRowContext(ctx, updateLastNotificationAt, arg.LastNotificationAt, arg.ID)
 	var i Users
 	err := row.Scan(
 		&i.ID,
@@ -411,7 +417,7 @@ type UpdateUserByIdParams struct {
 }
 
 func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) (Users, error) {
-	row := q.db.QueryRow(ctx, updateUserById,
+	row := q.db.QueryRowContext(ctx, updateUserById,
 		arg.PasswordDoUpdate,
 		arg.Password,
 		arg.SaltDoUpdate,
@@ -457,7 +463,7 @@ type UpdateUserRoleParams struct {
 }
 
 func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (Users, error) {
-	row := q.db.QueryRow(ctx, updateUserRole, arg.Role, arg.ID)
+	row := q.db.QueryRowContext(ctx, updateUserRole, arg.Role, arg.ID)
 	var i Users
 	err := row.Scan(
 		&i.ID,
@@ -488,7 +494,7 @@ RETURNING
 `
 
 func (q *Queries) VerifyUserByEmail(ctx context.Context, email string) (Users, error) {
-	row := q.db.QueryRow(ctx, verifyUserByEmail, email)
+	row := q.db.QueryRowContext(ctx, verifyUserByEmail, email)
 	var i Users
 	err := row.Scan(
 		&i.ID,

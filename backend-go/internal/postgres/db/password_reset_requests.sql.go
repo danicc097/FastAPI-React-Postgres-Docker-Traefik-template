@@ -21,7 +21,7 @@ type CreatePasswordResetRequestParams struct {
 }
 
 func (q *Queries) CreatePasswordResetRequest(ctx context.Context, arg CreatePasswordResetRequestParams) (PwdResetReq, error) {
-	row := q.db.QueryRow(ctx, createPasswordResetRequest, arg.Email, arg.Message)
+	row := q.db.QueryRowContext(ctx, createPasswordResetRequest, arg.Email, arg.Message)
 	var i PwdResetReq
 	err := row.Scan(
 		&i.ID,
@@ -41,7 +41,7 @@ RETURNING
 `
 
 func (q *Queries) DeletePasswordResetRequest(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deletePasswordResetRequest, id)
+	_, err := q.db.ExecContext(ctx, deletePasswordResetRequest, id)
 	return err
 }
 
@@ -53,7 +53,7 @@ FROM
 `
 
 func (q *Queries) GetPasswordResetRequests(ctx context.Context) ([]PwdResetReq, error) {
-	rows, err := q.db.Query(ctx, getPasswordResetRequests)
+	rows, err := q.db.QueryContext(ctx, getPasswordResetRequests)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,9 @@ func (q *Queries) GetPasswordResetRequests(ctx context.Context) ([]PwdResetReq, 
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

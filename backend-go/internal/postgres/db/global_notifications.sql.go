@@ -7,6 +7,8 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 const checkHasNewNotifications = `-- name: CheckHasNewNotifications :one
@@ -27,7 +29,7 @@ type CheckHasNewNotificationsParams struct {
 }
 
 func (q *Queries) CheckHasNewNotifications(ctx context.Context, arg CheckHasNewNotificationsParams) (bool, error) {
-	row := q.db.QueryRow(ctx, checkHasNewNotifications, arg.LastNotificationAt, arg.Roles)
+	row := q.db.QueryRowContext(ctx, checkHasNewNotifications, arg.LastNotificationAt, pq.Array(arg.Roles))
 	var has_new_notifications bool
 	err := row.Scan(&has_new_notifications)
 	return has_new_notifications, err
@@ -50,7 +52,7 @@ type CreateNotificationParams struct {
 }
 
 func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotificationParams) (GlobalNotifications, error) {
-	row := q.db.QueryRow(ctx, createNotification,
+	row := q.db.QueryRowContext(ctx, createNotification,
 		arg.Sender,
 		arg.ReceiverRole,
 		arg.Title,
@@ -81,7 +83,7 @@ RETURNING
 `
 
 func (q *Queries) DeleteNotification(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deleteNotification, id)
+	_, err := q.db.ExecContext(ctx, deleteNotification, id)
 	return err
 }
 
@@ -165,7 +167,7 @@ type GetNotificationsByLastReadRow struct {
 }
 
 func (q *Queries) GetNotificationsByLastRead(ctx context.Context, arg GetNotificationsByLastReadParams) ([]GetNotificationsByLastReadRow, error) {
-	rows, err := q.db.Query(ctx, getNotificationsByLastRead, arg.LastNotificationAt, arg.Roles, arg.PageChunkSize)
+	rows, err := q.db.QueryContext(ctx, getNotificationsByLastRead, arg.LastNotificationAt, pq.Array(arg.Roles), arg.PageChunkSize)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +210,9 @@ func (q *Queries) GetNotificationsByLastRead(ctx context.Context, arg GetNotific
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -295,7 +300,7 @@ type GetNotificationsByStartingDateRow struct {
 }
 
 func (q *Queries) GetNotificationsByStartingDate(ctx context.Context, arg GetNotificationsByStartingDateParams) ([]GetNotificationsByStartingDateRow, error) {
-	rows, err := q.db.Query(ctx, getNotificationsByStartingDate, arg.StartingDate, arg.Roles, arg.PageChunkSize)
+	rows, err := q.db.QueryContext(ctx, getNotificationsByStartingDate, arg.StartingDate, pq.Array(arg.Roles), arg.PageChunkSize)
 	if err != nil {
 		return nil, err
 	}
@@ -338,6 +343,9 @@ func (q *Queries) GetNotificationsByStartingDate(ctx context.Context, arg GetNot
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

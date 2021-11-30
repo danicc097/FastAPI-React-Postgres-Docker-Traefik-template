@@ -54,16 +54,16 @@ func main() {
 	}
 	defer dbSQLC.Close()
 
-	router.HandleFunc("/names/sqlc/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+	router.HandleFunc("/names/sqlc/{name}", func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["name"]
 
-		name, err := dbSQLC.UpdateUser(id)
+		user, err := dbSQLC.GetUserByUsername(name)
 		if err != nil {
 			renderJSON(w, &Error{Message: err.Error()}, http.StatusInternalServerError)
 			return
 		}
 
-		renderJSON(w, &name, http.StatusOK)
+		renderJSON(w, &user, http.StatusOK)
 	})
 
 	//-
