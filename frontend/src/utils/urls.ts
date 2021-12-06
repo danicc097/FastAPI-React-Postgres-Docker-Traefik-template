@@ -63,3 +63,16 @@ export const formatURL = (url: string, params: Params) => {
 
 // const pathToEndpoint = formatURL('/search/cleanings', { searchTerm: 'house', price: 9.99 });
 // console.log('pathToEndpoint: ', pathToEndpoint);
+
+/**
+ * Formats API request to FormData
+ */
+export const formDataEncode = (form) => {
+  const formData = new FormData()
+
+  for (const [key, value] of Object.entries(form)) {
+    formData.append(key, value as any)
+  }
+
+  return formData
+}

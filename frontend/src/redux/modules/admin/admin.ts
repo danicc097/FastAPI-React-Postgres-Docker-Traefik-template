@@ -8,6 +8,7 @@ import { UiActionCreators } from '../ui/ui'
 import { schema } from 'src/types/schema_override'
 import { errorState, loadingState } from '../../utils/slices'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
+import { paths } from 'src/types/schema'
 
 type AdminDataType = {
   unverifiedUsers?: Array<schema['UserPublic']>
@@ -279,7 +280,10 @@ AdminActionCreators.fetchAllNonVerifiedUsers = () => {
 
 AdminActionCreators.verifyUsers = ({ userEmails }) => {
   return async (dispatch: AppDispatch) => {
-    // set the request headers (override defaultOptions)
+    const data: paths['/api/admin/users-unverified/']['post']['requestBody']['content']['application/json'] = {
+      user_emails: userEmails,
+    }
+
     const headers = {}
     // we HAVE TO _return_ a dispatch, else we won't get the
     // returns of onSuccess or onFailure and verify types
@@ -294,8 +298,7 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
         },
         options: {
           headers,
-          // fastapi will only grab 'user_emails' from body
-          data: { user_emails: userEmails },
+          data,
           params: {},
         },
         onSuccess: (res) => {
@@ -366,6 +369,9 @@ AdminActionCreators.fetchAllPasswordResetUsers = () => {
 
 AdminActionCreators.resetPasswordForUser = ({ email }) => {
   return (dispatch: AppDispatch) => {
+    const data: paths['/api/admin/reset-user-password/']['post']['requestBody']['content']['application/json'] = {
+      email,
+    }
     const headers = {}
     return dispatch(
       apiClient({
@@ -379,7 +385,7 @@ AdminActionCreators.resetPasswordForUser = ({ email }) => {
         options: {
           headers,
           // fastapi will only grab 'email' from body
-          data: { email },
+          data,
           params: {},
         },
         onSuccess: (res) => {
@@ -480,6 +486,9 @@ AdminActionCreators._removeResetPasswordRequestFromStore = ({ email }) => {
 
 AdminActionCreators.updateUserRole = ({ role_update }) => {
   return async (dispatch: AppDispatch) => {
+    const data: paths['/api/admin/update-user-role/']['put']['requestBody']['content']['application/json'] = {
+      role_update,
+    }
     const headers = {}
     return dispatch(
       apiClient({
@@ -493,7 +502,7 @@ AdminActionCreators.updateUserRole = ({ role_update }) => {
         options: {
           headers,
           // fastapi will only grab 'role_update' key from body
-          data: { role_update },
+          data,
           params: {},
         },
         onSuccess: (res) => {

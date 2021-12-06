@@ -5,6 +5,7 @@ import { UiActionCreators } from '../ui/ui'
 import { loadingState, successState } from '../../utils/slices'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { schema } from 'src/types/schema_override'
+import { paths } from 'src/types/schema'
 
 type initialStateType = {
   userProfile: {
@@ -76,8 +77,14 @@ export const UserUpdateActionCreators: Partial<ActionCreators> = {}
 
 UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_password }) => {
   return async (dispatch: AppDispatch) => {
-    // create the url-encoded form data
-
+    const data: paths['/api/users/me/']['put']['requestBody']['content']['application/json'] = {
+      user_update: {
+        ...(email && { email }),
+        ...(username && { username }),
+        ...(password && { password }),
+        ...(old_password && { old_password }),
+      },
+    }
     // set the request headers (override defaulOptions)
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -94,15 +101,7 @@ UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_p
           FAILURE: UserProfileActionType.REQUEST_USER_UPDATE_FAILURE,
         },
         options: {
-          data: {
-            user_update: {
-              // dynamically set update form data if truthy values
-              ...(email && { email }),
-              ...(username && { username }),
-              ...(password && { password }),
-              ...(old_password && { old_password }),
-            },
-          },
+          data,
           headers,
           params: {},
         },

@@ -6,6 +6,7 @@ import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { schema } from 'src/types/schema_override'
 import { errorState, loadingState, successState } from 'src/redux/utils/slices'
 import { UiActionCreators } from 'src/redux/modules/ui/ui'
+import { paths } from 'src/types/schema'
 
 type initialStateType = {
   feed: {
@@ -254,6 +255,10 @@ GlobalNotificationsActionCreators.updateHasNewNotifications = () => {
 
 GlobalNotificationsActionCreators.createNotification = ({ notification }) => {
   return async (dispatch: AppDispatch) => {
+    const data: paths['/api/admin/create-notification/']['post']['requestBody']['content']['application/json'] = {
+      notification,
+    }
+
     return dispatch(
       apiClient({
         url: '/admin/create-notification/',
@@ -264,7 +269,7 @@ GlobalNotificationsActionCreators.createNotification = ({ notification }) => {
           FAILURE: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_FAILURE,
         },
         options: {
-          data: { notification },
+          data,
           params: {},
         },
         onSuccess: (res) => {

@@ -4,6 +4,8 @@ import { AppDispatch } from '../../store'
 import { UiActionCreators } from '../ui/ui'
 import { schema } from 'src/types/schema_override'
 import { loadingState, successState } from '../../utils/slices'
+import { paths } from 'src/types/schema'
+import { formDataEncode } from 'src/utils/urls'
 
 type initialStateType = {
   auth: {
@@ -165,11 +167,11 @@ export const AuthActionCreators: Partial<ActionCreators> = {}
 
 AuthActionCreators.requestUserLogin = ({ email, password }) => {
   return async (dispatch: AppDispatch) => {
-    // create the url-encoded form data
-    const formData = new FormData()
-    formData.set('username', email)
-    formData.set('password', password)
-    // set the request headers (override defaulOptions)
+    const data: paths['/api/users/login/token/']['post']['requestBody']['content']['application/x-www-form-urlencoded'] =
+      {
+        username: email,
+        password,
+      }
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
     }
@@ -183,7 +185,7 @@ AuthActionCreators.requestUserLogin = ({ email, password }) => {
           FAILURE: AuthActionType.REQUEST_LOGIN_FAILURE,
         },
         options: {
-          data: formData,
+          data: formDataEncode(data),
           headers,
           params: {},
         },
@@ -215,9 +217,11 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
     const headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
     }
-    const reset_request: schema['PasswordResetRequestCreate'] = {
-      email,
-      message,
+    const data: paths['/api/users/request-password-reset/']['post']['requestBody']['content']['application/json'] = {
+      reset_request: {
+        email,
+        message,
+      },
     }
     return dispatch(
       apiClient({
@@ -229,7 +233,7 @@ AuthActionCreators.requestPasswordReset = ({ email, message }) => {
           FAILURE: AuthActionType.REQUEST_PASSWORD_RESET_FAILURE,
         },
         options: {
-          data: { reset_request },
+          data,
           headers,
           params: {},
         },
@@ -300,6 +304,13 @@ AuthActionCreators.logUserOut = () => {
 // We are calling the dispatch function on the apiClient so that
 // we have access to dispatch in the onSuccess handler
 AuthActionCreators.registerNewUser = ({ username, email, password }) => {
+  const data: paths['/api/users/']['post']['requestBody']['content']['application/json'] = {
+    new_user: {
+      username,
+      email,
+      password,
+    },
+  }
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
@@ -311,7 +322,7 @@ AuthActionCreators.registerNewUser = ({ username, email, password }) => {
           FAILURE: AuthActionType.REQUEST_USER_SIGN_UP_FAILURE,
         },
         options: {
-          data: { new_user: { username, email, password } },
+          data,
           params: {},
         },
         onSuccess: (res) => {
