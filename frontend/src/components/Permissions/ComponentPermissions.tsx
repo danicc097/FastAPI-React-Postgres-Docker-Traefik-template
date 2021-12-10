@@ -2,7 +2,7 @@ import { EuiEmptyPrompt } from '@elastic/eui'
 import _ from 'lodash'
 import React from 'react'
 import { schema } from 'src/types/schema_override'
-import { getAllowedRoles } from 'src/utils/permissions'
+import { getAllowedRoles } from 'src/services/permissions'
 
 type ComponentPermissionsProps = {
   element: JSX.Element

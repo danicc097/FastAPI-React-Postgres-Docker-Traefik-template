@@ -199,4 +199,3 @@ ALTER TABLE ONLY "profiles"
 
 ALTER TABLE ONLY "pwd_reset_req"
   ADD CONSTRAINT pwd_reset_req_email_fkey FOREIGN KEY (email) REFERENCES users (email) ON DELETE CASCADE;
-

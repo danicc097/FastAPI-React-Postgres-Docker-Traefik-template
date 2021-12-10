@@ -1,5 +1,5 @@
 import { SetStateAction } from 'react'
-import { ROLE_PERMISSIONS } from 'src/utils/permissions'
+import { ROLE_PERMISSIONS } from 'src/services/permissions'
 
 /**
  * VERY simple email validation

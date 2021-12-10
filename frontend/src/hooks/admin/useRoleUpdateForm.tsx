@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from 'src/redux/hooks'
 import { AdminActionCreators } from 'src/redux/modules/admin/admin'
 import { schema } from 'src/types/schema_override'
 import { extractErrorMessages } from 'src/utils/errors'
-import { ROLE_PERMISSIONS } from 'src/utils/permissions'
+import { ROLE_PERMISSIONS } from 'src/services/permissions'
 import { _getFormErrors } from 'src/utils/validation'
 import { useGlobalNotifications } from '../ui/useGlobalNotifications'
 

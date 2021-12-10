@@ -23,7 +23,7 @@ import { AdminActionType } from 'src/redux/modules/admin/admin'
 import { schema } from 'src/types/schema_override'
 import { getColorForRole } from 'src/utils/colors'
 import { joinWithAnd } from 'src/utils/format'
-import { getImplicitRoles, ROLE_PERMISSIONS } from 'src/utils/permissions'
+import { getImplicitRoles, ROLE_PERMISSIONS } from 'src/services/permissions'
 import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
 
 export default function UserPermissionsPage() {

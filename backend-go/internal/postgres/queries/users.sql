@@ -123,4 +123,3 @@ WHERE
   "id" = @id
 RETURNING
   *;
-

@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom'
 import React, { useState, Fragment } from 'react'
-import { getAllowedRoles, ROLE_PERMISSIONS } from '../../../utils/permissions'
+import { getAllowedRoles, ROLE_PERMISSIONS } from '../../../services/permissions'
 import { joinWithAnd } from '../../../utils/format'
 
 import {
