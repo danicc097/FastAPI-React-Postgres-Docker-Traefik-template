@@ -14,30 +14,25 @@ WHERE
 
 -- name: GetProfileByUsername :one
 SELECT
-    "profiles".Id,
-    "users".Email AS Email,
-    "users".Username AS Username,
-    "full_name",
-    "phone_number",
-    "bio",
-    "image",
-    "user_id",
-    "profiles".Created_at,
-    "profiles".Updated_at
+    profiles.id,
+    users.email,
+    users.username,
+    profiles.full_name,
+    profiles.phone_number,
+    profiles.bio,
+    profiles.image,
+    profiles.user_id,
+    profiles.created_at,
+    profiles.updated_at
 FROM
-    "profiles"
-INNER JOIN "users" ON "profiles".User_id = "users".Id
+    profiles
+INNER JOIN users ON profiles.user_id = users.id
 WHERE
-    "user_id" = (
-        SELECT "id"
-        FROM
-            "users"
-        WHERE
-            "username" = @username::text);
+    users.username = @username::text;
 
 -- name: UpdateProfile :one
 UPDATE
-"profiles"
+  profiles
 SET
     "full_name" = CASE WHEN @full_name_do_update::boolean THEN
         @full_name

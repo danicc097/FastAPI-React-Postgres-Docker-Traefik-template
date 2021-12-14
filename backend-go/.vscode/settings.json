@@ -13,6 +13,17 @@
       "name": "go-backend",
       "database": "dbname",
       "connectString": "postgres://postgres:password@localhost:5432/dbname?sslmode=disable"
+    },
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5534,
+      "askForPassword": false,
+      "password": "postgres",
+      "driver": "PostgreSQL",
+      "name": "template-dev",
+      "database": "postgres",
+      "connectString": "postgres://postgres:postgres@localhost:5534/postgres?sslmode=disable"
     }
   ]
 }

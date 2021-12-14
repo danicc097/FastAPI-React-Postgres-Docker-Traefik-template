@@ -1,8 +1,7 @@
 [sqlfluff]
-# python -m pip install git+https://github.com/danicc097/sqlfluff-sqlc-postgres --upgrade
+# python -m pip install --upgrade --force-reinstall git+https://github.com/danicc097/sqlfluff-sqlc-postgres
 templater=sqlfluff-sqlc-postgres
 
 [sqlfluff:templater:sqlfluff-sqlc-postgres]
 param_style=sqlc
 autofill_missing_params=True
-explicit_param='explicit_param'
