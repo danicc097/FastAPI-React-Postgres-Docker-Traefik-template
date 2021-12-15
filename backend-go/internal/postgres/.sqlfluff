@@ -1,6 +1,9 @@
 [sqlfluff]
 # python -m pip install --upgrade --force-reinstall git+https://github.com/danicc097/sqlfluff-sqlc-postgres
 templater=sqlfluff-sqlc-postgres
+# L025 
+exclude_rules = L025
+
 
 [sqlfluff:templater:sqlfluff-sqlc-postgres]
 param_style=sqlc

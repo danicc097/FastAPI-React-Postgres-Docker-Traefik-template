@@ -11,7 +11,7 @@ import (
 
 const createProfile = `-- name: CreateProfile :one
 INSERT INTO "profiles" ("full_name", "phone_number", "bio", "image", "user_id")
-  VALUES ($1, $2, $3, $4, $5)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING
   id, full_name, phone_number, bio, image, user_id, created_at, updated_at
 `
@@ -48,11 +48,11 @@ func (q *Queries) CreateProfile(ctx context.Context, arg CreateProfileParams) (P
 
 const getProfileById = `-- name: GetProfileById :one
 SELECT
-  id, full_name, phone_number, bio, image, user_id, created_at, updated_at
+    id, full_name, phone_number, bio, image, user_id, created_at, updated_at
 FROM
-  "profiles"
+    "profiles"
 WHERE
-  "user_id" = $1
+    "user_id" = $1
 `
 
 func (q *Queries) GetProfileById(ctx context.Context, userID sql.NullInt32) (Profiles, error) {
@@ -73,27 +73,21 @@ func (q *Queries) GetProfileById(ctx context.Context, userID sql.NullInt32) (Pro
 
 const getProfileByUsername = `-- name: GetProfileByUsername :one
 SELECT
-  p.id,
-  u.email AS email,
-  u.username AS username,
-  "full_name",
-  "phone_number",
-  "bio",
-  "image",
-  "user_id",
-  p.created_at,
-  p.updated_at
+    profiles.id,
+    users.email,
+    users.username,
+    profiles.full_name,
+    profiles.phone_number,
+    profiles.bio,
+    profiles.image,
+    profiles.user_id,
+    profiles.created_at,
+    profiles.updated_at
 FROM
-  "profiles" p
-  INNER JOIN "users" u ON p.user_id = u.id
+    profiles
+INNER JOIN users ON profiles.user_id = users.id
 WHERE
-  "user_id" = (
-    SELECT
-      "id"
-    FROM
-      "users"
-    WHERE
-      "username" = $1::text)
+    users.username = $1::text
 `
 
 type GetProfileByUsernameRow struct {
@@ -129,30 +123,30 @@ func (q *Queries) GetProfileByUsername(ctx context.Context, username string) (Ge
 
 const updateProfile = `-- name: UpdateProfile :one
 UPDATE
-  "profiles"
+"profiles"
 SET
-  "full_name" = CASE WHEN $1::boolean THEN
-    $2
-  ELSE
-    "full_name"
-  END,
-  "phone_number" = CASE WHEN $3::boolean THEN
-    $4
-  ELSE
-    "phone_number"
-  END,
-  "bio" = CASE WHEN $5::boolean THEN
-    $6
-  ELSE
-    "bio"
-  END,
-  "image" = CASE WHEN $7::boolean THEN
-    $8
-  ELSE
-    "image"
-  END
+    "full_name" = CASE WHEN $1::boolean THEN
+        $2
+        ELSE
+            "full_name"
+    END,
+    "phone_number" = CASE WHEN $3::boolean THEN
+        $4
+        ELSE
+            "phone_number"
+    END,
+    "bio" = CASE WHEN $5::boolean THEN
+        $6
+        ELSE
+            "bio"
+    END,
+    "image" = CASE WHEN $7::boolean THEN
+        $8
+        ELSE
+            "image"
+    END
 WHERE
-  "user_id" = $9
+    "user_id" = $9 
 RETURNING
   id, full_name, phone_number, bio, image, user_id, created_at, updated_at
 `

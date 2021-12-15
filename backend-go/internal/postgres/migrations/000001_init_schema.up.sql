@@ -178,16 +178,9 @@ ADD CONSTRAINT pwd_reset_req_pkey PRIMARY KEY (id);
 ALTER TABLE ONLY "users"
 ADD CONSTRAINT users_pkey PRIMARY KEY (id);
 
-CREATE INDEX ix_global_notifications_created_at ON "global_notifications" USING btree(
-    "created_at"
-);
 
 CREATE INDEX ix_global_notifications_receiver_role ON "global_notifications" USING btree(
     "receiver_role"
-);
-
-CREATE INDEX ix_global_notifications_updated_at ON "global_notifications" USING btree(
-    "updated_at"
 );
 
 CREATE UNIQUE INDEX ix_users_email ON "users" USING btree("email");
@@ -200,9 +193,6 @@ CREATE INDEX ix_users_role ON "users" USING btree("role");
 
 CREATE UNIQUE INDEX ix_users_username ON "users" USING btree("username");
 
-CREATE INDEX notifications_created_at_receiver_role ON "global_notifications" USING btree(
-    "created_at", "receiver_role"
-);
 
 CREATE TRIGGER "update_profiles_modtime"
 BEFORE UPDATE ON "profiles"

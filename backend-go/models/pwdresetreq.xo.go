@@ -5,16 +5,13 @@ package models
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 // PwdResetReq represents a row from 'public.pwd_reset_req'.
 type PwdResetReq struct {
-	ID        int            `json:"id"`         // id
-	Email     sql.NullString `json:"email"`      // email
-	Message   sql.NullString `json:"message"`    // message
-	CreatedAt time.Time      `json:"created_at"` // created_at
-	UpdatedAt time.Time      `json:"updated_at"` // updated_at
+	ID      int            `json:"id"`      // id
+	Email   sql.NullString `json:"email"`   // email
+	Message sql.NullString `json:"message"` // message
 	// xo fields
 	_exists, _deleted bool
 }
@@ -40,13 +37,13 @@ func (prr *PwdResetReq) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (primary key generated and returned by database)
 	const sqlstr = `INSERT INTO public.pwd_reset_req (` +
-		`email, message, created_at, updated_at` +
+		`email, message` +
 		`) VALUES (` +
-		`$1, $2, $3, $4` +
+		`$1, $2` +
 		`) RETURNING id`
 	// run
-	logf(sqlstr, prr.Email, prr.Message, prr.CreatedAt, prr.UpdatedAt)
-	if err := db.QueryRowContext(ctx, sqlstr, prr.Email, prr.Message, prr.CreatedAt, prr.UpdatedAt).Scan(&prr.ID); err != nil {
+	logf(sqlstr, prr.Email, prr.Message)
+	if err := db.QueryRowContext(ctx, sqlstr, prr.Email, prr.Message).Scan(&prr.ID); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -64,11 +61,11 @@ func (prr *PwdResetReq) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.pwd_reset_req SET ` +
-		`email = $1, message = $2, created_at = $3, updated_at = $4 ` +
-		`WHERE id = $5`
+		`email = $1, message = $2 ` +
+		`WHERE id = $3`
 	// run
-	logf(sqlstr, prr.Email, prr.Message, prr.CreatedAt, prr.UpdatedAt, prr.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, prr.Email, prr.Message, prr.CreatedAt, prr.UpdatedAt, prr.ID); err != nil {
+	logf(sqlstr, prr.Email, prr.Message, prr.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, prr.Email, prr.Message, prr.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -90,16 +87,16 @@ func (prr *PwdResetReq) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.pwd_reset_req (` +
-		`id, email, message, created_at, updated_at` +
+		`id, email, message` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5` +
+		`$1, $2, $3` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`email = EXCLUDED.email, message = EXCLUDED.message, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`email = EXCLUDED.email, message = EXCLUDED.message `
 	// run
-	logf(sqlstr, prr.ID, prr.Email, prr.Message, prr.CreatedAt, prr.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, prr.ID, prr.Email, prr.Message, prr.CreatedAt, prr.UpdatedAt); err != nil {
+	logf(sqlstr, prr.ID, prr.Email, prr.Message)
+	if _, err := db.ExecContext(ctx, sqlstr, prr.ID, prr.Email, prr.Message); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -134,7 +131,7 @@ func (prr *PwdResetReq) Delete(ctx context.Context, db DB) error {
 func PwdResetReqByEmail(ctx context.Context, db DB, email sql.NullString) (*PwdResetReq, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, email, message, created_at, updated_at ` +
+		`id, email, message ` +
 		`FROM public.pwd_reset_req ` +
 		`WHERE email = $1`
 	// run
@@ -142,7 +139,7 @@ func PwdResetReqByEmail(ctx context.Context, db DB, email sql.NullString) (*PwdR
 	prr := PwdResetReq{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, email).Scan(&prr.ID, &prr.Email, &prr.Message, &prr.CreatedAt, &prr.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, email).Scan(&prr.ID, &prr.Email, &prr.Message); err != nil {
 		return nil, logerror(err)
 	}
 	return &prr, nil
@@ -154,7 +151,7 @@ func PwdResetReqByEmail(ctx context.Context, db DB, email sql.NullString) (*PwdR
 func PwdResetReqByID(ctx context.Context, db DB, id int) (*PwdResetReq, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, email, message, created_at, updated_at ` +
+		`id, email, message ` +
 		`FROM public.pwd_reset_req ` +
 		`WHERE id = $1`
 	// run
@@ -162,7 +159,7 @@ func PwdResetReqByID(ctx context.Context, db DB, id int) (*PwdResetReq, error) {
 	prr := PwdResetReq{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&prr.ID, &prr.Email, &prr.Message, &prr.CreatedAt, &prr.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&prr.ID, &prr.Email, &prr.Message); err != nil {
 		return nil, logerror(err)
 	}
 	return &prr, nil

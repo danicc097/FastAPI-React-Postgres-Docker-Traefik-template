@@ -32,7 +32,7 @@ WHERE
 
 -- name: UpdateProfile :one
 UPDATE
-  profiles
+"profiles"
 SET
     "full_name" = CASE WHEN @full_name_do_update::boolean THEN
         @full_name

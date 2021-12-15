@@ -1,3 +1,17 @@
+-- TODO:
+-- create a common RETURNING function for all queries
+-- that returns id, created_at, updated_at, username, email, password, salt
+CREATE FUNCTION return_user_row() RETURNS void AS '
+    RETURNING
+        id,
+        created_at,
+        updated_at,
+        username,
+        email,
+        password,
+        salt
+' LANGUAGE SQL;
+
 -- name: GetUserByEmail :one
 SELECT
     *
@@ -13,6 +27,7 @@ FROM
     "users"
 WHERE
     "username" = @username;
+
 
 -- name: RegisterNewUser :one
 INSERT INTO "users" ("username", "email", "password", "salt")

@@ -1,4 +1,5 @@
 #!/bin/bash
 set -e
 
-xo schema pgsql://postgres:password@localhost:5432/dbname?sslmode=disable
+# shellcheck disable=SC2035
+xo schema pgsql://postgres:password@localhost:5432/dbname?sslmode=disable -e *.created_at -e *.updated_at -e *.deleted_at

@@ -5,7 +5,6 @@ package models
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 // Profile represents a row from 'public.profiles'.
@@ -16,8 +15,6 @@ type Profile struct {
 	Bio         sql.NullString `json:"bio"`          // bio
 	Image       sql.NullString `json:"image"`        // image
 	UserID      sql.NullInt64  `json:"user_id"`      // user_id
-	CreatedAt   time.Time      `json:"created_at"`   // created_at
-	UpdatedAt   time.Time      `json:"updated_at"`   // updated_at
 	// xo fields
 	_exists, _deleted bool
 }
@@ -43,13 +40,13 @@ func (p *Profile) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (primary key generated and returned by database)
 	const sqlstr = `INSERT INTO public.profiles (` +
-		`full_name, phone_number, bio, image, user_id, created_at, updated_at` +
+		`full_name, phone_number, bio, image, user_id` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7` +
+		`$1, $2, $3, $4, $5` +
 		`) RETURNING id`
 	// run
-	logf(sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.CreatedAt, p.UpdatedAt)
-	if err := db.QueryRowContext(ctx, sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.CreatedAt, p.UpdatedAt).Scan(&p.ID); err != nil {
+	logf(sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID)
+	if err := db.QueryRowContext(ctx, sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID).Scan(&p.ID); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -67,11 +64,11 @@ func (p *Profile) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.profiles SET ` +
-		`full_name = $1, phone_number = $2, bio = $3, image = $4, user_id = $5, created_at = $6, updated_at = $7 ` +
-		`WHERE id = $8`
+		`full_name = $1, phone_number = $2, bio = $3, image = $4, user_id = $5 ` +
+		`WHERE id = $6`
 	// run
-	logf(sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.CreatedAt, p.UpdatedAt, p.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.CreatedAt, p.UpdatedAt, p.ID); err != nil {
+	logf(sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -93,16 +90,16 @@ func (p *Profile) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.profiles (` +
-		`id, full_name, phone_number, bio, image, user_id, created_at, updated_at` +
+		`id, full_name, phone_number, bio, image, user_id` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`full_name = EXCLUDED.full_name, phone_number = EXCLUDED.phone_number, bio = EXCLUDED.bio, image = EXCLUDED.image, user_id = EXCLUDED.user_id, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`full_name = EXCLUDED.full_name, phone_number = EXCLUDED.phone_number, bio = EXCLUDED.bio, image = EXCLUDED.image, user_id = EXCLUDED.user_id `
 	// run
-	logf(sqlstr, p.ID, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.CreatedAt, p.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, p.ID, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID, p.CreatedAt, p.UpdatedAt); err != nil {
+	logf(sqlstr, p.ID, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID)
+	if _, err := db.ExecContext(ctx, sqlstr, p.ID, p.FullName, p.PhoneNumber, p.Bio, p.Image, p.UserID); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -137,7 +134,7 @@ func (p *Profile) Delete(ctx context.Context, db DB) error {
 func ProfileByID(ctx context.Context, db DB, id int) (*Profile, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, full_name, phone_number, bio, image, user_id, created_at, updated_at ` +
+		`id, full_name, phone_number, bio, image, user_id ` +
 		`FROM public.profiles ` +
 		`WHERE id = $1`
 	// run
@@ -145,7 +142,7 @@ func ProfileByID(ctx context.Context, db DB, id int) (*Profile, error) {
 	p := Profile{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&p.ID, &p.FullName, &p.PhoneNumber, &p.Bio, &p.Image, &p.UserID, &p.CreatedAt, &p.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&p.ID, &p.FullName, &p.PhoneNumber, &p.Bio, &p.Image, &p.UserID); err != nil {
 		return nil, logerror(err)
 	}
 	return &p, nil

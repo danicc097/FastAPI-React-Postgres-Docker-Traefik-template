@@ -5,7 +5,6 @@ package models
 import (
 	"context"
 	"database/sql"
-	"time"
 )
 
 // GlobalNotification represents a row from 'public.global_notifications'.
@@ -17,8 +16,6 @@ type GlobalNotification struct {
 	Body         string         `json:"body"`          // body
 	Label        string         `json:"label"`         // label
 	Link         sql.NullString `json:"link"`          // link
-	CreatedAt    time.Time      `json:"created_at"`    // created_at
-	UpdatedAt    time.Time      `json:"updated_at"`    // updated_at
 	// xo fields
 	_exists, _deleted bool
 }
@@ -44,13 +41,13 @@ func (gn *GlobalNotification) Insert(ctx context.Context, db DB) error {
 	}
 	// insert (primary key generated and returned by database)
 	const sqlstr = `INSERT INTO public.global_notifications (` +
-		`sender, receiver_role, title, body, label, link, created_at, updated_at` +
+		`sender, receiver_role, title, body, label, link` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8` +
+		`$1, $2, $3, $4, $5, $6` +
 		`) RETURNING id`
 	// run
-	logf(sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.CreatedAt, gn.UpdatedAt)
-	if err := db.QueryRowContext(ctx, sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.CreatedAt, gn.UpdatedAt).Scan(&gn.ID); err != nil {
+	logf(sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link)
+	if err := db.QueryRowContext(ctx, sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link).Scan(&gn.ID); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -68,11 +65,11 @@ func (gn *GlobalNotification) Update(ctx context.Context, db DB) error {
 	}
 	// update with composite primary key
 	const sqlstr = `UPDATE public.global_notifications SET ` +
-		`sender = $1, receiver_role = $2, title = $3, body = $4, label = $5, link = $6, created_at = $7, updated_at = $8 ` +
-		`WHERE id = $9`
+		`sender = $1, receiver_role = $2, title = $3, body = $4, label = $5, link = $6 ` +
+		`WHERE id = $7`
 	// run
-	logf(sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.CreatedAt, gn.UpdatedAt, gn.ID)
-	if _, err := db.ExecContext(ctx, sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.CreatedAt, gn.UpdatedAt, gn.ID); err != nil {
+	logf(sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.ID)
+	if _, err := db.ExecContext(ctx, sqlstr, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.ID); err != nil {
 		return logerror(err)
 	}
 	return nil
@@ -94,16 +91,16 @@ func (gn *GlobalNotification) Upsert(ctx context.Context, db DB) error {
 	}
 	// upsert
 	const sqlstr = `INSERT INTO public.global_notifications (` +
-		`id, sender, receiver_role, title, body, label, link, created_at, updated_at` +
+		`id, sender, receiver_role, title, body, label, link` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7, $8, $9` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`sender = EXCLUDED.sender, receiver_role = EXCLUDED.receiver_role, title = EXCLUDED.title, body = EXCLUDED.body, label = EXCLUDED.label, link = EXCLUDED.link, created_at = EXCLUDED.created_at, updated_at = EXCLUDED.updated_at `
+		`sender = EXCLUDED.sender, receiver_role = EXCLUDED.receiver_role, title = EXCLUDED.title, body = EXCLUDED.body, label = EXCLUDED.label, link = EXCLUDED.link `
 	// run
-	logf(sqlstr, gn.ID, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.CreatedAt, gn.UpdatedAt)
-	if _, err := db.ExecContext(ctx, sqlstr, gn.ID, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link, gn.CreatedAt, gn.UpdatedAt); err != nil {
+	logf(sqlstr, gn.ID, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link)
+	if _, err := db.ExecContext(ctx, sqlstr, gn.ID, gn.Sender, gn.ReceiverRole, gn.Title, gn.Body, gn.Label, gn.Link); err != nil {
 		return logerror(err)
 	}
 	// set exists
@@ -138,7 +135,7 @@ func (gn *GlobalNotification) Delete(ctx context.Context, db DB) error {
 func GlobalNotificationByID(ctx context.Context, db DB, id int) (*GlobalNotification, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, sender, receiver_role, title, body, label, link, created_at, updated_at ` +
+		`id, sender, receiver_role, title, body, label, link ` +
 		`FROM public.global_notifications ` +
 		`WHERE id = $1`
 	// run
@@ -146,44 +143,10 @@ func GlobalNotificationByID(ctx context.Context, db DB, id int) (*GlobalNotifica
 	gn := GlobalNotification{
 		_exists: true,
 	}
-	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link, &gn.CreatedAt, &gn.UpdatedAt); err != nil {
+	if err := db.QueryRowContext(ctx, sqlstr, id).Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link); err != nil {
 		return nil, logerror(err)
 	}
 	return &gn, nil
-}
-
-// GlobalNotificationsByCreatedAt retrieves a row from 'public.global_notifications' as a GlobalNotification.
-//
-// Generated from index 'ix_global_notifications_created_at'.
-func GlobalNotificationsByCreatedAt(ctx context.Context, db DB, createdAt time.Time) ([]*GlobalNotification, error) {
-	// query
-	const sqlstr = `SELECT ` +
-		`id, sender, receiver_role, title, body, label, link, created_at, updated_at ` +
-		`FROM public.global_notifications ` +
-		`WHERE created_at = $1`
-	// run
-	logf(sqlstr, createdAt)
-	rows, err := db.QueryContext(ctx, sqlstr, createdAt)
-	if err != nil {
-		return nil, logerror(err)
-	}
-	defer rows.Close()
-	// process
-	var res []*GlobalNotification
-	for rows.Next() {
-		gn := GlobalNotification{
-			_exists: true,
-		}
-		// scan
-		if err := rows.Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link, &gn.CreatedAt, &gn.UpdatedAt); err != nil {
-			return nil, logerror(err)
-		}
-		res = append(res, &gn)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, logerror(err)
-	}
-	return res, nil
 }
 
 // GlobalNotificationsByReceiverRole retrieves a row from 'public.global_notifications' as a GlobalNotification.
@@ -192,7 +155,7 @@ func GlobalNotificationsByCreatedAt(ctx context.Context, db DB, createdAt time.T
 func GlobalNotificationsByReceiverRole(ctx context.Context, db DB, receiverRole string) ([]*GlobalNotification, error) {
 	// query
 	const sqlstr = `SELECT ` +
-		`id, sender, receiver_role, title, body, label, link, created_at, updated_at ` +
+		`id, sender, receiver_role, title, body, label, link ` +
 		`FROM public.global_notifications ` +
 		`WHERE receiver_role = $1`
 	// run
@@ -209,75 +172,7 @@ func GlobalNotificationsByReceiverRole(ctx context.Context, db DB, receiverRole 
 			_exists: true,
 		}
 		// scan
-		if err := rows.Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link, &gn.CreatedAt, &gn.UpdatedAt); err != nil {
-			return nil, logerror(err)
-		}
-		res = append(res, &gn)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, logerror(err)
-	}
-	return res, nil
-}
-
-// GlobalNotificationsByUpdatedAt retrieves a row from 'public.global_notifications' as a GlobalNotification.
-//
-// Generated from index 'ix_global_notifications_updated_at'.
-func GlobalNotificationsByUpdatedAt(ctx context.Context, db DB, updatedAt time.Time) ([]*GlobalNotification, error) {
-	// query
-	const sqlstr = `SELECT ` +
-		`id, sender, receiver_role, title, body, label, link, created_at, updated_at ` +
-		`FROM public.global_notifications ` +
-		`WHERE updated_at = $1`
-	// run
-	logf(sqlstr, updatedAt)
-	rows, err := db.QueryContext(ctx, sqlstr, updatedAt)
-	if err != nil {
-		return nil, logerror(err)
-	}
-	defer rows.Close()
-	// process
-	var res []*GlobalNotification
-	for rows.Next() {
-		gn := GlobalNotification{
-			_exists: true,
-		}
-		// scan
-		if err := rows.Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link, &gn.CreatedAt, &gn.UpdatedAt); err != nil {
-			return nil, logerror(err)
-		}
-		res = append(res, &gn)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, logerror(err)
-	}
-	return res, nil
-}
-
-// GlobalNotificationsByCreatedAtReceiverRole retrieves a row from 'public.global_notifications' as a GlobalNotification.
-//
-// Generated from index 'notifications_created_at_receiver_role'.
-func GlobalNotificationsByCreatedAtReceiverRole(ctx context.Context, db DB, createdAt time.Time, receiverRole string) ([]*GlobalNotification, error) {
-	// query
-	const sqlstr = `SELECT ` +
-		`id, sender, receiver_role, title, body, label, link, created_at, updated_at ` +
-		`FROM public.global_notifications ` +
-		`WHERE created_at = $1 AND receiver_role = $2`
-	// run
-	logf(sqlstr, createdAt, receiverRole)
-	rows, err := db.QueryContext(ctx, sqlstr, createdAt, receiverRole)
-	if err != nil {
-		return nil, logerror(err)
-	}
-	defer rows.Close()
-	// process
-	var res []*GlobalNotification
-	for rows.Next() {
-		gn := GlobalNotification{
-			_exists: true,
-		}
-		// scan
-		if err := rows.Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link, &gn.CreatedAt, &gn.UpdatedAt); err != nil {
+		if err := rows.Scan(&gn.ID, &gn.Sender, &gn.ReceiverRole, &gn.Title, &gn.Body, &gn.Label, &gn.Link); err != nil {
 			return nil, logerror(err)
 		}
 		res = append(res, &gn)

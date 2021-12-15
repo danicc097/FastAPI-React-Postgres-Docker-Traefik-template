@@ -55,7 +55,7 @@ FROM ((
             AND receiver_role = ANY(@roles::text[])
         ORDER BY
             "created_at" DESC
-  LIMIT @page_chunk_size))
+  LIMIT @page_chunk_size)) AS notifications
 ORDER BY
     event_timestamp DESC
 LIMIT @page_chunk_size;
@@ -94,7 +94,7 @@ FROM ((
             AND "receiver_role" = ANY(@roles::text[])
         ORDER BY
             "created_at" DESC
-  LIMIT @page_chunk_size))
+  LIMIT @page_chunk_size)) AS notifications
 ORDER BY
     event_timestamp DESC
 LIMIT @page_chunk_size;
