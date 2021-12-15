@@ -15,10 +15,10 @@ const checkHasNewNotifications = `-- name: CheckHasNewNotifications :one
 SELECT EXISTS(
     SELECT 1
     FROM
-        "global_notifications"
+        global_notifications
     WHERE
-        "updated_at" > $1
-        AND "receiver_role" = ANY($2::text[])) AS has_new_notifications
+        updated_at > $1
+        AND receiver_role = ANY($2::text[])) AS has_new_notifications
 `
 
 type CheckHasNewNotificationsParams struct {
@@ -89,38 +89,48 @@ func (q *Queries) DeleteNotification(ctx context.Context, id int32) error {
 
 const getNotificationsByLastRead = `-- name: GetNotificationsByLastRead :many
 SELECT
-    notifications.id, notifications.sender, notifications.receiver_role, notifications.title, notifications.body, notifications.label, notifications.link, notifications.created_at, notifications.updated_at, event_timestamp, event_type, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at,
+    notifications.id,
+    notifications.sender,
+    notifications.receiver_role,
+    notifications.label,
+    notifications.link,
+    notifications.title,
+    notifications.body,
+    notifications.created_at,
+    notifications.updated_at,
+    'is_create' AS event_type,
+    notifications.created_at AS event_timestamp,
     ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
         id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-        "updated_at" AS event_timestamp,
+        updated_at AS event_timestamp,
         -- define a new column event_type and set its value
         'is_update' AS event_type
     FROM
-        "global_notifications"
+        global_notifications
     WHERE
-        "global_notifications"."updated_at" > $1
-        AND "receiver_role" = ANY($2::text[])
-        AND "updated_at" != "created_at"
+        global_notifications.updated_at > $1
+        AND receiver_role = ANY($2::text[])
+        AND updated_at != created_at
     ORDER BY
-        "updated_at" DESC
+        updated_at DESC
     LIMIT $3)
     UNION (
         -- All rows.
         SELECT
             id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-            "created_at" AS event_timestamp,
+            created_at AS event_timestamp,
             -- define a new column event_type and set its value
             'is_create' AS event_type
         FROM
-            "global_notifications"
+            global_notifications
         WHERE
-            "created_at" > $1
+            created_at > $1
             AND receiver_role = ANY($2::text[])
         ORDER BY
-            "created_at" DESC
+            created_at DESC
   LIMIT $3)) AS notifications
 ORDER BY
     event_timestamp DESC
@@ -137,32 +147,14 @@ type GetNotificationsByLastReadRow struct {
 	ID             int32          `db:"id"`
 	Sender         sql.NullString `db:"sender"`
 	ReceiverRole   string         `db:"receiver_role"`
-	Title          string         `db:"title"`
-	Body           string         `db:"body"`
 	Label          string         `db:"label"`
 	Link           sql.NullString `db:"link"`
+	Title          string         `db:"title"`
+	Body           string         `db:"body"`
 	CreatedAt      time.Time      `db:"created_at"`
 	UpdatedAt      time.Time      `db:"updated_at"`
-	EventTimestamp time.Time      `db:"event_timestamp"`
 	EventType      interface{}    `db:"event_type"`
-	ID_2           int32          `db:"id_2"`
-	Sender_2       sql.NullString `db:"sender_2"`
-	ReceiverRole_2 string         `db:"receiver_role_2"`
-	Title_2        string         `db:"title_2"`
-	Body_2         string         `db:"body_2"`
-	Label_2        string         `db:"label_2"`
-	Link_2         sql.NullString `db:"link_2"`
-	CreatedAt_2    time.Time      `db:"created_at_2"`
-	UpdatedAt_2    time.Time      `db:"updated_at_2"`
-	ID_3           int32          `db:"id_3"`
-	Sender_3       sql.NullString `db:"sender_3"`
-	ReceiverRole_3 string         `db:"receiver_role_3"`
-	Title_3        string         `db:"title_3"`
-	Body_3         string         `db:"body_3"`
-	Label_3        string         `db:"label_3"`
-	Link_3         sql.NullString `db:"link_3"`
-	CreatedAt_3    time.Time      `db:"created_at_3"`
-	UpdatedAt_3    time.Time      `db:"updated_at_3"`
+	EventTimestamp time.Time      `db:"event_timestamp"`
 	RowNumber      int64          `db:"row_number"`
 }
 
@@ -179,32 +171,14 @@ func (q *Queries) GetNotificationsByLastRead(ctx context.Context, arg GetNotific
 			&i.ID,
 			&i.Sender,
 			&i.ReceiverRole,
-			&i.Title,
-			&i.Body,
 			&i.Label,
 			&i.Link,
+			&i.Title,
+			&i.Body,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.EventTimestamp,
 			&i.EventType,
-			&i.ID_2,
-			&i.Sender_2,
-			&i.ReceiverRole_2,
-			&i.Title_2,
-			&i.Body_2,
-			&i.Label_2,
-			&i.Link_2,
-			&i.CreatedAt_2,
-			&i.UpdatedAt_2,
-			&i.ID_3,
-			&i.Sender_3,
-			&i.ReceiverRole_3,
-			&i.Title_3,
-			&i.Body_3,
-			&i.Label_3,
-			&i.Link_3,
-			&i.CreatedAt_3,
-			&i.UpdatedAt_3,
+			&i.EventTimestamp,
 			&i.RowNumber,
 		); err != nil {
 			return nil, err
@@ -222,38 +196,47 @@ func (q *Queries) GetNotificationsByLastRead(ctx context.Context, arg GetNotific
 
 const getNotificationsByStartingDate = `-- name: GetNotificationsByStartingDate :many
 SELECT
-    notifications.id, notifications.sender, notifications.receiver_role, notifications.title, notifications.body, notifications.label, notifications.link, notifications.created_at, notifications.updated_at, event_timestamp, event_type, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at, global_notifications.id, global_notifications.sender, global_notifications.receiver_role, global_notifications.title, global_notifications.body, global_notifications.label, global_notifications.link, global_notifications.created_at, global_notifications.updated_at,
+    notifications.id,
+    notifications.sender,
+    notifications.receiver_role,
+    notifications.label,
+    notifications.link,
+    notifications.body,
+    notifications.created_at,
+    notifications.updated_at,
+    'is_create' AS event_type,
+    notifications.created_at AS event_timestamp,
     ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
         id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-        "updated_at" AS event_timestamp,
+        updated_at AS event_timestamp,
         -- define a new column event_type and set its value
         'is_update' AS event_type
     FROM
-        "global_notifications"
+        global_notifications
     WHERE
-        "global_notifications"."updated_at" < $1
-        AND "receiver_role" = ANY($2::text[])
-        AND "updated_at" != "created_at"
+        global_notifications.updated_at < $1
+        AND receiver_role = ANY($2::text[])
+        AND updated_at != created_at
     ORDER BY
-        "updated_at" DESC
+        updated_at DESC
     LIMIT $3)
     UNION (
         -- All rows.
         SELECT
             id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-            "created_at" AS event_timestamp,
+            created_at AS event_timestamp,
             -- define a new column event_type and set its value
             'is_create' AS event_type
         FROM
-            "global_notifications"
+            global_notifications
         WHERE
-            "created_at" < $1
-            AND "receiver_role" = ANY($2::text[])
+            created_at < $1
+            AND receiver_role = ANY($2::text[])
         ORDER BY
-            "created_at" DESC
+            created_at DESC
   LIMIT $3)) AS notifications
 ORDER BY
     event_timestamp DESC
@@ -270,32 +253,13 @@ type GetNotificationsByStartingDateRow struct {
 	ID             int32          `db:"id"`
 	Sender         sql.NullString `db:"sender"`
 	ReceiverRole   string         `db:"receiver_role"`
-	Title          string         `db:"title"`
-	Body           string         `db:"body"`
 	Label          string         `db:"label"`
 	Link           sql.NullString `db:"link"`
+	Body           string         `db:"body"`
 	CreatedAt      time.Time      `db:"created_at"`
 	UpdatedAt      time.Time      `db:"updated_at"`
-	EventTimestamp time.Time      `db:"event_timestamp"`
 	EventType      interface{}    `db:"event_type"`
-	ID_2           int32          `db:"id_2"`
-	Sender_2       sql.NullString `db:"sender_2"`
-	ReceiverRole_2 string         `db:"receiver_role_2"`
-	Title_2        string         `db:"title_2"`
-	Body_2         string         `db:"body_2"`
-	Label_2        string         `db:"label_2"`
-	Link_2         sql.NullString `db:"link_2"`
-	CreatedAt_2    time.Time      `db:"created_at_2"`
-	UpdatedAt_2    time.Time      `db:"updated_at_2"`
-	ID_3           int32          `db:"id_3"`
-	Sender_3       sql.NullString `db:"sender_3"`
-	ReceiverRole_3 string         `db:"receiver_role_3"`
-	Title_3        string         `db:"title_3"`
-	Body_3         string         `db:"body_3"`
-	Label_3        string         `db:"label_3"`
-	Link_3         sql.NullString `db:"link_3"`
-	CreatedAt_3    time.Time      `db:"created_at_3"`
-	UpdatedAt_3    time.Time      `db:"updated_at_3"`
+	EventTimestamp time.Time      `db:"event_timestamp"`
 	RowNumber      int64          `db:"row_number"`
 }
 
@@ -312,32 +276,13 @@ func (q *Queries) GetNotificationsByStartingDate(ctx context.Context, arg GetNot
 			&i.ID,
 			&i.Sender,
 			&i.ReceiverRole,
-			&i.Title,
-			&i.Body,
 			&i.Label,
 			&i.Link,
+			&i.Body,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.EventTimestamp,
 			&i.EventType,
-			&i.ID_2,
-			&i.Sender_2,
-			&i.ReceiverRole_2,
-			&i.Title_2,
-			&i.Body_2,
-			&i.Label_2,
-			&i.Link_2,
-			&i.CreatedAt_2,
-			&i.UpdatedAt_2,
-			&i.ID_3,
-			&i.Sender_3,
-			&i.ReceiverRole_3,
-			&i.Title_3,
-			&i.Body_3,
-			&i.Label_3,
-			&i.Link_3,
-			&i.CreatedAt_3,
-			&i.UpdatedAt_3,
+			&i.EventTimestamp,
 			&i.RowNumber,
 		); err != nil {
 			return nil, err
