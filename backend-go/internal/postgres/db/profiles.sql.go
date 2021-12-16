@@ -10,7 +10,7 @@ import (
 )
 
 const createProfile = `-- name: CreateProfile :one
-INSERT INTO "profiles" ("full_name", "phone_number", "bio", "image", "user_id")
+INSERT INTO profiles ("full_name", "phone_number", "bio", "image", "user_id")
 VALUES ($1, $2, $3, $4, $5)
 RETURNING
   id, full_name, phone_number, bio, image, user_id, created_at, updated_at
@@ -50,7 +50,7 @@ const getProfileById = `-- name: GetProfileById :one
 SELECT
     id, full_name, phone_number, bio, image, user_id, created_at, updated_at
 FROM
-    "profiles"
+    profiles
 WHERE
     "user_id" = $1
 `
@@ -123,7 +123,7 @@ func (q *Queries) GetProfileByUsername(ctx context.Context, username string) (Ge
 
 const updateProfile = `-- name: UpdateProfile :one
 UPDATE
-"profiles"
+profiles
 SET
     "full_name" = CASE WHEN $1::boolean THEN
         $2

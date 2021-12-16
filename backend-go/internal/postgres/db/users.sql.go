@@ -12,7 +12,7 @@ const getUserByEmail = `-- name: GetUserByEmail :one
 SELECT
     id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 FROM
-    "users"
+    users
 WHERE
     "email" = $1
 `
@@ -41,7 +41,7 @@ const getUserById = `-- name: GetUserById :one
 SELECT
     id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 FROM
-    "users"
+    users
 WHERE
     "id" = $1
 `
@@ -70,7 +70,7 @@ const getUserByUsername = `-- name: GetUserByUsername :one
 SELECT
     id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 FROM
-    "users"
+    users
 WHERE
     "username" = $1
 `
@@ -99,7 +99,7 @@ const listAllNonVerifiedUsers = `-- name: ListAllNonVerifiedUsers :many
 SELECT
     id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 FROM
-    "users"
+    users
 WHERE
     "is_verified" = 'false'
 `
@@ -144,7 +144,7 @@ const listAllUsers = `-- name: ListAllUsers :many
 SELECT
     id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 FROM
-    "users"
+    users
 `
 
 func (q *Queries) ListAllUsers(ctx context.Context) ([]Users, error) {
@@ -184,7 +184,7 @@ func (q *Queries) ListAllUsers(ctx context.Context) ([]Users, error) {
 }
 
 const registerAdmin = `-- name: RegisterAdmin :one
-INSERT INTO "users" (
+INSERT INTO users (
     "username", "email", "password", "salt", "is_superuser", "is_verified"
 )
 VALUES ($1, $2, $3, $4, TRUE, TRUE)
@@ -225,7 +225,7 @@ func (q *Queries) RegisterAdmin(ctx context.Context, arg RegisterAdminParams) (U
 }
 
 const registerNewUser = `-- name: RegisterNewUser :one
-INSERT INTO "users" ("username", "email", "password", "salt")
+INSERT INTO users ("username", "email", "password", "salt")
 VALUES ($1, $2, $3, $4)
 RETURNING
   id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
@@ -264,7 +264,7 @@ func (q *Queries) RegisterNewUser(ctx context.Context, arg RegisterNewUserParams
 }
 
 const registerVerifiedUser = `-- name: RegisterVerifiedUser :one
-INSERT INTO "users" ("username", "email", "password", "salt", "is_verified")
+INSERT INTO users ("username", "email", "password", "salt", "is_verified")
 VALUES ($1, $2, $3, $4, TRUE)
 RETURNING
   id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
@@ -304,7 +304,7 @@ func (q *Queries) RegisterVerifiedUser(ctx context.Context, arg RegisterVerified
 
 const resetUserPassword = `-- name: ResetUserPassword :one
 UPDATE
-"users"
+users
 SET
     "password" = $1,
     "salt" = $2
@@ -342,7 +342,7 @@ func (q *Queries) ResetUserPassword(ctx context.Context, arg ResetUserPasswordPa
 
 const updateLastNotificationAt = `-- name: UpdateLastNotificationAt :one
 UPDATE
-"users"
+users
 SET
     "last_notification_at" = $1
 WHERE
@@ -378,7 +378,7 @@ func (q *Queries) UpdateLastNotificationAt(ctx context.Context, arg UpdateLastNo
 
 const updateUserById = `-- name: UpdateUserById :one
 UPDATE
-"users"
+users
 SET
     "password" = CASE WHEN $1::boolean THEN
         $2
@@ -449,7 +449,7 @@ func (q *Queries) UpdateUserById(ctx context.Context, arg UpdateUserByIdParams) 
 }
 
 const updateUserRole = `-- name: UpdateUserRole :one
-UPDATE "users" SET "role" = $1 WHERE "id" = $2  RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
+UPDATE users SET "role" = $1 WHERE "id" = $2  RETURNING id, username, email, role, is_verified, salt, password, is_active, is_superuser, last_notification_at, created_at, updated_at
 `
 
 type UpdateUserRoleParams struct {
@@ -479,7 +479,7 @@ func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) 
 
 const verifyUserByEmail = `-- name: VerifyUserByEmail :one
 UPDATE
-"users"
+users
 SET
     "is_verified" = 'true'
 WHERE

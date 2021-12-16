@@ -1,5 +1,5 @@
 -- name: CreateProfile :one
-INSERT INTO "profiles" ("full_name", "phone_number", "bio", "image", "user_id")
+INSERT INTO profiles ("full_name", "phone_number", "bio", "image", "user_id")
 VALUES (@full_name, @phone_number, @bio, @image, @user_id)
 RETURNING
   *;
@@ -8,7 +8,7 @@ RETURNING
 SELECT
     *
 FROM
-    "profiles"
+    profiles
 WHERE
     "user_id" = @user_id;
 
@@ -32,7 +32,7 @@ WHERE
 
 -- name: UpdateProfile :one
 UPDATE
-"profiles"
+profiles
 SET
     "full_name" = CASE WHEN @full_name_do_update::boolean THEN
         @full_name

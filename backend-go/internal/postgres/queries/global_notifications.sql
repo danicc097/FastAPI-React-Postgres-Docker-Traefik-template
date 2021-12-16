@@ -8,7 +8,7 @@ RETURNING
 
 -- name: DeleteNotification :exec
 DELETE FROM global_notifications
-WHERE "id" = @id
+WHERE "id" = @id 
 RETURNING
   *;
 
@@ -32,9 +32,9 @@ SELECT
     notifications.body,
     notifications.created_at,
     notifications.updated_at,
-    CAST(notifications.event_type AS text) AS "event_type",
     notifications.event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS row_number
+    CAST(notifications.event_type AS text) AS "event_type",
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS "row_number"
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
@@ -80,9 +80,9 @@ SELECT
     notifications.body,
     notifications.created_at,
     notifications.updated_at,
-    CAST(notifications.event_type AS text) AS "event_type",
     notifications.event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS row_number
+    CAST(notifications.event_type AS text) AS "event_type",
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS "row_number"
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT

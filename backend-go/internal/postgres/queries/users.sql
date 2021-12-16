@@ -1,22 +1,8 @@
--- TODO:
--- create a common RETURNING function for all queries
--- that returns id, created_at, updated_at, username, email, password, salt
-CREATE FUNCTION return_user_row() RETURNS void AS '
-    RETURNING
-        id,
-        created_at,
-        updated_at,
-        username,
-        email,
-        password,
-        salt
-' LANGUAGE SQL;
-
 -- name: GetUserByEmail :one
 SELECT
     *
 FROM
-    "users"
+    users
 WHERE
     "email" = @email;
 
@@ -24,19 +10,19 @@ WHERE
 SELECT
     *
 FROM
-    "users"
+    users
 WHERE
     "username" = @username;
 
 
 -- name: RegisterNewUser :one
-INSERT INTO "users" ("username", "email", "password", "salt")
+INSERT INTO users ("username", "email", "password", "salt")
 VALUES (@username, @email, @password, @salt)
 RETURNING
   *;
 
 -- name: RegisterAdmin :one
-INSERT INTO "users" (
+INSERT INTO users (
     "username", "email", "password", "salt", "is_superuser", "is_verified"
 )
 VALUES (@username, @email, @password, @salt, TRUE, TRUE)
@@ -44,7 +30,7 @@ RETURNING
   *;
 
 -- name: RegisterVerifiedUser :one
-INSERT INTO "users" ("username", "email", "password", "salt", "is_verified")
+INSERT INTO users ("username", "email", "password", "salt", "is_verified")
 VALUES (@username, @email, @password, @salt, TRUE)
 RETURNING
   *;
@@ -53,13 +39,13 @@ RETURNING
 SELECT
     *
 FROM
-    "users"
+    users
 WHERE
     "id" = @id;
 
 -- name: UpdateUserById :one
 UPDATE
-"users"
+users
 SET
     "password" = CASE WHEN @password_do_update::boolean THEN
         @password
@@ -90,19 +76,19 @@ RETURNING
 SELECT
     *
 FROM
-    "users";
+    users;
 
 -- name: ListAllNonVerifiedUsers :many
 SELECT
     *
 FROM
-    "users"
+    users
 WHERE
     "is_verified" = 'false';
 
 -- name: VerifyUserByEmail :one
 UPDATE
-"users"
+users
 SET
     "is_verified" = 'true'
 WHERE
@@ -112,7 +98,7 @@ RETURNING
 
 -- name: ResetUserPassword :one
 UPDATE
-"users"
+users
 SET
     "password" = @password,
     "salt" = @salt
@@ -123,7 +109,7 @@ RETURNING
 
 -- name: UpdateLastNotificationAt :one
 UPDATE
-"users"
+users
 SET
     "last_notification_at" = @last_notification_at
 WHERE
@@ -132,4 +118,4 @@ RETURNING
   *;
 
 -- name: UpdateUserRole :one
-UPDATE "users" SET "role" = @role WHERE "id" = @id  RETURNING *;
+UPDATE users SET "role" = @role WHERE "id" = @id  RETURNING *;

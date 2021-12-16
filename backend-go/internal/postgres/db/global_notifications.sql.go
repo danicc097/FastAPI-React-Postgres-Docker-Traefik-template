@@ -77,7 +77,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 
 const deleteNotification = `-- name: DeleteNotification :exec
 DELETE FROM global_notifications
-WHERE "id" = $1
+WHERE "id" = $1 
 RETURNING
   id, sender, receiver_role, title, body, label, link, created_at, updated_at
 `
@@ -98,9 +98,9 @@ SELECT
     notifications.body,
     notifications.created_at,
     notifications.updated_at,
-    CAST(notifications.event_type AS text) AS "event_type",
     notifications.event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS row_number
+    CAST(notifications.event_type AS text) AS "event_type",
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS "row_number"
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
@@ -153,8 +153,8 @@ type GetNotificationsByLastReadRow struct {
 	Body           string         `db:"body"`
 	CreatedAt      time.Time      `db:"created_at"`
 	UpdatedAt      time.Time      `db:"updated_at"`
-	EventType      string         `db:"event_type"`
 	EventTimestamp time.Time      `db:"event_timestamp"`
+	EventType      string         `db:"event_type"`
 	RowNumber      int64          `db:"row_number"`
 }
 
@@ -177,8 +177,8 @@ func (q *Queries) GetNotificationsByLastRead(ctx context.Context, arg GetNotific
 			&i.Body,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.EventType,
 			&i.EventTimestamp,
+			&i.EventType,
 			&i.RowNumber,
 		); err != nil {
 			return nil, err
@@ -204,9 +204,9 @@ SELECT
     notifications.body,
     notifications.created_at,
     notifications.updated_at,
-    CAST(notifications.event_type AS text) AS "event_type",
     notifications.event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS row_number
+    CAST(notifications.event_type AS text) AS "event_type",
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS "row_number"
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
@@ -258,8 +258,8 @@ type GetNotificationsByStartingDateRow struct {
 	Body           string         `db:"body"`
 	CreatedAt      time.Time      `db:"created_at"`
 	UpdatedAt      time.Time      `db:"updated_at"`
-	EventType      string         `db:"event_type"`
 	EventTimestamp time.Time      `db:"event_timestamp"`
+	EventType      string         `db:"event_type"`
 	RowNumber      int64          `db:"row_number"`
 }
 
@@ -281,8 +281,8 @@ func (q *Queries) GetNotificationsByStartingDate(ctx context.Context, arg GetNot
 			&i.Body,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.EventType,
 			&i.EventTimestamp,
+			&i.EventType,
 			&i.RowNumber,
 		); err != nil {
 			return nil, err
