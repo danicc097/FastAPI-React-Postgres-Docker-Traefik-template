@@ -17,8 +17,8 @@ SELECT EXISTS(
     FROM
         global_notifications
     WHERE
-        updated_at > $1
-        AND receiver_role = ANY($2::text[])) AS has_new_notifications
+        "updated_at" > $1
+        AND "receiver_role" = ANY($2::text[])) AS "has_new_notifications"
 `
 
 type CheckHasNewNotificationsParams struct {
@@ -34,7 +34,7 @@ func (q *Queries) CheckHasNewNotifications(ctx context.Context, arg CheckHasNewN
 }
 
 const createNotification = `-- name: CreateNotification :one
-INSERT INTO "global_notifications" (
+INSERT INTO global_notifications (
     "sender", "receiver_role", "title", "body", "label", "link"
 )
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -76,7 +76,7 @@ func (q *Queries) CreateNotification(ctx context.Context, arg CreateNotification
 }
 
 const deleteNotification = `-- name: DeleteNotification :exec
-DELETE FROM "global_notifications"
+DELETE FROM global_notifications
 WHERE "id" = $1
 RETURNING
   id, sender, receiver_role, title, body, label, link, created_at, updated_at
@@ -98,42 +98,42 @@ SELECT
     notifications.body,
     notifications.created_at,
     notifications.updated_at,
-    'is_create' AS event_type,
-    notifications.created_at AS event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
+    CAST(notifications.event_type AS text) AS "event_type",
+    notifications.event_timestamp,
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS row_number
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
         id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-        updated_at AS event_timestamp,
+        "updated_at" AS "event_timestamp",
         -- define a new column event_type and set its value
-        'is_update' AS event_type
+        'is_update' AS "event_type"
     FROM
         global_notifications
     WHERE
         global_notifications.updated_at > $1
-        AND receiver_role = ANY($2::text[])
-        AND updated_at != created_at
+        AND "receiver_role" = ANY($2::text[])
+        AND "updated_at" != "created_at"
     ORDER BY
-        updated_at DESC
+        "updated_at" DESC
     LIMIT $3)
     UNION (
         -- All rows.
         SELECT
             id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-            created_at AS event_timestamp,
+            "created_at" AS "event_timestamp",
             -- define a new column event_type and set its value
-            'is_create' AS event_type
+            'is_create' AS "event_type"
         FROM
             global_notifications
         WHERE
-            created_at > $1
-            AND receiver_role = ANY($2::text[])
+            "created_at" > $1
+            AND "receiver_role" = ANY($2::text[])
         ORDER BY
-            created_at DESC
+            "created_at" DESC
   LIMIT $3)) AS notifications
 ORDER BY
-    event_timestamp DESC
+    "event_timestamp" DESC
 LIMIT $3
 `
 
@@ -153,7 +153,7 @@ type GetNotificationsByLastReadRow struct {
 	Body           string         `db:"body"`
 	CreatedAt      time.Time      `db:"created_at"`
 	UpdatedAt      time.Time      `db:"updated_at"`
-	EventType      interface{}    `db:"event_type"`
+	EventType      string         `db:"event_type"`
 	EventTimestamp time.Time      `db:"event_timestamp"`
 	RowNumber      int64          `db:"row_number"`
 }
@@ -204,42 +204,42 @@ SELECT
     notifications.body,
     notifications.created_at,
     notifications.updated_at,
-    'is_create' AS event_type,
-    notifications.created_at AS event_timestamp,
-    ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
+    CAST(notifications.event_type AS text) AS "event_type",
+    notifications.event_timestamp,
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS row_number
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
         id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-        updated_at AS event_timestamp,
+        "updated_at" AS "event_timestamp",
         -- define a new column event_type and set its value
-        'is_update' AS event_type
+        'is_update' AS "event_type"
     FROM
         global_notifications
     WHERE
         global_notifications.updated_at < $1
-        AND receiver_role = ANY($2::text[])
-        AND updated_at != created_at
+        AND "receiver_role" = ANY($2::text[])
+        AND "updated_at" != "created_at"
     ORDER BY
-        updated_at DESC
+        "updated_at" DESC
     LIMIT $3)
     UNION (
         -- All rows.
         SELECT
             id, sender, receiver_role, title, body, label, link, created_at, updated_at,
-            created_at AS event_timestamp,
+            "created_at" AS "event_timestamp",
             -- define a new column event_type and set its value
-            'is_create' AS event_type
+            'is_create' AS "event_type"
         FROM
             global_notifications
         WHERE
-            created_at < $1
-            AND receiver_role = ANY($2::text[])
+            "created_at" < $1
+            AND "receiver_role" = ANY($2::text[])
         ORDER BY
-            created_at DESC
+            "created_at" DESC
   LIMIT $3)) AS notifications
 ORDER BY
-    event_timestamp DESC
+    "event_timestamp" DESC
 LIMIT $3
 `
 
@@ -258,7 +258,7 @@ type GetNotificationsByStartingDateRow struct {
 	Body           string         `db:"body"`
 	CreatedAt      time.Time      `db:"created_at"`
 	UpdatedAt      time.Time      `db:"updated_at"`
-	EventType      interface{}    `db:"event_type"`
+	EventType      string         `db:"event_type"`
 	EventTimestamp time.Time      `db:"event_timestamp"`
 	RowNumber      int64          `db:"row_number"`
 }
