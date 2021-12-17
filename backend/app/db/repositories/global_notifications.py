@@ -27,42 +27,53 @@ from app.services.authorization import ROLE_PERMISSIONS
 
 def _fetch_notifications_query(date_condition: str) -> str:
     return f"""
+--sql
 SELECT
-  *,
-  ROW_NUMBER() OVER (ORDER BY event_timestamp DESC) AS row_number
+    notifications.id,
+    notifications.sender,
+    notifications.receiver_role,
+    notifications.title,
+    notifications.label,
+    notifications.link,
+    notifications.body,
+    notifications.created_at,
+    notifications.updated_at,
+    notifications.event_timestamp,
+    CAST(notifications.event_type AS text) AS "event_type",
+    ROW_NUMBER() OVER (ORDER BY "event_timestamp" DESC) AS "row_number"
 FROM ((
     -- Rows where the notification has been updated at some point.
     SELECT
-      *,
-      updated_at AS event_timestamp,
-      -- define a new column ``event_type`` and set its value
-      'is_update' AS event_type
+        *,
+        "updated_at" AS "event_timestamp",
+        -- define a new column event_type and set its value
+        'is_update' AS "event_type"
     FROM
-      global_notifications
+        global_notifications
     WHERE
-      updated_at {date_condition}
-      AND receiver_role = ANY(:roles)
-      AND updated_at != created_at
+        global_notifications.updated_at {date_condition}
+        AND "receiver_role" = ANY(:roles)
+        AND "updated_at" != "created_at"
     ORDER BY
-      updated_at DESC
+        "updated_at" DESC
     LIMIT :page_chunk_size)
-UNION (
-  -- All rows.
-  SELECT
-    *,
-    created_at AS event_timestamp,
-    -- define a new column ``event_type`` and set its value
-    'is_create' AS event_type
-  FROM
-    global_notifications
-  WHERE
-    created_at {date_condition}
-    AND receiver_role = ANY(:roles)
-  ORDER BY
-    created_at DESC
-  LIMIT :page_chunk_size)) AS notifications_feed
+    UNION (
+    -- All rows.
+        SELECT
+            *,
+            "created_at" AS "event_timestamp",
+            -- define a new column event_type and set its value
+            'is_create' AS "event_type"
+        FROM
+            global_notifications
+        WHERE
+            global_notifications.created_at {date_condition}
+            AND "receiver_role" = ANY(:roles)
+        ORDER BY
+            "created_at" DESC
+  LIMIT :page_chunk_size)) AS notifications
 ORDER BY
-  event_timestamp DESC
+    "event_timestamp" DESC
 LIMIT :page_chunk_size;
 """
 

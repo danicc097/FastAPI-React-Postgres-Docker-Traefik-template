@@ -52,7 +52,7 @@ FROM ((
         "updated_at" DESC
     LIMIT @page_chunk_size)
     UNION (
-        -- All rows.
+    -- All rows.
         SELECT
             *,
             "created_at" AS "event_timestamp",
@@ -61,7 +61,7 @@ FROM ((
         FROM
             global_notifications
         WHERE
-            "created_at" > @last_notification_at
+            global_notifications.created_at > @last_notification_at
             AND "receiver_role" = ANY(@roles::text[])
         ORDER BY
             "created_at" DESC
@@ -75,6 +75,7 @@ SELECT
     notifications.id,
     notifications.sender,
     notifications.receiver_role,
+    notifications.title,
     notifications.label,
     notifications.link,
     notifications.body,
@@ -100,7 +101,7 @@ FROM ((
         "updated_at" DESC
     LIMIT @page_chunk_size)
     UNION (
-        -- All rows.
+    -- All rows.
         SELECT
             *,
             "created_at" AS "event_timestamp",
@@ -109,7 +110,7 @@ FROM ((
         FROM
             global_notifications
         WHERE
-            "created_at" < @starting_date
+            global_notifications.created_at < @starting_date
             AND "receiver_role" = ANY(@roles::text[])
         ORDER BY
             "created_at" DESC

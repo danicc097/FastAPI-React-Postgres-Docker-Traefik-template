@@ -48,4 +48,4 @@ See <https://github.com/pytest-dev/pytest-xdist> and benchmark those to figure o
 
 ## Software recommendations
 
-- DBeaver for Postgres. Dead-simple query testing and debugging and even allows using ``:param`` syntax in its SQL console.
+- DBeaver for Postgres. Dead-simple query testing and debugging and even allows using ``:param`` syntax in its SQL console. Can be changed to any other character in Window>Preferences>Editors>SQLEditor>SQL Processing > Named parameter prefix
