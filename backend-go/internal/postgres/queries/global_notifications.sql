@@ -22,6 +22,7 @@ SELECT EXISTS(
         AND "receiver_role" = ANY(@roles::text[])) AS "has_new_notifications";
 
 -- name: GetNotificationsByLastRead :many
+-- TODO: perhaps WITH ... as notifications is more performant?
 SELECT
     notifications.id,
     notifications.sender,

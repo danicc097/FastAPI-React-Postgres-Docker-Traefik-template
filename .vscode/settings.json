@@ -1,0 +1,5 @@
+{
+  "terminal.integrated.env.linux": {
+    "PATH": "${env:PATH}:scripts/:bin/:frontend/scripts/:backend/scripts/:backend-go/scripts/:e2e/scripts/"
+  }
+}
