@@ -52,7 +52,7 @@ export default function UserPermissionsPage() {
     } else {
       setUserOptions(userOptions)
     }
-  }, [userOptions, allUsers])
+  }, [userOptions, allUsers, forceRerender])
 
   const onEmailSelectableChange = (newOptions) => {
     setUserOptions(newOptions)
@@ -69,7 +69,7 @@ export default function UserPermissionsPage() {
     if (action.type !== AdminActionType.UPDATE_USER_ROLE_SUCCESS) {
       setErrors((errors) => ({ ...errors, form: 'There was an error updating the user role' }))
     }
-    setForceRerender(!forceRerender)
+    setForceRerender(true)
     closeModal()
   }
 
