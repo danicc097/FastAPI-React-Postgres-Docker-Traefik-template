@@ -29,6 +29,9 @@ httpx = "*"
 asgi-lifespan = "*"
 loguru = "*"
 psycopg2-binary = "*"
+sse-starlette = "*"
+pytest-timeout = "*"
+starlette-context = "*"
 
 [requires]
 python_version = "3.9"

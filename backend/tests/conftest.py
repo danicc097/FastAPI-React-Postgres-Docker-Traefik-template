@@ -11,7 +11,7 @@ from asgi_lifespan import LifespanManager
 from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
-
+import pytest_asyncio
 from app.core.config import JWT_TOKEN_PREFIX, UNIQUE_KEY, is_testing
 from app.db.repositories.users import UsersRepository
 from app.models.user import Role, RoleUpdate, UserCreate, UserInDB, UserPublic
@@ -28,7 +28,7 @@ os.environ["TESTING"] = "1"
 # but it rolls back every single transaction, which won't allow us to test multiple queries
 # that depend on each other for the test to be useful.
 # "module" will persist db changes between tests files and is a nice balance
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 def apply_migrations():
     """
     Determine when migrations should be applied
@@ -54,14 +54,14 @@ def apply_migrations():
 # * i.e. we're creating a new `app` for every test module (.py).
 # * However, the same `app` is used anywhere this fixture is used, e.g. db(),
 # * it doesn't create a new one since it knows it already exists.
-@pytest.fixture
+@pytest_asyncio.fixture
 def app(apply_migrations) -> FastAPI:
     from app.api.server import get_application
 
     return get_application()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def db(app: FastAPI) -> Database:
     """
     Current app's ``Database`` object to be used in other fixtures.
@@ -75,7 +75,7 @@ def db(app: FastAPI) -> Database:
 # NOTES on how to fix:
 # - ``with`` cleans up afterwards...
 # - Reference https://www.python-httpx.org/async/#opening-and-closing-clients
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI):
     """
     Creates a new unauthenticated ``client`` able to make requests.
@@ -97,7 +97,7 @@ async def client(app: FastAPI):
 # this will mess up apply_migrations on scope change due
 # to having more than one client connected
 # and requires force closing all sessions
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_client(app: FastAPI):
     """
     Creates a new unauthenticated ``admin_client`` able to make requests.
@@ -113,7 +113,7 @@ async def admin_client(app: FastAPI):
             yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client_2(app: FastAPI):
     """
     Creates a new unauthenticated ``client_2`` able to make requests.
@@ -129,7 +129,7 @@ async def client_2(app: FastAPI):
             yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def user_fixture(request):
     """
     Return an user fixture.
@@ -137,7 +137,7 @@ def user_fixture(request):
     return request.getfixturevalue(request.param)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def authorized_client(client: AsyncClient, test_user: UserPublic) -> AsyncClient:
     """
     Creates an authorized ``test_user`` to test authorized requests instead
@@ -152,7 +152,7 @@ def authorized_client(client: AsyncClient, test_user: UserPublic) -> AsyncClient
     return client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def superuser_client(admin_client: AsyncClient, test_admin_user: UserPublic) -> AsyncClient:
     """
     Creates an authorized ``superuser_client`` with admin privileges and its own
@@ -167,7 +167,7 @@ def superuser_client(admin_client: AsyncClient, test_admin_user: UserPublic) -> 
     return admin_client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def test_2_client(client_2: AsyncClient, test_user4: UserPublic) -> AsyncClient:
     access_token = auth_service.create_access_token_for_user(user=test_user4, secret_key=str(UNIQUE_KEY))
     client_2.headers = {
@@ -177,7 +177,7 @@ def test_2_client(client_2: AsyncClient, test_user4: UserPublic) -> AsyncClient:
     return client_2
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def create_authorized_client(client: AsyncClient) -> Callable:
     """
     Allows to authorize any user fixture (test_user[i], etc.)
@@ -281,7 +281,7 @@ TEST_USERS: Dict[str, UserCreate] = {
 }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_db(db: Database) -> UserInDB:
     new_user = UserCreate(
         email=TEST_USERS["test_user_db"].email,
@@ -291,7 +291,7 @@ async def test_user_db(db: Database) -> UserInDB:
     return await user_fixture_helper(db=db, new_user=new_user, to_public=False)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_admin_user(db: Database) -> UserInDB:
     new_user = UserCreate(
         email=TEST_USERS["test_admin_user"].email,
@@ -301,7 +301,7 @@ async def test_admin_user(db: Database) -> UserInDB:
     return await user_fixture_helper(db=db, new_user=new_user, admin=True, to_public=False)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_unverified_user(db: Database) -> UserInDB:
     new_user = UserCreate(
         email=TEST_USERS["test_unverified_user"].email,
@@ -312,7 +312,7 @@ async def test_unverified_user(db: Database) -> UserInDB:
     return await user_fixture_helper(db=db, new_user=new_user, to_public=False)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_unverified_user2(db: Database) -> UserInDB:
     new_user = UserCreate(
         email=TEST_USERS["test_unverified_user2"].email,
@@ -323,7 +323,7 @@ async def test_unverified_user2(db: Database) -> UserInDB:
     return await user_fixture_helper(db=db, new_user=new_user, to_public=False)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user"].email,
@@ -333,7 +333,7 @@ async def test_user(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user2(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user2"].email,
@@ -343,7 +343,7 @@ async def test_user2(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user3(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user3"].email,
@@ -353,7 +353,7 @@ async def test_user3(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user4(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user4"].email,
@@ -363,7 +363,7 @@ async def test_user4(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user5(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user5"].email,
@@ -373,7 +373,7 @@ async def test_user5(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user6(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user6"].email,
@@ -383,7 +383,7 @@ async def test_user6(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user7(db: Database) -> UserPublic:
     new_user = UserCreate(
         email=TEST_USERS["test_user7"].email,
@@ -393,7 +393,7 @@ async def test_user7(db: Database) -> UserPublic:
     return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_list(
     test_user3: UserPublic,
     test_user4: UserPublic,

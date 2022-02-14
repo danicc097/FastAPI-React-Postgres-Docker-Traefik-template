@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.routes.admin import router as admin_router
 from app.api.routes.profiles import router as profiles_router
 from app.api.routes.users import router as users_router
+from app.api.routes.sse import router as sse_router
 
 router = APIRouter()
 
@@ -12,3 +13,4 @@ router = APIRouter()
 router.include_router(users_router, prefix="/users", tags=["users"])
 router.include_router(profiles_router, prefix="/profiles", tags=["profiles"])
 router.include_router(admin_router, prefix="/admin", tags=["admin"])
+router.include_router(sse_router, prefix="/sse", tags=["sse"])

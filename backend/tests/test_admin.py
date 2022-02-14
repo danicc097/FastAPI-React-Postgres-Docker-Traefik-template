@@ -6,16 +6,18 @@ Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
 
 
 """
+from contextlib import _AsyncGeneratorContextManager
 import json
 import os
 from datetime import datetime, timedelta
 from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
+from urllib.parse import urlencode
 
 import jwt
 import pytest
 from databases import Database
 from fastapi import FastAPI, HTTPException, status
-from httpx import AsyncClient
+from httpx import AsyncClient, Response
 from loguru import logger
 from starlette.datastructures import Secret
 from starlette.status import (
@@ -339,35 +341,48 @@ class TestAdminGlobalNotifications:
             # transaction should have been rolled back
             assert n_notifications == self._n_notifications
 
-    async def test_user_receives_has_new_notification_alert(
+    async def test_user_global_notification_alerts(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
         test_user: UserPublic,
     ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
-        assert res.status_code == HTTP_200_OK
-        assert res.json() is True
+        async def fetch_stream(
+            max_messages,
+            async_gen_ctx_manager: _AsyncGeneratorContextManager[Response],
+            expected_response,
+        ):
+            async with async_gen_ctx_manager as response:
+                assert response.status_code == HTTP_200_OK
+                assert "text/event-stream" in response.headers["Content-Type"]
+                res = await response.aread()
+                assert len(res.decode("utf-8").split("\r\n\r\n")) == max_messages + 1
+                # b'data: {"id": "user@myapp.com-2022-02-10T08:42:42.749505", "has_new_notifications": "false"}\r\n\r\ndata: {"id": "user@myapp.com-2022-02-10T08:42:42.952950", "has_new_notifications": "false"}\r\n\r\n'
+                res_last_message = res.decode("utf-8").split("\r\n\r\n")[-max_messages].replace("data: ", "")
+                assert json.loads(res_last_message)["has_new_notifications"] == expected_response
 
-    async def test_user_can_fetch_all_unread_notifications(
-        self,
-        app: FastAPI,
-        authorized_client: AsyncClient,
-        test_user: UserPublic,
-    ) -> None:
-        # this will fail if the user is created after the notification is sent
+        import app.api.routes.sse as sse
+
+        sse.MESSAGE_STREAM_DELAY = 0.2
+
+        token = authorized_client.headers.get("Authorization").split(" ")[1]
+        max_messages = 3
+        url_path = (
+            app.url_path_for("sse:global-notifications-stream")
+            + "?"
+            + urlencode({"token": token, "max_messages": max_messages})
+        )
+
+        async_gen_ctx_manager = authorized_client.stream("get", url_path)
+        # user receives a new notification alert
+        await fetch_stream(max_messages, async_gen_ctx_manager, "true")
+        # user can fetch all unread notifications
         res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == self._n_notifications
-
-    async def test_user_does_not_receive_a_has_new_notification_alert_for_old_notifications(
-        self, app: FastAPI, authorized_client: AsyncClient, test_user
-    ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
-        assert res.status_code == HTTP_200_OK
-        assert res.json() is False
+        # user does not receive a has new notification alert for old notifications
+        async_gen_ctx_manager = authorized_client.stream("get", url_path)
+        await fetch_stream(max_messages, async_gen_ctx_manager, "false")
 
     async def test_user_gets_no_new_notifications_when_loading_more_if_all_are_read(
         self,
@@ -380,6 +395,7 @@ class TestAdminGlobalNotifications:
         assert res.status_code == HTTP_200_OK
         assert len(res.json()) == 0
 
+    @pytest.mark.timeout(25)
     async def test_user_does_not_see_notifications_out_of_role_scope(
         self,
         app: FastAPI,
@@ -404,15 +420,23 @@ class TestAdminGlobalNotifications:
             json={"notification": notification.dict()},
         )
 
-        # alert that new feed is available
-        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
-        assert res.status_code == HTTP_200_OK
-        assert res.json() is False
+        import app.api.routes.sse as sse
 
-        # feed itself
-        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == 0
+        sse.MESSAGE_STREAM_DELAY = 0.1
+
+        token = authorized_client.headers.get("Authorization").split(" ")[1]
+        url_path = (
+            app.url_path_for("sse:global-notifications-stream") + "?" + urlencode({"token": token, "max_messages": 2})
+        )
+
+        async_gen_ctx_manager = authorized_client.stream("get", url_path)
+        async with async_gen_ctx_manager as response:
+            assert response.status_code == HTTP_200_OK
+            assert "text/event-stream" in response.headers["Content-Type"]
+            res = await response.aread()
+            # b'data: {"id": "user@ftrs.com-2022-02-10T08:42:42.749505", "has_new_notifications": "false"}\r\n\r\ndata: {"id": "user@ftrs.com-2022-02-10T08:42:42.952950", "has_new_notifications": "false"}\r\n\r\n'
+            res_last_message = res.decode("utf-8").split("\r\n\r\n")[-2].replace("data: ", "")
+            assert json.loads(res_last_message)["has_new_notifications"] == "false"
 
     async def test_user_can_arbitrarily_fetch_notification_feed_by_date(
         self,
