@@ -17,7 +17,6 @@ print(query_values)
 The ``databases`` package allows for ``:query_arg`` style query parameters (which can come from unpacked dicts from a model).
 A query (with ``fetch_one``, ``fetch_all``, etc) returns a ``Record`` whose keys can be unpacked to yet another Pydantic model for further validation.
 
-
 # Transactions
 
 When executing multiple queries, i.e. multiple ``fetch_all``, ``fetch_one``, etc. we can use the following context manager:
