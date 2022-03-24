@@ -18,6 +18,7 @@
   - [Docker](#docker)
     - [Building image from compose file](#building-image-from-compose-file)
   - [Troubleshooting](#troubleshooting)
+    - [Pyndatic validation](#pyndatic-validation)
     - [Traefik](#traefik)
     - [Environment files](#environment-files)
     - [Backend tests suddenly fail](#backend-tests-suddenly-fail)
@@ -119,6 +120,19 @@ ENV PERSISTENT_ENV_VAR $ENV_VAR
 ```
 
 ## Troubleshooting
+
+### Pyndatic validation
+
+Fastapi won't give a meaningful error when the response model typing in a route does not match the return value.
+```py
+    if errors:
+    >               raise ValidationError(errors, field.type_)
+    E               pydantic.error_wrappers.ValidationError: <unprintable ValidationError object>
+
+/usr/local/lib/python3.9/site-packages/fastapi/routing.py:138: ValidationError
+```
+
+We should always look into the ``response_model`` of the route first of all to ensure it's correct
 
 ### Traefik
 
