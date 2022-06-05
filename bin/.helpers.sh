@@ -98,6 +98,7 @@ function docker_compose_in_env {
         ;;
       -c | --ci)
         cicd=true
+        echo "$(yellow WARNING): Running in CICD pipeline."
         ;;
       -p | --pull)
         pull=true
