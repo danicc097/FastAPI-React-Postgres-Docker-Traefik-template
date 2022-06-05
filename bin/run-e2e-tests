@@ -12,7 +12,7 @@ ROOT_DIR="$(dirname "$BIN_DIR")"
 
 if [ "$1" = "ci" ]; then
   red "Running E2E tests for CI..."
-  mv "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env
+  mv "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env || stat "$ROOT_DIR"/.env.ci || echo "No .env.ci file found"
   mv "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
   mv "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
   mv "$ROOT_DIR"/frontend/.env.ci "$ROOT_DIR"/frontend/.env.development
