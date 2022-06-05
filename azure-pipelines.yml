@@ -187,7 +187,7 @@ stages:
               script: |
                 wget --no-verbose -O mkcert https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64
                 chmod +x ./mkcert
-                sudo apt install libnss3-tools
+                sudo apt-get install libnss3-tools
                 ./mkcert -install
                 ./mkcert --cert-file localhost.pem --key-file localhost-key.pem \
                   "app.localhost" "*.app.localhost" \
@@ -207,7 +207,7 @@ stages:
               abortOnContainerExit: true
 
           - task: Bash@3
-            displayName: tooling installation
+            displayName: Tooling installation
             inputs:
               targetType: inline
               script: |
@@ -216,7 +216,7 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: frontend package installation
+            displayName: Frontend package installation
             inputs:
               targetType: inline
               script: |
@@ -225,7 +225,7 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: e2e package installation
+            displayName: E2E package installation
             inputs:
               targetType: inline
               script: |
@@ -234,7 +234,7 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: dcompose up
+            displayName: Build with dcompose
             inputs:
               targetType: inline
               script: |
