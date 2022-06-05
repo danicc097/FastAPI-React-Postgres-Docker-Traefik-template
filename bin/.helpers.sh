@@ -116,6 +116,7 @@ function docker_compose_in_env {
     done
 
     echo "- deploy: $(bool "$deploy")"
+    echo "- ci: $(bool "$cicd")"
     echo "- docker-compose extra args: $(green "$COMPOSE_ARGS")"
     _confirm "Do you want to run $(green docker-compose "$COMPOSE_COMMAND" "$COMPOSE_ARGS" \[...\]) in the $(red "$ENV") environment?"
 

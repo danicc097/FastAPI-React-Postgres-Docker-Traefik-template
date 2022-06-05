@@ -10,12 +10,14 @@ services:
   backend:
     image: ${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend:latest
     container_name: backend_${PROJECT_PREFIX:?not set}_${APP_ENV:?not set}
-    user: rootless
+    user: ${CONTAINER_USER:?not set}
     networks:
       - traefik-net
     build:
       context: ./backend
       dockerfile: Dockerfile.${APP_ENV:?not set}
+      args:
+        - "CONTAINER_USER=${CONTAINER_USER:?not set}"
     volumes:
       - /backend/.pytest_cache/
       - /backend/__pycache__/
