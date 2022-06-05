@@ -24,8 +24,7 @@ fi
 BASEDIR=$(dirname "$0")
 PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
 
-# shellcheck disable=SC2086
-yes | "$BIN_DIR"/dcompose dev up --build $extra_args
+yes | "$BIN_DIR"/dcompose dev up --build "${extra_args[@]}"
 
 # shellcheck disable=SC2086
 DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose --project-name "$PROJECT_PREFIX"_e2e -f docker-compose.e2e.yml --env-file ".env.dev" up -d --build
