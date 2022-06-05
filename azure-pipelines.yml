@@ -48,7 +48,7 @@ variables:
   # REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
 
 
-  # System.Debug: true # see debug logs for every pipeline
+  System.Debug: true # see debug logs for every pipeline
   # tag: "$(Build.BuildNumber)" # incremental build id as image tag
   # DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
   # DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
