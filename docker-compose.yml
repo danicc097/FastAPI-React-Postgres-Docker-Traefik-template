@@ -21,7 +21,7 @@ services:
       - /backend/__pycache__/
       - /backend/.mypy_cache/
       - /backend/.venv/
-      - ./backend/:/backend/:z
+      - ./backend/:/backend/
       - ./backend/logs/:/backend/logs/
       - ./backend/.env.${APP_ENV:?not set}:/backend/.env.${APP_ENV:?not set}
     # command: uvicorn app.api.server:app --reload --reload-dir app/ --workers 2 --host 0.0.0.0 --port ${BACKEND_PORT_DEV:?not set}

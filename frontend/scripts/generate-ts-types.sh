@@ -58,7 +58,7 @@ cp "$(dirname "$SCHEMA_OUT")"/initialData.ts "$(dirname "$SCHEMA_OUT_E2E")"
 echo "Wrote initial data types to $(dirname "$SCHEMA_OUT")/initialData.ts"
 
 if [ "$ENV" = "e2e" ]; then
-  ../../bin/initial-data "$ENV"
   chown -R 1000:1000 "$BACKEND_DIR"/initial_data 2>/dev/null
+  ../../bin/initial-data "$ENV"
   cp "$BACKEND_DIR"/initial_data/e2e.json "$E2E_DIR"/__tests__/initialData/e2e.json
 fi
