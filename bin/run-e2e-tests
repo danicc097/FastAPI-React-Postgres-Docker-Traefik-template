@@ -12,7 +12,6 @@ ROOT_DIR="$(dirname "$BIN_DIR")"
 
 if [ "$1" = "ci" ]; then
   red "Running E2E tests for CI..."
-  chown -R 1000:1000 "$ROOT_DIR" 2>/dev/null || true
   cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env
   cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
   cp "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
