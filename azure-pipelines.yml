@@ -213,7 +213,7 @@ stages:
               script: |
                 sudo bash backend/docs/sudo_install_tooling.sh && \
                 bash backend/docs/install_sqlc_custom.sh && \
-                pip install pydantic-to-typescript && \
+                pip install pydantic-to-typescript alembic && \
                 sudo apt-get install -y npm && sudo npm install -g pnpm
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
