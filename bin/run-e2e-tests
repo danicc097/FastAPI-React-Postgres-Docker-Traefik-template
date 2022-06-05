@@ -16,7 +16,6 @@ if [ "$1" = "ci" ]; then
   cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
   cp "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
   cp "$ROOT_DIR"/frontend/.env.ci "$ROOT_DIR"/frontend/.env.development
-  sudo chown -R 1500:1500 "$ROOT_DIR"
 else # dev
   red "Running E2E tests for $PROJECT_PREFIX..."
 fi
