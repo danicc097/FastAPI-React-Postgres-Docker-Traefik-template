@@ -59,5 +59,5 @@ echo "Wrote initial data types to $(dirname "$SCHEMA_OUT")/initialData.ts"
 
 if [ "$ENV" = "e2e" ]; then
   ../../bin/initial-data "$ENV"
-  sudo cp "$BACKEND_DIR"/initial_data/e2e.json "$E2E_DIR"/__tests__/initialData/e2e.json
+  cp "$BACKEND_DIR"/initial_data/e2e.json "$E2E_DIR"/__tests__/initialData/e2e.json
 fi

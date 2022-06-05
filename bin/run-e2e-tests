@@ -16,7 +16,7 @@ if [ "$1" = "ci" ]; then
   cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
   cp "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
   cp "$ROOT_DIR"/frontend/.env.ci "$ROOT_DIR"/frontend/.env.development
-  sudo chown -R 1000:1000 "$ROOT_DIR"
+  extra_args=" --ci"
 else # dev
   red "Running E2E tests for $PROJECT_PREFIX..."
 fi
@@ -24,7 +24,7 @@ fi
 BASEDIR=$(dirname "$0")
 PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
 
-yes | "$BIN_DIR"/dcompose dev up --build
+yes | "$BIN_DIR"/dcompose dev up --build "$extra_args"
 
 # shellcheck disable=SC2086
 DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose --project-name "$PROJECT_PREFIX"_e2e -f docker-compose.e2e.yml --env-file ".env.dev" up -d --build
