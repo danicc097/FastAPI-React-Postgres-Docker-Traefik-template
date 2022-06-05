@@ -12,7 +12,8 @@ ROOT_DIR="$(dirname "$BIN_DIR")"
 
 if [ "$1" = "ci" ]; then
   red "Running E2E tests for CI..."
-  cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env || stat "$ROOT_DIR"/.env.ci || echo "No .env.ci file found"
+  chown -R $UID:"$GROUPS" "$ROOT_DIR" 2>/dev/null || true
+  cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env
   cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
   cp "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
   cp "$ROOT_DIR"/frontend/.env.ci "$ROOT_DIR"/frontend/.env.development
