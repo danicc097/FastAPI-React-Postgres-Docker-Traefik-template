@@ -213,7 +213,7 @@ stages:
               script: |
                 sudo bash backend/docs/sudo_install_tooling.sh && \
                 bash backend/docs/install_sqlc_custom.sh && \
-                bash backend/docs/install_dependencies.sh && \
+                cd backend && bash docs/install_dependencies.sh && \
                 sudo apt-get install -y npm && sudo npm install -g pnpm
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
