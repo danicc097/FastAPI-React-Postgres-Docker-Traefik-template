@@ -1,0 +1,65 @@
+{
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.useLibraryCodeForTypes": true,
+  "python.analysis.indexing": true,
+  "python.analysis.typeCheckingMode": "basic", // better off until pydantic/pyright fixed https://github.com/samuelcolvin/pydantic/issues/3753
+  "python.analysis.diagnosticSeverityOverrides": {},
+  "python.analysis.extraPaths": [".", "./myapp-client"],
+  // CRUCIAL to fix auto import suggestions. currently undocumented.
+  // https://github.com/microsoft/pylance-release/issues/2533
+  "python.analysis.packageIndexDepths": [
+    ["celery", 6],
+    ["sqlalchemy", 6],
+    ["app", 6],
+    [".", 6],
+    ["", 6],
+    ["sklearn", 2],
+    ["matplotlib", 2],
+    ["fastapi", 3],
+    ["starlette", 3],
+    ["scipy", 2],
+    ["django", 2],
+    ["numpy", 2]
+  ],
+  "python.linting.pylintArgs": ["--init-hook='import sys; sys.path.append(\"/workspace\")'"],
+  "python.defaultInterpreterPath": ".venv/bin/python",
+  "python.linting.flake8Path": ".venv/bin/flake8",
+  "python.sortImports.path": ".venv/bin/isort",
+  "python.linting.mypyEnabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Args": ["--config=tox.ini"],
+  "python.formatting.blackPath": ".venv/bin/black",
+  "python.linting.mypyPath": ".venv/bin/mypy",
+  "pytest.pythonPath": ".venv/bin/python",
+  "pytest.command": ".venv/bin/pytest",
+  "python.linting.mypyArgs": [
+    // "--follow-imports=silent",
+    "--show-column-numbers",
+    // add configuration located in setup.cfg
+    "--config-file=./setup.cfg"
+  ],
+
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true, // using docker
+  "python.formatting.provider": "black",
+
+  "plpgsqlLanguageServer.database": "postgres",
+  "plpgsqlLanguageServer.user": "postgres",
+  "plpgsqlLanguageServer.password": "postgres",
+  "plpgsqlLanguageServer.host": "localhost",
+  "plpgsqlLanguageServer.port": 55360,
+  "plpgsqlLanguageServer.defaultSchema": "public",
+  "plpgsqlLanguageServer.definitionFiles": ["**/*.psql", "**/*.pgsql"],
+  // "plpgsqlLanguageServer.queryParameterPattern": "@[A-Za-z_][A-Za-z0-9_]*",
+  "plpgsqlLanguageServer.keywordQueryParameterPattern": "@{keyword}",
+
+  "files.associations": {
+    "*.sql": "sql"
+  },
+  "search.exclude": {
+    "**/swagger": true,
+    "**/myapp-client": true
+  },
+  "search.sortOrder": "fileNames"
+}

@@ -4,14 +4,14 @@ import userEvent from '@testing-library/user-event'
 import PagePermissions from './PagePermissions'
 import '@testing-library/jest-dom'
 import { BrowserRouter } from 'react-router-dom'
-// this is an overridden render from @testing-library/react
+
 import { render as renderWithStore } from 'src/test/test-utils'
 import { testInitialState } from 'src/test/test-state'
 
 test('Renders content', async () => {
   renderWithStore(
     <BrowserRouter>
-      <PagePermissions element={<div></div>} isAllowed={true} />
+      <PagePermissions element={<div></div>} isAllowed />
     </BrowserRouter>,
     { initialState: testInitialState },
   )

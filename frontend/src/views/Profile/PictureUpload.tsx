@@ -2,7 +2,7 @@ import { EuiButton, EuiFilePicker, EuiFlexGroup, EuiFlexItem, EuiFormHelpText } 
 import React, { Fragment, useRef, useState } from 'react'
 
 export default function PictureUpload() {
-  const [files, setFiles] = useState<GenObjType<any>>({})
+  const [files, setFiles] = useState<Record<string, any>>({})
   const filePickerRef: any = useRef()
 
   const onChange = (files) => {

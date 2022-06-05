@@ -14,13 +14,11 @@ import React, { useState, Fragment, useRef } from 'react'
 import { EuiBasicTable, EuiLink, EuiHealth, EuiButton, EuiFlexGroup, EuiFlexItem, EuiSpacer } from '@elastic/eui'
 import { useUnverifiedUsers } from 'src/hooks/admin/useUnverifiedUsers'
 import styled from 'styled-components'
-import { schema } from 'src/types/schema_override'
-import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
+import { schema } from 'src/types/schemaOverride'
+import AdminPageBase from '../AdminPageBase/AdminPageBase'
 
 export default function UnverifiedUsersPage() {
-  //   const [pageIndex, setPageIndex] = useState(0)
-  //   const [pageSize, setPageSize] = useState(5)
-  const [sortField, setSortField] = useState('') // broken when specifying any field first
+  const [sortField, setSortField] = useState('')
   const [selectedItems, setSelectedItems] = useState<typeof unverifiedUsers>([])
   const [sortDirection, setSortDirection] = useState<Direction>('asc')
   const { verifyUsers, fetchAllNonVerifiedUsers, unverifiedUsers } = useUnverifiedUsers()
@@ -36,10 +34,7 @@ export default function UnverifiedUsersPage() {
     setSelectedItems(selectedItems)
   }
 
-  // don't forget async...
   const onClickVerify = async () => {
-    // return list of user.email from selectedItems
-    // verifyUsers needs to return whatever dispatch returns to be able to await the response
     const action = await verifyUsers({ userEmails: selectedItems.map((user) => user.email) })
     console.log(
       `selectedItems.map((user) => user.email)`,
@@ -68,7 +63,6 @@ export default function UnverifiedUsersPage() {
   }
   const verifyButton = renderVerifyButton()
 
-  // field must match the object field name
   const columns = [
     {
       field: 'email',
@@ -144,7 +138,7 @@ export default function UnverifiedUsersPage() {
       <EuiInMemoryTable
         items={unverifiedUsers ?? []}
         message={unverifiedUsers?.length ? null : 'There are no unverified users'}
-        itemId="email" // how to extract a unique ID from each item, for selections & expanded rows
+        itemId="email"
         columns={columns}
         sorting={sorting}
         selection={selection}
@@ -154,5 +148,5 @@ export default function UnverifiedUsersPage() {
     </Fragment>
   )
 
-  return <AdminPageTemplate title={title} element={element} />
+  return <AdminPageBase title={title} element={element} />
 }

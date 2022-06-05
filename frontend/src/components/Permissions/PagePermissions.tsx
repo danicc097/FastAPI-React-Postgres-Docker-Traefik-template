@@ -8,15 +8,14 @@ type PagePermissionsProps = {
   adminRoute?: boolean
 }
 
-// props with same syntax as the Route component from react-router-dom
 export default function PagePermissions({ element, isAllowed = false }: PagePermissionsProps) {
   if (!isAllowed) {
     return (
       <EuiEmptyPrompt
         iconType="securityApp"
         iconColor={null}
-        title={<h2>Access Denied</h2>}
-        body={<p>{_.escape(`You don't have the required permissions to access this content.`)}</p>}
+        title={<h2 className="eui-textInheritColor">Access Denied</h2>}
+        body={<p>{`You don't have the required permissions to access this content.`}</p>}
       />
     )
   }

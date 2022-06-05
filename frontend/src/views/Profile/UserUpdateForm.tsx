@@ -1,8 +1,6 @@
 import {
-  EuiAccordion,
   EuiButton,
   EuiConfirmModal,
-  EuiFieldPassword,
   EuiFieldText,
   EuiFlexGroup,
   EuiFlexItem,
@@ -21,20 +19,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUserUpdateForm } from 'src/hooks/forms/useUserUpdateForm'
 import { UserProfileActionType } from 'src/redux/modules/userProfile/userProfile'
 import { handleInputChange, validateInput } from 'src/utils/validation'
-import styled from 'styled-components'
-
-const StyledEuiAccordion = styled(EuiAccordion)`
-  &&& {
-    margin-top: 2rem;
-  }
-`
-
-// getting rid of autocomplete requires custom mask
-const StyledEuiFieldPassword = styled(EuiFieldPassword)`
-  &&& {
-    -webkit-text-security: disc;
-  }
-`
+import { StyledEuiFieldPassword, StyledEuiAccordion } from './UserUpdateForm.styles'
 
 export default function UserUpdateAccordion() {
   const { form, setForm, errors, setErrors, getFormErrors, updateUser, setHasSubmitted, handlePasswordConfirmChange } =
@@ -46,7 +31,6 @@ export default function UserUpdateAccordion() {
     })
   }
 
-  // don't forget async...
   const submitUserUpdate = async (e) => {
     e.preventDefault()
     closeModal()
@@ -63,26 +47,18 @@ export default function UserUpdateAccordion() {
       resetForm()
     } else {
       console.log('user update succeeded')
-      // redirect to login page in 5 seconds
-      // setTimeout(() => {
-      //   window.location.reload()
-      // }, 3000)
     }
   }
 
-  // don't forget async...
   const handleSubmit = async (e: any) => {
     e.preventDefault()
 
     setErrors({})
 
-    // do not send blank form
     if (!Object.keys(form).some((key) => form[key] !== '')) {
       return
     }
 
-    // ensure passwords match
-    // ensure all password fields are not empty if at least one isn't
     if (
       (!!form.password || !!form.passwordConfirm || !!form.old_password) &&
       !(form.password && form.passwordConfirm && form.old_password)
@@ -94,7 +70,6 @@ export default function UserUpdateAccordion() {
     showModal()
   }
 
-  // confirm userUpdate modal
   const [isModalVisible, setIsModalVisible] = useState(false)
   const closeModal = () => setIsModalVisible(false)
   const showModal = () => setIsModalVisible(true)
@@ -226,7 +201,6 @@ export default function UserUpdateAccordion() {
     </div>
   )
 
-  // content of the clickable area
   const buttonContent = (
     <div>
       <EuiFlexGroup gutterSize="s" alignItems="center" responsive={false}>

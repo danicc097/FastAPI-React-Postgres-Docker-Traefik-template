@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker-compose --project-name myapp -f docker-compose.yml -f docker-compose."$1".yml --env-file .env."$1" config

@@ -2,6 +2,12 @@
 
 version: "3.8"
 
+x-logging: &default-logging
+  options:
+    max-size: "10m"
+    max-file: "2"
+  driver: json-file
+
 services:
   socket-proxy:
     image: tecnativa/docker-socket-proxy
@@ -57,11 +63,12 @@ services:
     networks:
       docker-proxy-internal-net:
       traefik-net:
+
       # not needed (if its *.localhost at least)
       # aliases:
-      #   - myapp-frontend.dev.localhost
+      #   - myapp.dev.localhost
       #   - myapp-backend.dev.localhost
-      #   - myapp-frontend.prod.localhost
+      #   - myapp.prod.localhost
       #   - myapp-backend.prod.localhost
     ports:
       - 80:80
@@ -77,6 +84,14 @@ services:
       - traefik.docker.network=traefik-net
       - traefik.http.routers.traefik=true
       - traefik.http.routers.traefik.tls=true
+      # doesnt seem to work per individual service, probably wrongly configured
+      # but should be:
+      #     - traefik.http.routers.{myrouter}.maxResponseBodyBytes=52428800
+      - traefik.http.routers.traefik.maxResponseBodyBytes=52428800
+      - traefik.http.routers.traefik.maxRequestBodyBytes=52428800
+      - traefik.http.routers.traefik.middlewares=test-compress
+      - traefik.http.middlewares.test-compress.compress=true
+
     volumes:
       # with docker socket proxy, do not mount the socket anymore
       # - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -84,8 +99,9 @@ services:
       - ./dynamic_conf.yaml:/etc/traefik/dynamic_conf.yaml:ro
       - ./certificates/:/etc/certs/:ro
     # extra_hosts:
-    #   - "myapp-frontend.dev.localhost:127.0.0.1"
+    #   - "myapp.dev.localhost:127.0.0.1"
     #   - "myapp-backend.dev.localhost:127.0.0.1"
+    logging: *default-logging
 
   whoami:
     image: containous/whoami:latest

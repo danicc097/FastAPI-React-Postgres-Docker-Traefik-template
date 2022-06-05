@@ -1,0 +1,124 @@
+version: "3.8"
+x-logging: &default-logging
+  options:
+    max-size: "10m"
+    max-file: "2"
+  driver: json-file
+
+# Debug config with docker-compose --env-file <...> config
+services:
+  backend:
+    image: ${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend:latest
+    container_name: backend_${PROJECT_PREFIX:?not set}_${APP_ENV:?not set}
+    user: rootless
+    networks:
+      - traefik-net
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.${APP_ENV:?not set}
+    volumes:
+      - /backend/.pytest_cache/
+      - /backend/__pycache__/
+      - /backend/.mypy_cache/
+      - /backend/.venv/
+      - ./backend/:/backend/
+      - ./backend/logs/:/backend/logs/
+      - ./backend/.env.${APP_ENV:?not set}:/backend/.env.${APP_ENV:?not set}
+    # command: uvicorn app.api.server:app --reload --reload-dir app/ --workers 2 --host 0.0.0.0 --port ${BACKEND_PORT_DEV:?not set}
+    env_file:
+      - ./backend/.env.${APP_ENV:?not set}
+    environment:
+      APP_ENV: ${APP_ENV:?not set}
+    depends_on:
+      - db
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend.rule=Host(`${DOMAIN:?not set}`) && PathPrefix("/api")
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend.middlewares=strip_prefix,test-compress
+      - traefik.http.middlewares.test-compress.compress=true
+      - traefik.http.middlewares.strip_prefix.stripprefix.prefixes=/api
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend.entrypoints=websecure
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend.tls=true
+      - traefik.http.services.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend.loadbalancer.server.port=${BACKEND_PORT:?not set}
+    logging: *default-logging
+
+  db:
+    image: ${PROJECT_PREFIX:?not set}-postgres:latest
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    container_name: postgres_db_${PROJECT_PREFIX:?not set}_${APP_ENV:?not set}
+    user: postgres
+    shm_size: 2g
+    networks:
+      - traefik-net
+    environment:
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - ./fts-postgres.conf:/etc/postgresql/postgresql.conf
+      - ./.psqlrc:/var/lib/postgresql/.psqlrc
+    command: postgres -c "config_file=/etc/postgresql/postgresql.conf"
+    ports:
+      - ${DB_PORT:?not set}:5432
+    env_file:
+      - ./backend/.env.${APP_ENV:?not set}
+    restart: unless-stopped
+    logging: *default-logging
+
+  frontend:
+    image: ${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-frontend:latest
+    container_name: frontend_${PROJECT_PREFIX:?not set}_${APP_ENV:?not set}
+    networks:
+      - traefik-net
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.${APP_ENV:?not set}
+      args:
+        - "VITE_BACKEND_API=${BACKEND_API:?not set}"
+        - "VITE_BUILD_NUMBER=${BUILD_NUMBER:?not set}"
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-frontend.rule=Host(`${DOMAIN:?not set}`)
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-frontend.middlewares=test-compress
+      - traefik.http.middlewares.test-compress.compress=true
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-frontend.entrypoints=websecure
+      - traefik.http.routers.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-frontend.tls=true
+      - traefik.http.services.${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-frontend.loadbalancer.server.port=${FRONTEND_PORT:?not set}
+    logging: *default-logging
+
+  celery_worker:
+    image: ${PROJECT_PREFIX:?not set}-${APP_ENV:?not set}-backend:latest
+    container_name: celery_worker_1_${PROJECT_PREFIX:?not set}_${APP_ENV:?not set}
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.${APP_ENV:?not set}
+    command: celery -A app.celery.worker:celery_app worker --loglevel INFO --logfile=./celery-${APP_ENV:?not set}.log --hostname=worker_1_${APP_ENV:?not set}@%h -Q myapp_queue_${APP_ENV:?not set} --task-events # -Q queue1,queue2 (although should work by default on all configured queues without this flag)
+    #  --without-heartbeat --without-gossip --without-mingle (flower maybe wont work with these on?)
+    volumes:
+      - /backend/.pytest_cache/
+      - /backend/__pycache__/
+      - /backend/.mypy_cache/
+      - /backend/.venv/
+      - ./backend/.env.${APP_ENV:?not set}:/backend/.env.${APP_ENV:?not set}
+      - ./backend/:/backend/
+    networks:
+      - traefik-net
+    env_file:
+      - ./backend/.env.${APP_ENV:?not set}
+    environment:
+      APP_ENV: ${APP_ENV:?not set}
+    restart: always
+    logging: *default-logging
+
+networks:
+  traefik-net:
+    name: traefik-net
+    external: true

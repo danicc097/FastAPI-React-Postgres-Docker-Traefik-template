@@ -1,87 +1,31 @@
 version: "3.8"
+
 x-logging: &default-logging
   options:
-    max-size: "20m"
-    max-file: "5"
+    max-size: "10m"
+    max-file: "2"
   driver: json-file
 
 services:
-  myapp_server_prod:
-    image: ${DOCKER_HUB_BACKEND}:latest
-    container_name: backend_myapp_prod
-    networks:
-      - traefik-net
-    volumes:
-      - ./backend/.env:/backend/.env:ro # only thing ignored in build
-      - ./backend/logs/:/backend/logs/:rw
-    # app.api.server refers to the path to server.py
-    # :app refers to the app object inside server.py
-    command: gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.api.server:app --bind 0.0.0.0:${SERVER_PORT_PROD}
-    env_file:
-      - ./backend/.env
-      - ./.env
-    environment:
-      APP_ENV: production
-    depends_on:
-      - myapp_db_prod
-    restart: unless-stopped
-    labels:
-      # Explicitly tell Traefik to expose this container
-      - traefik.enable=true
-      - traefik.http.routers.myapp-prod.rule=Host(`myapp-backend.prod.localhost`)
-      - traefik.docker.network=traefik-net
-      - traefik.http.routers.myapp-prod.entrypoints=websecure
-      - traefik.http.routers.myapp-prod.tls=true
-      - traefik.http.services.myapp-prod.loadbalancer.server.port=${SERVER_PORT_PROD}
-    logging: *default-logging
+  backend:
+    command: gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.api.server:app --bind 0.0.0.0:${BACKEND_PORT:?not set}
 
-  myapp_db_prod:
-    image: postgres:13-alpine
-    container_name: postgres_db_myapp_prod
-    user: postgres
-    networks:
-      - traefik-net
-    environment:
-      PGDATA: /var/lib/postgresql/data
+  db:
     volumes:
       - myapp_pg_data_prod:/var/lib/postgresql/data/
-    env_file:
-      - ./backend/.env # must have in both backend and db services
-      - ./.env
-    ports:
-      - $DB_PORT_PROD:5432
-    restart: always
-    logging: *default-logging
+      - ./backend/.env:/backend/.env
+      - ./fts-postgres.conf:/etc/postgresql/postgresql.conf
+      - ./.psqlrc:/var/lib/postgresql/.psqlrc
 
-  myapp_frontend_prod:
-    image: ${DOCKER_HUB_FRONTEND}:latest
-    container_name: frontend_myapp_prod
-    networks:
-      - traefik-net
-    # won't get injected in build, use Dockerfile.prod for 'process.env' vars
-    # env_file:
-    # - ./frontend/.env.production
-    # - ./.env
-    depends_on:
-      - myapp_db_prod
-    restart: unless-stopped
-    labels:
-      # Explicitly tell Traefik to expose this container
-      - traefik.enable=true
-      - traefik.http.routers.myappreact-prod.rule=Host(`myapp-frontend.prod.localhost`)
-      # we're using nginx in the Dockerfile -> 80
-      - traefik.port=${FRONTEND_PORT_PROD}
-      - traefik.docker.network=traefik-net
-      - traefik.http.routers.myappreact-prod.entrypoints=websecure
-      - traefik.http.routers.myappreact-prod.tls=true
-      - traefik.http.services.myappreact-prod.loadbalancer.server.port=${FRONTEND_PORT_PROD}
+  pg_hero_prod:
+    image: ankane/pghero:latest
+    container_name: pg_hero_prod
+    network_mode: "host"
+    restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@localhost:${DB_PORT:?not set}/postgres?sslmode=disable
+      PORT: ${PG_HERO_PORT:?not set}
     logging: *default-logging
 
 volumes:
   myapp_pg_data_prod:
-  myapp_logs_prod:
-
-networks:
-  traefik-net:
-    name: traefik-net
-    external: true

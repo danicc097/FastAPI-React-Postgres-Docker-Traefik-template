@@ -9,7 +9,7 @@ import { validationFunctions, _getFormErrors } from 'src/utils/validation'
 export const useUserUpdateForm = () => {
   const dispatch = useAppDispatch()
   const { authError } = useAuthenticatedUser()
-  // define keys meant to be passed to API with original snake_case
+
   const [form, setForm] = useState({
     username: '',
     email: '',
@@ -34,10 +34,6 @@ export const useUserUpdateForm = () => {
     setForm((form) => ({ ...form, passwordConfirm: value }))
   }
 
-  /**
-   * Retrieve form errors specific to the current form.
-   * Form-specific errors should be set in its own form key
-   */
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, authErrorList, userProfileErrorList)
 
   const updateUser = ({ email, username, password, old_password }) =>

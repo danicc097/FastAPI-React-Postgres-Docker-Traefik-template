@@ -9,17 +9,12 @@ import {
   htmlIdGenerator,
 } from '@elastic/eui'
 import { Link } from 'react-router-dom'
-import styled from 'styled-components'
 import React from 'react'
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { useRegistrationForm } from 'src/hooks/forms/useRegistrationForm'
-
-const RegistrationFormWrapper = styled.div`
-  padding: 2rem;
-  max-width: 400px;
-`
+import { RegistrationFormWrapper } from './RegistrationForm.styles'
 
 export default function RegistrationForm() {
   const [isDisabled, setIsDisabled] = React.useState(false)
@@ -51,7 +46,7 @@ export default function RegistrationForm() {
       email: form.email,
       password: form.password,
     })
-    // our onSuccess function must return type: res.type
+
     if (action?.type === AuthActionType.REQUEST_USER_SIGN_UP_SUCCESS) {
       setErrors({})
       setForm((form) => ({ ...form, username: '', email: '', password: '', passwordConfirm: '' }))

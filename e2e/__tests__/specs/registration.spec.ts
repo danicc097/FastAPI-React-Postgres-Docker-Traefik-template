@@ -1,5 +1,8 @@
 import registrationPo from '../pages/registration.po'
 import puppeteer from 'puppeteer'
+import { Users } from '../initialData/users'
+
+jest.retryTimes(3)
 
 beforeEach(async () => {
   // await registrationPo.setupPuppeteerLogging()
@@ -17,14 +20,14 @@ afterEach(async () => {
 
 describe('Test registration', () => {
   it.each`
-    userTitle       | error
+    user            | error
     ${'admin'}      | ${'already exists'}
     ${'unverified'} | ${'already exists'}
     ${'newUser'}    | ${''}
   `(
     'should display an appropiate error in a callout error box',
-    async ({ userTitle, error }: { userTitle: userType; error: string }) => {
-      await registrationPo.register(userTitle)
+    async ({ user, error }: { user: keyof Users; error: string }) => {
+      await registrationPo.register(user)
       if (!!error) {
         const calloutErrors = (await registrationPo.getFormCalloutErrors()).toString()
         expect(calloutErrors).toEqual(expect.stringMatching(error))

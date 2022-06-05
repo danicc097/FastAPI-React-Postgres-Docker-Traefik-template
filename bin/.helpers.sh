@@ -3,39 +3,190 @@
 # "shellcheck.customArgs": ["-x"],
 # required for sourcing check to work properly and detect unexisting files
 
+# --env-file override for docker-compose only allows one single file. workaround would be to combine all necessary .env's to a temp file
+
 set -e
 
-function docker_compose_in_env {
-  local ENV
+green() {
+  printf "\e[32m%s\e[0m\n" "$*"
+}
+
+red() {
+  printf "\e[31m%s\e[0m\n" "$*"
+}
+
+yellow() {
+  printf "\e[33m%s\e[0m\n" "$*"
+}
+
+bool() {
+  if [[ $1 == true ]]; then
+    green "true"
+  else
+    red "false"
+  fi
+}
+
+declare -A envMap
+envMap["prod"]="production"
+envMap["dev"]="development"
+
+usage() {
+  echo "Usage: $PROGNAME -i <file> -o <file> [options]..."
+  echo
+  echo "Options:"
+  echo "  -b | --build                Build docker images"
+  echo "  -d | --deploy               Additional configuration in server for deployment"
+  echo
+}
+
+function ensure_pwd_is_top_level_repo() {
   REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
+  if [[ $(basename "$PWD") != "$REPO_NAME" ]]; then
+    echo "Please run this script from the top level of the repository: '$REPO_NAME'"
+    echo "Current directory: $PWD"
+    exit 1
+  fi
+}
+
+function retry {
+  local retries=$1
+  shift
+
+  local count=0
+  until "$@"; do
+    exit=$?
+    wait=$((2 ** $count))
+    count=$(($count + 1))
+    if [ $count -lt "$retries" ]; then
+      echo "Retry $count/$retries exited $exit, retrying in $wait seconds..."
+      sleep $wait
+    else
+      echo "Retry $count/$retries exited $exit, no more retries left."
+      return $exit
+    fi
+  done
+  return 0
+}
+
+function docker_compose_in_env {
   ENV="$(get_env_suffix "$1")"
-  COMPOSE_COMMAND=$(get_compose_command "$2")
-  _confirm "Do you want to run docker-compose $COMPOSE_COMMAND in the $ENV environment?"
+  PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
+  deploy=false
 
   case $ENV in
-  dev | e2e | prod)
-    BASEDIR=$(dirname "$0")
+  dev | prod)
+    COMPOSE_COMMAND=$(get_compose_command "$2")
+    COMPOSE_ARGS=""
 
-    if [[ $(basename "$PWD") != "$REPO_NAME" ]]; then
-      echo "Please run this script from the root repo's directory: '$REPO_NAME'"
-      echo "Current directory: $PWD"
-      exit 1
+    while [ "$#" -gt 0 ]; do # see https://gist.github.com/dgoguerra/9206418
+      case "$1" in
+      -h | --help)
+        usage
+        exit 0
+        ;;
+      -b | --build)
+        COMPOSE_ARGS+='--build'
+        ;;
+      -d | --deploy)
+        if [[ "$ENV" == "prod" ]]; then
+          deploy=true
+        else
+          echo "$(yellow WARNING): --deploy is only available for the 'prod' environment. Ignoring flag."
+        fi
+        ;;
+      -p | --pull)
+        pull=true
+        ;;
+      -i | --input) # for reference, if we want to have something like --timeout <seconds> this is the way
+        input="$2"
+        # Jump over <file> which is $2, in case "-" is a valid input file
+        # (keyword to standard input). Jumping here prevents reaching
+        # "-*)" case when parsing <file>
+        shift
+        ;;
+      *) ;;
+      esac
+      shift
+    done
+
+    echo "- deploy: $(bool "$deploy")"
+    echo "- docker-compose extra args: $(green "$COMPOSE_ARGS")"
+    _confirm "Do you want to run $(green docker-compose "$COMPOSE_COMMAND" "$COMPOSE_ARGS" \[...\]) in the $(red "$ENV") environment?"
+
+    BASEDIR=$(dirname "$0")
+    ROOT_DIR="$(dirname "$BASEDIR")"
+
+    # shellcheck disable=SC2128
+    if [[ $deploy == true ]]; then
+      echo "Recursively chowning $ROOT_DIR to $UID:$GROUPS" # required logged in as correct user
+      echo "Current user: $UID:$GROUPS"
+      # shellcheck disable=SC2086
+      chown -R $UID:$GROUPS "$ROOT_DIR" 2>/dev/null || true
     fi
 
+    docker network create traefik-net || true
+
+    docker-compose --project-name "$PROJECT_PREFIX" -f "redis/docker-compose.yml" --env-file ".env" up -d
+    docker-compose --project-name "$PROJECT_PREFIX" -f "flower/docker-compose.yml" --env-file ".env" up -d
+
     if [ "$ENV" = "prod" ] && [[ "$COMPOSE_COMMAND" = *"up"* ]]; then
+      _search_stopship_magic_keyword "PROD-STOPSHIP"
+    fi
+
+    if [[ "$pull" == true ]]; then
+      docker-compose -f docker-compose.yml pull
+      docker-compose -f docker-compose.dev.yml pull
       docker-compose -f docker-compose."$ENV".yml pull
     fi
 
-    # shellcheck disable=SC2086
-    docker-compose --project-name myapp_"$ENV" -f docker-compose."$ENV".yml $COMPOSE_COMMAND
+    if [[ "$COMPOSE_COMMAND" = *"up"* ]]; then
+      DOMAIN=$(get_env_var_value ".env.$ENV" "DOMAIN")
+      replace_env_var "backend/.env.$ENV" "DOMAIN" "$DOMAIN"
+      BACKEND_PORT=$(get_env_var_value ".env.$ENV" "BACKEND_PORT")
+      replace_env_var "backend/.env.$ENV" "BACKEND_PORT" "$BACKEND_PORT"
+      # TODO FIXME is not appending to .env.$ENV
+      # for some reason appending to .env works, but does nothing with .env.$ENV
+      # instead with .env.$ENV it creates a .env folder in backend
+      # the function does work standalone with .env.$ENV and yields:
+      # auto-generated by bin/scripts/debug_replace_env
+      # BUILD_NUMBER=1654078111
+      BUILD_NUMBER=$(date +%s)
+      if [[ "$ENV" == "prod" ]]; then
+        replace_env_var ".env" "BUILD_NUMBER" "$BUILD_NUMBER"
+      else
+        replace_env_var ".env" "BUILD_NUMBER" "DEVELOPMENT"
+      fi
 
-    if [ "$ENV" = "e2e" ] && [[ "$COMPOSE_COMMAND" = *"up"* ]]; then
-      "${BASEDIR}"/e2e-tests "$ENV"
+      FRONTEND_PORT=$(get_env_var_value ".env.$ENV" "FRONTEND_PORT")
+      # if port is not 80:
+      if [[ "$FRONTEND_PORT" != "80" ]]; then
+        replace_env_var "frontend/.env.${envMap[$ENV]}" "VITE_PORT" "$FRONTEND_PORT"
+      else
+        remove_env_var "frontend/.env.${envMap[$ENV]}" "VITE_PORT"
+      fi
+      BACKEND_API=$(get_env_var_value ".env.$ENV" "BACKEND_API")
+      replace_env_var "frontend/.env.${envMap[$ENV]}" "VITE_BACKEND_API" "$BACKEND_API"
+      WIKI_URL=$(get_env_var_value ".env.$ENV" "WIKI_URL")
+      replace_env_var "frontend/.env.${envMap[$ENV]}" "VITE_WIKI_URL" "$WIKI_URL"
     fi
+
+    include_env_vars ".env" ".env.$ENV"
+
+    #TODO check against back and front templates with dedicated env templates
+    # ensure_env_vars_are_set "backend/.env.template" "backend/.env.${ENV}" etc
+    ensure_env_vars_are_set ".env.template" ".env.${ENV}"
+
+    # shellcheck disable=SC2086
+    DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose --project-name "$PROJECT_PREFIX"_"$ENV" -f docker-compose.yml -f docker-compose."$ENV".yml --env-file ".env.$ENV" $COMPOSE_COMMAND $COMPOSE_ARGS
+    docker exec -t backend_"$PROJECT_PREFIX"_"$ENV" /bin/bash -c "alembic upgrade head"
+
+    ;;
+  e2e)
+    err "Use run-e2e-tests instead"
     ;;
   *)
     err "Unexpected environment name"
-    exit 1
     ;;
   esac
 }
@@ -46,26 +197,29 @@ function get_env_suffix {
   e2e) echo e2e ;;
   prod | production) echo prod ;;
   *)
-    err "Expected environment [dev]elopment|[e2e]|[prod]uction"
-    exit 1
+    err "Expected environment [dev]elopment|[prod]uction"
     ;;
   esac
 }
 
 function get_compose_command {
   case $1 in
-  up) printf '%s' 'up -d --build' ;;
-  down) printf '%s' 'down --remove-orphans' ;;
-  stop) printf '%s' 'stop' ;;
+  up) printf '%s' "up -d" ;;
+  down) printf '%s' "down --remove-orphans" ;;
+  stop) printf '%s' "stop" ;;
   *)
     err "Expected docker compose command up|down|stop"
-    exit 1
     ;;
   esac
 }
 
 function err {
   echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*" >&2
+  exit 1
+}
+
+function log {
+  echo "[$(date +'%Y-%m-%dT%H:%M:%S%z')]: $*"
 }
 
 function _confirm {
@@ -87,4 +241,102 @@ function _confirm {
       ;;
     esac
   done
+}
+
+# Block build if magic keyword is found in any file
+function _search_stopship_magic_keyword {
+  if grep -r -e "$1" \
+    --exclude-dir=".venv" \
+    --exclude-dir=".git" \
+    --exclude-dir="node_modules" \
+    --exclude=".helpers.sh" \
+    --ignore-case \
+    --quiet; then
+    echo "$1 found in the following files. Please fix all related issues before continuing."
+    grep -r -e "$1" \
+      --exclude-dir=".venv" \
+      --exclude-dir=".git" \
+      --exclude-dir="node_modules" \
+      --exclude=".helpers.sh" \
+      --ignore-case
+    exit 1
+  fi
+}
+
+function ensure_env_vars_are_set {
+  local _env_template="$1"
+  local _env_file="$2"
+  local _n_missing=0
+  if [[ -f "$_env_template" ]]; then
+    while read -r var; do
+      if [[ "$var" =~ ^#.* ]]; then
+        continue
+      fi
+      if ! grep -oP "(?<=^$var)[^ ]+" "$_env_file" | grep -q .; then
+        echo "$_env_file does not contain the variable $var (required by $_env_template)"
+        _n_missing=$((_n_missing + 1))
+      fi
+    done < <(grep -oP "(?<=^)[^ ]+" "$_env_template")
+    if [ "$_n_missing" -gt 0 ]; then
+      exit 1
+    fi
+  fi
+}
+
+function replace_env_var {
+  local _env_file="$1"
+  local _var="$2"
+  local _value="$3"
+  if [[ -f "$_env_file" ]]; then
+    if ! grep -q "$_var=" "$_env_file"; then
+      echo "Adding $_var=$_value to $_env_file"
+      echo "# auto-generated by $0" >>"$_env_file"
+      echo "$_var=$_value" >>"$_env_file"
+    else
+      echo "Replacing $_var with $_value in $_env_file"
+      sed -i -e "s|$_var=.*|$_var=$_value|g" "$_env_file"
+    fi
+  else
+    err "$_env_file does not exist"
+  fi
+}
+
+function remove_env_var {
+  local _env_file="$1"
+  local _var="$2"
+  if [[ -f "$_env_file" ]]; then
+    if grep -q "$_var=" "$_env_file"; then
+      echo "Removing $_var from $_env_file"
+      sed -i -e "/$_var=/d" "$_env_file"
+    fi
+  else
+    err "$_env_file does not exist"
+  fi
+}
+
+function get_env_var_value {
+  local _env_file="$1"
+  local _var="$2"
+  if [[ -f "$_env_file" ]]; then
+    value=$(
+      grep -oP "(?<=^$_var=)[^ ]+" "$_env_file" | head -n 1
+    )
+    if [ -z "$value" ]; then
+      err "Variable $_var not found in $_env_file"
+    fi
+    echo "$value"
+  else
+    err "$_env_file does not exist"
+  fi
+}
+
+function include_env_vars {
+  origin="$1"
+  destination="$2"
+  sed -i "/^#### $origin vars/,/^$origin vars ####/d" "$destination"
+  {
+    echo "#### $origin vars ####"
+    cat "$origin"
+    echo "#### end of $origin vars ####"
+  } >>"$destination"
 }

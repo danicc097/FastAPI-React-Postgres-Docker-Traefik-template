@@ -4,9 +4,9 @@ import { AppDispatch } from '../../store'
 import { UiActionCreators } from '../ui/ui'
 import { loadingState, successState } from '../../utils/slices'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 
-type initialStateType = {
+export type initialStateType = {
   userProfile: {
     isLoading: boolean
     error?: schema['HTTPValidationError']
@@ -20,7 +20,7 @@ const initialState: initialStateType = {
     isLoading: false,
     error: null,
     userLoaded: false,
-    user: { id: null },
+    user: null,
   },
 }
 
@@ -30,7 +30,6 @@ export enum UserProfileActionType {
   REQUEST_USER_UPDATE_SUCCESS = 'userProfile/REQUEST_USER_UPDATE_SUCCESS',
 }
 
-// recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function userProfileReducer(
   state: initialStateType['userProfile'] = initialState.userProfile,
   action: AnyAction,
@@ -44,12 +43,11 @@ export default function userProfileReducer(
         ...state,
         isLoading: false,
         error: action.error,
-        user: { id: null },
+        user: null,
       }
 
     case UserProfileActionType.REQUEST_USER_UPDATE_SUCCESS:
       return successState(state)
-    // remove data when user logs out
 
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.userProfile
@@ -67,7 +65,6 @@ export type UserUpdateActionsParams = {
   old_password?: string
 }
 
-// make optional properties to allow easier usage of actions inside other actions in this file.
 type ActionCreators = {
   requestUserUpdate: ({ email, username, password, old_password }: UserUpdateActionsParams) => any
 }
@@ -76,14 +73,6 @@ export const UserUpdateActionCreators: Partial<ActionCreators> = {}
 
 UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_password }) => {
   return async (dispatch: AppDispatch) => {
-    // create the url-encoded form data
-
-    // set the request headers (override defaulOptions)
-    const headers = {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    }
-    // we HAVE TO _return_ a dispatch, else we won't get the
-    // returns of onSuccess or onFailure and verify types in ProfilePage, etc
     return dispatch(
       apiClient({
         url: `/users/me/`,
@@ -96,25 +85,26 @@ UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_p
         options: {
           data: {
             user_update: {
-              // dynamically set update form data if truthy values
               ...(email && { email }),
               ...(username && { username }),
               ...(password && { password }),
               ...(old_password && { old_password }),
             },
           },
-          headers,
+          // headers,
           params: {},
         },
         onSuccess: (res) => {
           dispatch(
             UiActionCreators.addToast({
-              id: 'user-update-toast-success',
-              title: `Your credentials have been updated!`,
-              color: 'success',
-              iconType: 'checkInCircleFilled',
-              toastLifeTimeMs: 115000,
-              text: 'You will now need to log in again',
+              toast: {
+                id: 'user-update-toast-success',
+                title: `Your credentials have been updated!`,
+                color: 'success',
+                iconType: 'checkInCircleFilled',
+                toastLifeTimeMs: 115000,
+                text: 'You will now need to log in again',
+              },
             }),
           )
           return dispatch({
@@ -130,21 +120,23 @@ UserUpdateActionCreators.requestUserUpdate = ({ email, username, password, old_p
           console.log(res.error?.data?.detail)
           dispatch(
             UiActionCreators.addToast({
-              id: 'user-update-toast-failure',
-              title: 'Failure!',
-              color: 'danger',
-              iconType: 'crossInACircleFilled',
-              toastLifeTimeMs: 15000,
-              text: `We couldn't update your user data.\n ${res.error?.data?.detail}`,
+              toast: {
+                id: 'user-update-toast-failure',
+                title: 'Failure!',
+                color: 'danger',
+                iconType: 'crossInACircleFilled',
+                toastLifeTimeMs: 15000,
+                text: `We couldn't update your user data.\n ${res.error?.data?.detail}`,
+              },
             }),
           )
-          return {
+          return dispatch({
             type: UserProfileActionType.REQUEST_USER_UPDATE_FAILURE,
             success: false,
             status: res.error?.status,
             data: res.data,
             error: res.error?.data?.detail,
-          }
+          })
         },
       }),
     )

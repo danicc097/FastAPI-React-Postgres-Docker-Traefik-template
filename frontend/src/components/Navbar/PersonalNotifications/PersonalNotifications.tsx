@@ -1,8 +1,8 @@
-import '@elastic/eui/dist/eui_theme_amsterdam_dark.css'
 import React, { useState } from 'react'
 
 import {
   EuiBadge,
+  EuiButton,
   EuiButtonEmpty,
   EuiFlexGroup,
   EuiFlexItem,
@@ -11,6 +11,7 @@ import {
   EuiHeaderSectionItemButton,
   EuiIcon,
   EuiLink,
+  EuiPanel,
   EuiPopover,
   EuiPopoverFooter,
   EuiPopoverTitle,
@@ -22,34 +23,46 @@ import { useGlobalNotificationsFeed } from 'src/hooks/feed/useGlobalNotification
 import moment from 'moment'
 import InfiniteSpinner from 'src/components/Loading/InfiniteSpinner'
 import _ from 'lodash'
+import { schema } from 'src/types/schemaOverride'
+import { Center } from 'src/components/Navbar/GlobalNotifications/GlobalNotifications.styles'
+import { usePersonalNotificationsFeed } from 'src/hooks/feed/usePersonalNotificationsFeed'
+import { motion } from 'framer-motion'
 
-export default function PersonalNotifications() {
+type PersonalNotificationsProps = {
+  user: schema['UserPublic']
+}
+
+export default function PersonalNotifications({ user }: PersonalNotificationsProps) {
   const [isPopoverVisible, setIsPopoverVisible] = useState(false)
 
   const newsFeedPopoverId = useGeneratedHtmlId({ prefix: 'newsFeedPopover' })
 
   const {
-    hasNewNotifications,
-    fetchFeedItemsByLastRead,
-    feedItems: globalNotificationsFeedItems,
-    unreadItems: globalNotificationsUnreadItems,
+    hasNewPersonalNotifications,
+    feedItems: personalNotificationsFeedItems,
+    unreadItems: personalNotificationsUnreadItems,
     isLoading,
-    errorList: globalNotificationsErrorList,
+    errorList: personalNotificationsErrorList,
     fetchFeedItems,
-  } = useGlobalNotificationsFeed()
+    setHasNewPersonalNotifications,
+  } = usePersonalNotificationsFeed()
 
-  const unreadIds = globalNotificationsUnreadItems.map((item) => item.id)
-
-  const globalNotificationsAlerts: Array<EuiHeaderAlertProps> = globalNotificationsFeedItems.map(
-    (item: ArrayElement<typeof globalNotificationsFeedItems>) => {
+  const loadMoreNotifications = async () => {
+    const lastDateUTC = personalNotificationsFeedItems[personalNotificationsFeedItems?.length - 1]?.event_timestamp
+    await fetchFeedItems({ starting_date: new Date(moment.utc(lastDateUTC).format()) })
+  }
+  const unreadIds = personalNotificationsUnreadItems?.map((personal_notification_id) => personal_notification_id) || []
+  const badgeColors = {
+    task: 'lightyellow',
+  }
+  type AlertProps = EuiHeaderAlertProps & { notificationId: number }
+  const personalNotificationsAlerts: Array<AlertProps> = personalNotificationsFeedItems?.map(
+    (item: ArrayElement<typeof personalNotificationsFeedItems>) => {
       const {
-        row_number,
         event_timestamp,
-        id,
-        created_at,
-        updated_at,
+        personal_notification_id,
         sender,
-        receiver_role,
+        receiver_email,
         title,
         body,
         label,
@@ -58,25 +71,35 @@ export default function PersonalNotifications() {
       } = item
 
       const alertProps = {
-        title: event_type === 'is_update' ? '[UPDATE]' + title : title,
-        text: <EuiText size="m">{body}</EuiText>,
+        notificationId: personal_notification_id,
+        title: event_type === 'is_update' ? '[UPDATE] ' + title : title,
+        text: <EuiText size="s">{body}</EuiText>,
         action: link ? (
           <EuiLink href={link} target="_blank">
-            {_.truncate(link, { length: 30 })}
+            <EuiButtonEmpty size="s" color="primary">
+              {_.truncate(link, { length: 30 })}
+            </EuiButtonEmpty>
           </EuiLink>
         ) : null,
-        date: moment.utc(event_timestamp).local().fromNow(),
+        date: (
+          <EuiBadge color="lightblue">
+            <Center>
+              <EuiIcon type="clock" size="s" />
+              {moment.utc(event_timestamp).local().fromNow()}
+            </Center>
+          </EuiBadge>
+        ),
         badge: (
           <EuiFlexGroup alignItems="center" gutterSize="xs">
             <EuiFlexItem grow={false}>
-              {unreadIds.includes(id) ? <EuiBadge color="danger">NEW</EuiBadge> : null}
+              {unreadIds.includes(personal_notification_id) ? <EuiBadge color="danger">NEW</EuiBadge> : null}
             </EuiFlexItem>
             <EuiFlexItem grow={false}>
-              <EuiBadge>{label}</EuiBadge>
+              <EuiBadge color={badgeColors[label] || 'lightgreen'}>{label}</EuiBadge>
             </EuiFlexItem>
           </EuiFlexGroup>
         ),
-      } as EuiHeaderAlertProps
+      } as AlertProps
 
       return alertProps
     },
@@ -86,67 +109,78 @@ export default function PersonalNotifications() {
     setIsPopoverVisible(false)
   }
 
-  const showPopover = () => {
+  const showPopover = async () => {
     if (!isPopoverVisible) {
-      fetchFeedItemsByLastRead()
-      fetchFeedItems({})
+      await fetchFeedItems({})
+      setHasNewPersonalNotifications(false)
     }
     setIsPopoverVisible(!isPopoverVisible)
   }
 
-  const cheerButtonNotificationColor: any = 'orange' // bad eui typing
+  const bellButtonNotificationColor: any = 'orange'
 
-  const cheerButton = (
+  const bellButton = (
     <EuiHeaderSectionItemButton
       aria-controls="headerPopoverNewsFeed"
       aria-expanded={isPopoverVisible}
       aria-haspopup="true"
       aria-label={"News feed: Updates available'"}
       onClick={showPopover}
-      notification={hasNewNotifications}
-      notificationColor={cheerButtonNotificationColor}
+      notification={hasNewPersonalNotifications}
+      notificationColor={bellButtonNotificationColor}
+      data-test-subj="headerPersonalNotificationsButton"
     >
-      <EuiIcon type="calendar" />
+      <motion.div
+        animate={{ rotate: hasNewPersonalNotifications ? [0, 45, -45, 25, -25, 0] : 0 }}
+        transition={{ duration: 2.5, ...(hasNewPersonalNotifications ? { repeat: Infinity } : {}) }}
+      >
+        <EuiIcon type="bell" />
+      </motion.div>
     </EuiHeaderSectionItemButton>
   )
+
+  function renderPersonalNotificationAlerts() {
+    return isLoading ? (
+      <InfiniteSpinner size="xl" />
+    ) : (
+      personalNotificationsAlerts?.map((alert: AlertProps, i) => (
+        <EuiHeaderAlert
+          key={`personal-notifications-alert-${alert.notificationId}`}
+          data-test-subj={`personal-notifications-alert-${alert.notificationId}`}
+          title={alert.title}
+          action={alert.action}
+          text={alert.text}
+          date={alert.date}
+          badge={alert.badge}
+        />
+      ))
+    )
+  }
 
   const popover = (
     <EuiPopover
       id={newsFeedPopoverId}
       ownFocus
-      button={cheerButton}
+      button={bellButton}
       isOpen={isPopoverVisible}
       closePopover={closePopover}
       panelPaddingSize="s"
     >
-      <EuiPopoverTitle paddingSize="s">Reminders</EuiPopoverTitle>
-      <div style={{ maxHeight: '40vh', maxWidth: '50vh', overflowY: 'auto', padding: 4 }}>
+      <EuiPopoverTitle paddingSize="s">Personal notifications</EuiPopoverTitle>
+      <div className="eui-yScroll" style={{ maxHeight: '40vh', maxWidth: '50vh', overflowY: 'auto', padding: 4 }}>
         <EuiSpacer size="s" />
-        {isLoading ? (
-          <InfiniteSpinner size="xl" />
-        ) : (
-          globalNotificationsAlerts.map((alert, i) => (
-            <EuiHeaderAlert
-              key={`alert-${i}`}
-              title={alert.title}
-              action={alert.action}
-              text={alert.text}
-              date={alert.date}
-              badge={alert.badge}
-            />
-          ))
-        )}
+        {renderPersonalNotificationAlerts()}
       </div>
-      {globalNotificationsAlerts.length === 0 ? (
+      {personalNotificationsAlerts?.length === 0 ? (
         <EuiText size="relative">
           <p>No new notifications</p>
         </EuiText>
       ) : (
         <EuiPopoverFooter paddingSize="s">
           <EuiText color="subdued" size="s">
-            <EuiButtonEmpty iconType="refresh" onClick={null} size="m">
+            <EuiButton size="s" fill onClick={loadMoreNotifications}>
               Load more
-            </EuiButtonEmpty>
+            </EuiButton>
           </EuiText>
         </EuiPopoverFooter>
       )}

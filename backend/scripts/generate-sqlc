@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e
+
+REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
+if [[ $(basename "$PWD") != "$REPO_NAME" ]]; then
+  echo "Please run this script from the root repo's directory: '$REPO_NAME'"
+  echo "Current directory: $PWD"
+  exit 1
+fi
+
+SCRIPTS_DIR="$(dirname "$(readlink -f "$0")")"
+BACKEND_DIR="$(dirname "$SCRIPTS_DIR")"
+DB_FOLDER="$BACKEND_DIR/app/db"
+cd backend
+source "$BACKEND_DIR"/.venv/bin/activate
+rm -r "$DB_FOLDER"/gen
+mkdir -p "$DB_FOLDER"/gen/queries
+touch "$DB_FOLDER"/gen/__init__.py
+touch "$DB_FOLDER"/gen/queries/__init__.py
+LATEST_MIGRATION_FILENAME="$(ls -1 "$DB_FOLDER/migrations/versions" | grep -oE '^[^_]*' | sort -r | head -n1)"
+echo "Latest migration: $LATEST_MIGRATION_FILENAME"
+alembic upgrade "$LATEST_MIGRATION_FILENAME" --sql >"$DB_FOLDER"/gen/schema.up.sql
+alembic downgrade "$LATEST_MIGRATION_FILENAME":base --sql >"$DB_FOLDER"/gen/schema.down.sql
+cd app/db
+"$HOME"/bin/sqlc-dev generate

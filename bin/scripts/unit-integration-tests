@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+source "${BASH_SOURCE%/*}/../.helpers.sh"
+
+backend/scripts/run-tests >/dev/null 2>&1 && echo -e "$(green Backend unit tests passed)" || echo -e "$(red Backend unit tests failed)" &
+cd frontend || exit && pnpm run test:nowatch >/dev/null 2>&1 && echo -e "$(green Frontend unit tests passed)" || echo -e "$(red Frontend unit tests failed)" &
+
+echo "Waiting for tests to finish..."
+wait
+echo "All tests finished!"

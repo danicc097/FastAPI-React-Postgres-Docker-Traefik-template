@@ -1,0 +1,58 @@
+{
+  "1_file_1.sh": {
+    "name": "1_file_1.sh",
+    "depth": 1,
+    "type": "file",
+    "ext": ".sh",
+    "size_kb": 0,
+    "url": "1_file_1.sh"
+  },
+  "1_dir_2": {
+    "name": "1_dir_2",
+    "depth": 1,
+    "type": "directory",
+    "ext": "",
+    "size_kb": "",
+    "url": "1_dir_2"
+  },
+  "1_dir_1": {
+    "name": "1_dir_1",
+    "depth": 1,
+    "type": "directory",
+    "ext": "",
+    "size_kb": "",
+    "url": "1_dir_1"
+  },
+  "1_dir_2/2_dir_1": {
+    "name": "2_dir_1",
+    "depth": 2,
+    "type": "directory",
+    "ext": "",
+    "size_kb": "",
+    "url": "1_dir_2/2_dir_1"
+  },
+  "1_dir_2/2_dir_1/3_file_1.txt": {
+    "name": "3_file_1.txt",
+    "depth": 3,
+    "type": "file",
+    "ext": ".txt",
+    "size_kb": 0,
+    "url": "1_dir_2/2_dir_1/3_file_1.txt"
+  },
+  "1_dir_1/2_file2": {
+    "name": "2_file2",
+    "depth": 2,
+    "type": "file",
+    "ext": "",
+    "size_kb": 0,
+    "url": "1_dir_1/2_file2"
+  },
+  "1_dir_1/2_file1.txt": {
+    "name": "2_file1.txt",
+    "depth": 2,
+    "type": "file",
+    "ext": ".txt",
+    "size_kb": 5,
+    "url": "1_dir_1/2_file1.txt"
+  }
+}

@@ -1,19 +1,7 @@
-declare type userType = 'admin' | 'manager' | 'verified' | 'unverified' | 'newUser' | 'unregisteredUser' | 'badUser'
-
-declare type updatableUserType = 'profileTestUser' | 'toBeVerified' | 'passwordResetTestUser' | 'passwordResetTestUser2'
-
-declare type usersType = {
-  [key in userType]: {
-    username: string
-    email: string
-    password: string
-  }
-}
-
-declare type updatableUsersType = {
-  [key in updatableUserType]: {
-    username: string
-    email: string
-    password: string
-  }
+declare type NotificationAlert = {
+  label: string
+  title: string
+  body: string
+  date: string
+  link: string
 }

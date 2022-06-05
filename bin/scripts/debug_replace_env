@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e
+
+source "${BASH_SOURCE%/*}/../.helpers.sh"
+
+BUILD_NUMBER=$(date +%s)
+ENV="dev"
+env="$ENV"
+replace_env_var ".env.dev" "BUILD_NUMBER" "$BUILD_NUMBER"

@@ -1,5 +1,5 @@
 import { ElementHandle } from 'puppeteer'
-import { schema } from '../types/schema_override'
+import { schema } from '../types/schemaOverride'
 import BasePO from './base.po'
 
 export class UnverifiedUsersPO extends BasePO {
@@ -44,10 +44,10 @@ export class PasswordResetRequestsPO extends BasePO {
 
   // We must rely on XPaths to get text content
   async clickResetRequestsTableAction(email: string, action: 'reset' | 'delete') {
-    await page.waitForXPath(`//*${this.$xPasswordResetRequestsRow}`, { timeout: 20000 })
+    await page.waitForXPath(`//*${this.$xPasswordResetRequestsRow}`, { timeout: 5000 })
     const $xEmailCell = `//*${this.$xPasswordResetRequestsRow}//*[contains(text(), "${email}")]`
     const $xActionRow = `${$xEmailCell}/ancestor::*${this.$xPasswordResetRequestsRow}`
-    await page.waitForXPath($xActionRow, { timeout: 20000 })
+    await page.waitForXPath($xActionRow, { timeout: 5000 })
     const $xResetAction = $xActionRow + '//*[@data-test-subj="passwordResetTable__resetAction"]'
     const $xDeleteAction = $xActionRow + '//*[@data-test-subj="passwordResetTable__deleteAction"]'
     switch (action) {
@@ -74,7 +74,7 @@ export class AdminPO extends BasePO {
     await this.waitForVisibleSelectorAndClick('[data-test-subj="addGlobalNotification"]')
   }
 
-  async fillGlobalNotificationForm(notification: schema['GlobalNotificationCreate']) {
+  async fillGlobalNotificationForm(notification: schema['CreateGlobalNotificationParams']) {
     await this.waitForSelectorAndType('[data-test-subj="notificationTitle"]', notification.title)
     await this.waitForSelectorAndType('[data-test-subj="notificationBody"]', notification.body)
     await this.waitForSelectorAndType('[data-test-subj="notificationLabel"]', notification.label)

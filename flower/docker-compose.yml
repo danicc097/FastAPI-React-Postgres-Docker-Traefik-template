@@ -1,0 +1,27 @@
+version: "3.8"
+x-logging: &default-logging
+  options:
+    max-size: "10m"
+    max-file: "2"
+  driver: json-file
+
+services:
+  flower:
+    image: mher/flower:latest
+    container_name: flower_${PROJECT_PREFIX:?not set}
+    ports:
+      - ${FLOWER_PORT:?not set}:5555
+    env_file:
+      - ../backend/.env.dev
+    # volumes:
+    #   - ../backend/app/celery/flowerconfig.py:/flowerconfig.py
+    # command: celery flower --port=5555 --conf=/flowerconfig.py
+    networks:
+      - traefik-net
+    restart: always
+    logging: *default-logging
+
+networks:
+  traefik-net:
+    name: traefik-net
+    external: true

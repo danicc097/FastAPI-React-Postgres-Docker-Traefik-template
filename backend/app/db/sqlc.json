@@ -1,0 +1,20 @@
+{
+  "version": "2",
+  "sql": [
+    {
+      "schema": "./gen",
+      "queries": "./repositories/queries",
+      "engine": "postgresql",
+      "gen": {
+        "python": {
+          "out": "gen/queries",
+          "package": "app.db.gen.queries",
+          "emit_async_querier": true,
+          "query_parameter_limit": 1,
+          "emit_pydantic_models": true,
+          "exclude_table_names": []
+        }
+      }
+    }
+  ]
+}

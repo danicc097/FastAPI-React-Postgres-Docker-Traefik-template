@@ -8,9 +8,10 @@
     "forceConsistentCasingInFileNames": true,
     "rootDir": "./__tests__",
     "allowUnreachableCode": true,
+    "resolveJsonModule": true,
     "sourceMap": true,
     "types": ["jest", "puppeteer", "jest-environment-puppeteer"],
     "outDir": "dist"
   },
-  "include": ["./__tests__", "schema_override.ts", "schema.ts"]
+  "include": ["./__tests__"]
 }

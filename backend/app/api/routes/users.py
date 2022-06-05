@@ -1,40 +1,61 @@
-import logging
+import pathlib
 from datetime import datetime, timedelta
-from typing import List, Optional, cast
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    HTTPException,
+    Path,
+    Query,
+    Response,
+)
+from fastapi.encoders import jsonable_encoder
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncConnection
+from starlette import status
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
 )
 
+import initial_data
 from app.api.dependencies.auth import (
     email_is_verified,
     get_current_active_user,
 )
-from app.api.dependencies.database import get_repository
+from app.api.dependencies.database import get_new_async_conn
 from app.api.routes.utils.errors import exception_handler
-from app.db.repositories.global_notifications import (
-    GlobalNotificationsRepository,
+from app.core.config import ADMIN_EMAIL
+from app.db.gen.queries.global_notifications import (
+    GetGlobalNotificationsByStartingDateParams,
 )
-from app.db.repositories.pwd_reset_req import (
-    UserAlreadyRequestedError,
-    UserPwdReqRepository,
+from app.db.gen.queries.models import PasswordResetRequest
+from app.db.gen.queries.password_reset_requests import (
+    CreatePasswordResetRequestParams,
 )
-from app.db.repositories.users import UsersRepository
-from app.models.feed import GlobalNotificationFeedItem
-from app.models.pwd_reset_req import (
-    PasswordResetRequest,
-    PasswordResetRequestCreate,
+from app.db.gen.queries.personal_notifications import (
+    CreatePersonalNotificationParams,
+    GetPersonalNotificationsByStartingDateParams,
+)
+from app.db.gen.queries.users import GetUserRow
+from app.models.global_notifications import (
+    GlobalNotificationFeedItem,
+    PersonalNotificationFeedItem,
 )
 from app.models.token import AccessToken
-from app.models.user import UserCreate, UserInDB, UserPublic, UserUpdate
+from app.models.user import UserCreate, UserPublic, UserUpdate
 from app.services import auth_service
+from app.services.authorization import ROLE_PERMISSIONS
+from app.services.global_notifications import GlobalNotificationsService
+from app.services.password_reset_requests import PwdResetReqService
+from app.services.personal_notifications import PersonalNotificationsService
+from app.services.users import UsersService
 
 router = APIRouter()
 
@@ -44,36 +65,53 @@ router = APIRouter()
     response_model=UserPublic,
     name="users:register-new-user",
     status_code=HTTP_201_CREATED,
+    # dependencies=[Depends(RoleVerifier(Role.admin))]
 )
 async def register_new_user(
     new_user: UserCreate = Body(..., embed=True),
-    user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> UserPublic:
-    async with exception_handler():
-        created_user = await user_repo.register_new_user(new_user=new_user, to_public=True)
-
+    conn: AsyncConnection = Depends(get_new_async_conn),
+):
+    users_service = UsersService(conn)
+    pn_service = PersonalNotificationsService(conn)
+    async with exception_handler(conn):
+        created_user = await users_service.register_new_user(new_user=new_user)
         if not created_user:
             raise HTTPException(
                 status_code=HTTP_409_CONFLICT,
                 detail="User could not be created.",
             )
-        created_user = cast(UserPublic, created_user)
 
+        access_token = auth_service.create_access_token_for_user(user=created_user)
+        if not access_token:
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail="Could not create access token for user.",
+            )
         access_token = AccessToken(
-            access_token=auth_service.create_access_token_for_user(user=created_user),
+            access_token=access_token,
             token_type="bearer",
         )
-        # we can return the access_token because we added it as
-        # an optional property in UserPublic
-        return created_user.copy(update={"access_token": access_token})
+        await pn_service.create_personal_notification(
+            notification=CreatePersonalNotificationParams(
+                sender=ADMIN_EMAIL.lower(),
+                receiver_email=created_user.email,
+                title="Welcome to MYAPP",
+                body="Here you can check out all news and updates from MYAPP. \nVisit the help page for more information.",
+                label="news",
+                link="/help",
+            )
+        )
+        with open(pathlib.Path(initial_data.__file__).parent / "verified_emails.txt", "r") as f:
+            verified_emails = [i.split("@")[0].lower() for i in f.read().splitlines()]
+            if created_user.email.split("@")[0] in verified_emails:
+                await users_service.verify_users(user_emails=[created_user.email])
 
-
-# we only know the user is logged in by the token passed to our routes
-# in the Authentication header.
-# Instead of parsing the request ourselves and searching
-# for that token, we're going to hand that responsibility over to FastAPI.
-# We'll create an auth dependency that grabs the currently authenticated
-# user from our database and injects that user into our route.
+        return jsonable_encoder(
+            UserPublic(
+                **created_user.dict(),
+                access_token=access_token,
+            )
+        )
 
 
 @router.get(
@@ -83,11 +121,11 @@ async def register_new_user(
     dependencies=[Depends(email_is_verified)],
 )
 async def get_currently_authenticated_user(
-    current_user: UserPublic = Depends(get_current_active_user),
+    current_user: GetUserRow = Depends(get_current_active_user),
 ) -> UserPublic:
     async with exception_handler():
         logger.info(f"User logged in: {current_user.email}")
-        return current_user
+        return jsonable_encoder(current_user)
 
 
 @router.put(
@@ -98,38 +136,42 @@ async def get_currently_authenticated_user(
     dependencies=[Depends(email_is_verified)],
 )
 async def update_user_by_id(
-    current_user: UserPublic = Depends(get_current_active_user),
+    current_user: GetUserRow = Depends(get_current_active_user),
     user_update: UserUpdate = Body(..., embed=True),
-    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> Optional[UserPublic]:
-    """
-    Update the user's profile.
-    """
-    async with exception_handler():
-        return await users_repo.update_user(user_id=current_user.id, user_update=user_update)
+    conn: AsyncConnection = Depends(get_new_async_conn),
+):
+    users_service = UsersService(conn)
+    async with exception_handler(conn):
+        return await users_service.update_user(user_id=current_user.user_id, user_update=user_update)
 
 
-@router.post("/login/token/", response_model=AccessToken, name="users:login-email-and-password")
+@router.post(
+    "/login/token/",
+    # response_model=AccessToken,
+    name="users:login-email-and-password",
+)
 async def user_login_with_email_and_password(
-    user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
     form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm),
-) -> AccessToken:
-    async with exception_handler():
-        # OAuth2 spec requires the exact field name "username"
-        user = await user_repo.authenticate_user(email=form_data.username, password=form_data.password)  # type: ignore
+    conn: AsyncConnection = Depends(get_new_async_conn),
+):
+    users_service = UsersService(conn)
+    async with exception_handler(conn):
+        user = await users_service.authenticate_user(email=form_data.username, password=form_data.password)  # type: ignore
         if not user:
             raise HTTPException(
                 status_code=HTTP_401_UNAUTHORIZED,
-                detail="Authentication was unsuccessful.",
-                headers={"WWW-Authenticate": "Bearer"},
+                detail="User could not be authenticated.",
             )
-
-        access_token = AccessToken(
-            access_token=auth_service.create_access_token_for_user(user=user),
+        access_token = auth_service.create_access_token_for_user(user=user)
+        if not access_token:
+            raise HTTPException(
+                status_code=HTTP_401_UNAUTHORIZED,
+                detail="Could not create access token for user.",
+            )
+        return AccessToken(
+            access_token=access_token,
             token_type="bearer",
         )
-
-        return access_token
 
 
 @router.post(
@@ -139,90 +181,120 @@ async def user_login_with_email_and_password(
     response_model=PasswordResetRequest,
 )
 async def request_password_reset(
-    password_request: PasswordResetRequestCreate = Body(..., embed=True),
-    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-    user_pwd_req_repo: UserPwdReqRepository = Depends(get_repository(UserPwdReqRepository)),
+    reset_request: CreatePasswordResetRequestParams = Body(..., embed=True),
+    conn: AsyncConnection = Depends(get_new_async_conn),
 ):
-    """
-    Any client, including unauthorized, can request a password reset that needs admin approval.
-    """
-    async with exception_handler():
-        logger.warning(password_request)
-        user = await users_repo.get_user_by_email(email=password_request.email, to_public=True)
+    users_service = UsersService(conn)
+    password_reset_requests_service = PwdResetReqService(conn)
+    async with exception_handler(conn):
+        user = await users_service.get_user_by_email(email=reset_request.email, get_db_data=True)
         if not user:
             raise HTTPException(
                 status_code=HTTP_404_NOT_FOUND,
-                detail=f"User with email {password_request.email} not found",
+                detail=f"User with email {reset_request.email} not found",
             )
-        return await user_pwd_req_repo.create_password_reset_request(
-            email=password_request.email,
-            message=password_request.message,
-        )
+        return await password_reset_requests_service.create_password_reset_request(reset_request=reset_request)
 
 
 @router.get(
-    "/notifications-by-last-read/",
-    response_model=List[GlobalNotificationFeedItem],
-    name="users:get-feed-by-last-read",
-    dependencies=[Depends(get_current_active_user)],
-)
-async def get_notification_feed_for_user_by_last_read(
-    user: UserPublic = Depends(get_current_active_user),
-    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> List[GlobalNotificationFeedItem]:
-    async with exception_handler():
-        return await users_repo.fetch_notifications_by_last_read(
-            user_id=user.id,
-            last_notification_at=user.last_notification_at,
-            role=user.role,
-            now=datetime.utcnow(),
-        )
-
-
-@router.get(
-    "/notifications/",
-    response_model=List[GlobalNotificationFeedItem],
-    name="users:get-feed",
-    dependencies=[Depends(get_current_active_user)],
+    "/global-notifications/",
+    response_model=list[GlobalNotificationFeedItem],
+    name="users:get-global-notifications",
 )
 async def get_notification_feed_for_user_by_date(
-    # add some validation and metadata with Query
     page_chunk_size: int = Query(
-        GlobalNotificationsRepository.page_chunk_size,
+        GlobalNotificationsService.page_chunk_size,
         ge=1,
         le=50,
         description="Number of notifications to retrieve",
     ),
     starting_date: datetime = Query(
-        datetime.utcnow() + timedelta(minutes=10),
+        datetime.utcnow() + timedelta(minutes=1),
         description="Used to determine the timestamp at which to begin querying for notification feed items.",
     ),
-    user: UserPublic = Depends(get_current_active_user),
-    users_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-) -> List[GlobalNotificationFeedItem]:
-    async with exception_handler():
-        return await users_repo.fetch_notifications_by_date(
-            role=user.role,
-            starting_date=starting_date,
-            page_chunk_size=page_chunk_size,
+    user: GetUserRow = Depends(get_current_active_user),
+    conn: AsyncConnection = Depends(get_new_async_conn),
+):
+    users_service = UsersService(conn)
+    async with exception_handler(conn):
+        return jsonable_encoder(
+            await users_service.fetch_global_notifications_by_date(
+                params=GetGlobalNotificationsByStartingDateParams(
+                    roles=ROLE_PERMISSIONS[user.role],
+                    starting_date=starting_date.replace(tzinfo=None),
+                    page_chunk_size=page_chunk_size,
+                ),
+                user_id=user.user_id,
+            )
         )
 
 
 @router.get(
-    "/check-user-has-unread-notifications/",
-    response_model=bool,
-    name="users:check-user-has-unread-notifications",
-    dependencies=[Depends(get_current_active_user)],
+    "/personal-notifications/",
+    response_model=list[PersonalNotificationFeedItem],
+    name="users:get-personal-notifications",
 )
-async def check_has_new_notifications(
-    user: UserPublic = Depends(get_current_active_user),
-    global_notif_repo: GlobalNotificationsRepository = Depends(get_repository(GlobalNotificationsRepository)),
-) -> bool:
-    """
-    Hit the server to check if the user has unread notifications.
-    It won't update the user's ``last_notification_at`` field.
-    """
-    async with exception_handler():
-        return await global_notif_repo.has_new_notifications(
-            last_notification_at=user.last_notification_at, role=user.role
+async def get_personal_notification_feed_for_user_by_date(
+    page_chunk_size: int = Query(
+        PersonalNotificationsService.page_chunk_size,
+        ge=1,
+        le=50,
+        description="Number of notifications to retrieve",
+    ),
+    starting_date: datetime = Query(
+        datetime.utcnow() + timedelta(minutes=1),
+        description="Used to determine the timestamp at which to begin querying for notification feed items.",
+    ),
+    user: GetUserRow = Depends(get_current_active_user),
+    conn: AsyncConnection = Depends(get_new_async_conn),
+):
+    users_service = UsersService(conn)
+    async with exception_handler(conn):
+        return jsonable_encoder(
+            await users_service.fetch_personal_notifications_by_date(
+                params=GetPersonalNotificationsByStartingDateParams(
+                    receiver_email=user.email,
+                    starting_date=starting_date.replace(tzinfo=None),
+                    page_chunk_size=page_chunk_size,
+                ),
+                user_id=user.user_id,
+            )
         )
+
+
+@router.post(
+    "/create-personal-notification/",
+    name="users:create-personal-notification",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(email_is_verified)],
+)
+async def create_personal_notification(
+    notification: CreatePersonalNotificationParams = Body(..., embed=True),
+    conn: AsyncConnection = Depends(get_new_async_conn),
+    user: GetUserRow = Depends(get_current_active_user),
+):
+    if user.email != notification.sender:
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="You cannot send a notification as a different user.",
+        )
+    pn_service = PersonalNotificationsService(conn)
+    async with exception_handler(conn):
+        return await pn_service.create_personal_notification(notification=notification)
+
+
+@router.delete(
+    "/delete-personal-notification/{id}/",
+    name="users:delete-personal-notification",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(email_is_verified)],
+)
+async def delete_personal_notification(
+    id: int = Path(..., ge=1),
+    conn: AsyncConnection = Depends(get_new_async_conn),
+    current_user: GetUserRow = Depends(get_current_active_user),
+):
+    pn_service = PersonalNotificationsService(conn)
+    async with exception_handler(conn):
+        await pn_service.delete_notification_by_id(user=current_user, id=id)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -17,7 +17,7 @@ myapp_puppeteer:
       dockerfile: Dockerfile
       args:
         - HEADLESS=true
-        - FRONTEND_URL=https://myapp-frontend.testing.localhost
+        - FRONTEND_URL=https://myapp.e2e.localhost
     command: tail -F anything # will stay up until we explicitly run tests
     depends_on:
       - myapp_frontend_e2e

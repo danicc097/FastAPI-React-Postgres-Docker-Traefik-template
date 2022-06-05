@@ -1,4 +1,4 @@
-import { EuiPage, EuiPageHeader } from '@elastic/eui'
+import { EuiHorizontalRule, EuiPage, EuiPageHeader } from '@elastic/eui'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -7,6 +7,13 @@ export const LandingTitle = styled.h1`
   font-size: 3.5rem;
   margin: 0 0 2rem;
   align-self: center;
+`
+
+export const StyledEuiHorizontalRule = styled(EuiHorizontalRule)`
+  &&& {
+    background-color: dodgerblue;
+    opacity: 0.7;
+  }
 `
 
 export const BetaBadge = styled.span`

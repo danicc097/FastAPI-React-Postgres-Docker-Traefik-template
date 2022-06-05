@@ -1,12 +1,8 @@
-import React from 'react'
-// centralized user auth, without duplicating logic in every component:
-// We remove any references to redux,
-// no longer need to connect the component,
-// and can simply default export
+import React, { Dispatch, useEffect } from 'react'
+
 import {
   EuiAvatar,
   EuiIcon,
-  EuiHeader,
   EuiHeaderSection,
   EuiHeaderSectionItem,
   EuiHeaderSectionItemButton,
@@ -18,54 +14,51 @@ import {
   EuiLink,
   EuiHorizontalRule,
   htmlIdGenerator,
+  EuiButton,
+  EuiSpacer,
+  EuiButtonEmpty,
+  useEuiTour,
+  EuiTourState,
+  EuiTourStep,
 } from '@elastic/eui'
 import { Link, useNavigate } from 'react-router-dom'
 import loginIcon from 'src/assets/img/loginIcon.svg'
-import styled from 'styled-components'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
 import UserAvatar from '../UserAvatar/UserAvatar'
 import CollapsibleNav from './CollapsibleNav/CollapsibleNav'
-import Notifications from './PersonalNotifications/PersonalNotifications'
 import GlobalNotifications from 'src/components/Navbar/GlobalNotifications/GlobalNotifications'
-import PersonalNotifications from './PersonalNotifications/PersonalNotifications'
-
-const LogoSection = styled(EuiHeaderLink)`
-  &&& {
-    padding: 0 2rem;
-  }
-`
-
-const StyledEuiHeader = styled(EuiHeader)`
-  &&& {
-    width: 100%;
-    top: 0px;
-    z-index: 1000;
-    left: 0px;
-    right: 0px;
-    margin-top: 0px;
-    position: fixed; /* cant override theme css else */
-    align-items: center; /* AvatarMenu */
-  }
-`
-
-const AvatarMenu = styled.div`
-  & .avatar-dropdown {
-    align-items: center; /* EuiFlexItem's */
-    padding: 1rem;
-  }
-
-  &&& {
-    & .avatar-dropdown-user > * {
-      margin-bottom: 0.2rem;
-      margin-top: 0.2rem;
-    }
-  }
-`
+import { ThemeSwitcher } from 'src/components/ThemeSwitcher/ThemeSwitcher'
+import { useNotificationApi } from 'src/hooks/ui/useNotificationApi'
+import arenaDark from 'src/assets/logo/two-white-clouds.svg'
+import arenaLight from 'src/assets/logo/two-black-clouds.svg'
+import { useTheme } from 'src/themes/useTheme'
+import { eagerImportDefault } from 'src/utils/eagerImport'
+import { AvatarMenu, StyledEuiHeader, LogoSection } from './Navbar.styles'
+import PersonalNotifications from 'src/components/Navbar/PersonalNotifications/PersonalNotifications'
 
 export default function Navbar() {
   const [avatarMenuOpen, setAvatarMenuOpen] = React.useState<boolean>(false)
   const navigate = useNavigate()
-  const { user, logUserOut } = useAuthenticatedUser()
+  const { user, logUserOut, avatarColor } = useAuthenticatedUser()
+  const { showTestNotification } = useNotificationApi()
+  const { theme } = useTheme()
+  const [notify, setNotify] = React.useState<boolean>(false)
+  const [logo, setLogo] = React.useState<string>(getLogo(theme))
+
+  useEffect(() => {
+    if (user && notify) {
+      showTestNotification(user.email)
+      setNotify(false)
+    }
+  }, [user, showTestNotification, notify])
+
+  useEffect(() => {
+    setLogo(getLogo(theme))
+  }, [theme])
+
+  function getLogo(theme: string) {
+    return theme === 'dark' ? arenaDark : arenaLight
+  }
 
   const toggleAvatarMenu = () => setAvatarMenuOpen(!avatarMenuOpen)
   const closeAvatarMenu = () => setAvatarMenuOpen(false)
@@ -79,10 +72,10 @@ export default function Navbar() {
     <EuiHeaderSectionItemButton
       aria-label="User avatar"
       data-test-subj="avatar"
-      onClick={() => user?.profile && toggleAvatarMenu()}
+      onClick={() => user?.email && toggleAvatarMenu()}
     >
-      {user?.profile ? (
-        <UserAvatar size="l" user={user} initialsLength={2} />
+      {user?.email ? (
+        <UserAvatar size="l" user={user} color={avatarColor} initialsLength={2} />
       ) : (
         <Link to="/login">
           <EuiAvatar size="l" color="#1E90FF" name="user" imageUrl={loginIcon} />
@@ -92,34 +85,80 @@ export default function Navbar() {
   )
 
   const renderAvatarMenu = () => {
-    if (!user?.profile) return null
+    if (!user?.email) return null
     return (
       <AvatarMenu>
-        <EuiFlexGroup direction="column" alignItems="center" justifyContent="spaceBetween" className="avatar-dropdown">
-          <EuiFlexGroup direction="row" alignItems="center">
-            <EuiFlexItem grow={false}>
-              <UserAvatar size="l" user={user} initialsLength={2} />
-            </EuiFlexItem>
-            <EuiFlexGroup direction="column" alignItems="flexStart" className="avatar-dropdown-user">
-              <EuiFlexItem>
-                <strong>{user.username}</strong>
+        <EuiFlexGroup
+          gutterSize="xs"
+          direction="column"
+          alignItems="center"
+          justifyContent="center"
+          className="avatar-dropdown"
+          style={{ alignItems: 'center' }}
+        >
+          <EuiFlexItem grow style={{ alignItems: 'center', flexGrow: 1 }}>
+            <EuiFlexGroup direction="row" alignItems="center">
+              <EuiFlexItem grow>
+                <UserAvatar size="l" user={user} color={avatarColor} initialsLength={2} />
               </EuiFlexItem>
-              <EuiFlexItem>{user.email}</EuiFlexItem>
+              <EuiFlexGroup direction="column" alignItems="flexStart" className="avatar-dropdown-user">
+                <EuiFlexItem grow>
+                  <strong>{user?.username}</strong>
+                </EuiFlexItem>
+                <EuiFlexItem grow>{user?.email}</EuiFlexItem>
+              </EuiFlexGroup>
             </EuiFlexGroup>
-          </EuiFlexGroup>
+          </EuiFlexItem>
 
           <EuiHorizontalRule margin="m" />
 
-          <EuiFlexGroup direction="column" alignItems="center" className="avatar-dropdown-actions">
+          <ThemeSwitcher />
+
+          <EuiHorizontalRule margin="m" />
+
+          <EuiFlexGroup
+            direction="row"
+            alignItems="center"
+            className="avatar-dropdown-actions"
+            style={{ alignSelf: 'flex-start' }}
+          >
             <EuiFlexItem grow={1}>
+              <EuiIcon type="user" size="m" />
+            </EuiFlexItem>
+            <EuiFlexItem grow={8}>
               <Link to="/profile">Profile</Link>
             </EuiFlexItem>
           </EuiFlexGroup>
 
+          <EuiSpacer size="s" />
+
+          <EuiFlexGroup
+            direction="row"
+            alignItems="center"
+            className="avatar-dropdown-actions"
+            style={{ alignSelf: 'flex-start' }}
+          >
+            <EuiFlexItem grow={1}>
+              <EuiIcon type="push" size="m" />
+            </EuiFlexItem>
+            <EuiFlexItem grow={3}>
+              <a onClick={() => setNotify(true)}>Notification</a>
+            </EuiFlexItem>
+          </EuiFlexGroup>
+
           <EuiHorizontalRule margin="m" />
 
-          <EuiFlexGroup direction="column" alignItems="center" className="avatar-dropdown-actions">
-            <EuiFlexItem grow={2}>
+          <EuiFlexGroup
+            direction="row"
+            alignItems="center"
+            justifyContent="flexStart"
+            className="avatar-dropdown-actions"
+            style={{ alignSelf: 'flex-start' }}
+          >
+            <EuiFlexItem grow={1}>
+              <EuiIcon type="exit" size="m" />
+            </EuiFlexItem>
+            <EuiFlexItem grow={8}>
               <EuiLink onClick={handleLogout} color="danger" data-test-subj="logout">
                 Log out
               </EuiLink>
@@ -135,18 +174,27 @@ export default function Navbar() {
       sections={[
         {
           items: [
-            user.is_verified ? <CollapsibleNav user={user} /> : null,
-            ,
+            user?.is_verified ? <CollapsibleNav user={user} /> : null,
+
             <LogoSection href="/" key={0}>
-              <EuiIcon type="training" color="#1E90FF" size="l" /> My App
+              <EuiIcon type={logo} size="l" />
             </LogoSection>,
-            // allow responsive grouping with EuiHeaderLinks
-            <EuiHeaderLinks aria-label="app navigation links" key={1}>
+
+            <EuiHeaderLinks aria-label="app navigation links" key={0}>
+              <EuiHeaderLink
+                iconType="documentation"
+                target="_blank"
+                href={import.meta.env.VITE_WIKI_URL}
+                data-test-subj="wiki"
+              >
+                Wiki
+              </EuiHeaderLink>
               <EuiHeaderLink
                 iconType="help"
                 onClick={() => {
                   navigate('/help')
                 }}
+                className="help-header-link"
               >
                 Help
               </EuiHeaderLink>
@@ -156,11 +204,12 @@ export default function Navbar() {
         },
         {
           items: [
-            user.is_verified ? <GlobalNotifications user={user} /> : null,
-            user.is_verified ? <PersonalNotifications /> : null,
+            user?.is_verified ? <GlobalNotifications user={user} /> : null, // TODO only receiver is user's role
+            // user?.is_verified ? <PersonalNotifications user={user} /> : null, // TODO only where receiver is user's email
+            user?.is_superuser ? <PersonalNotifications user={user} /> : null, // TODO enable when ready
             <EuiPopover
               id="avatar-menu"
-              key={3}
+              key={'765'}
               isOpen={avatarMenuOpen}
               closePopover={closeAvatarMenu}
               anchorPosition="downRight"

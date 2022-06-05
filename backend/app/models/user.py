@@ -1,102 +1,70 @@
-from datetime import datetime
-from enum import Enum
+import re
 from typing import Optional
 
 from pydantic import EmailStr, constr, validator
-from pydantic.main import BaseModel
 
-from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
-from app.models.profile import ProfilePublic
+from app.db.gen.queries.models import Role
+from app.db.gen.queries.users import GetUserRow
+from app.models.core import CoreModel
 from app.models.token import AccessToken
 
-
-class Role(str, Enum):
-    """
-    Access level for users.
-    """
-
-    user = "user"
-    manager = "manager"
-    admin = "admin"
-
-
-class UserBase(CoreModel):
-    """
-    Leaving off password and salt from base model
-    so they never leave the backend
-    """
-
-    email: Optional[EmailStr]
-    username: Optional[str]
-    is_verified: bool = False
-    is_active: bool = True
-    is_superuser: bool = False
-    role: Role = Role.user
-    last_notification_at: datetime = datetime.utcnow()
-
-    @validator("last_notification_at", pre=True)
-    def default_datetime(cls, value: datetime) -> datetime:
-        return value or datetime.utcnow()
-
-
-# ? until constr fixed
-# mypy: ignore-errors
+DOMAIN_REGEX = re.compile(r".*@(myappdomain|myapp|myappdomain2)\..*")
 
 
 class UserCreate(CoreModel):
-    """
-    Email, username, and password are required for registering a new user
-    """
 
     email: EmailStr
-    password: constr(min_length=7, max_length=100)
-    username: constr(min_length=3, max_length=50, regex="^[a-zA-Z0-9_-]+$")
+    password: constr(min_length=7, max_length=100)  # type: ignore
+    username: constr(min_length=3, max_length=50, regex="^[a-zA-Z0-9_-]+$")  # type: ignore
+
+    @validator("email")
+    def validate_email(cls, v):
+        if not DOMAIN_REGEX.match(v):
+            raise ValueError("Email domain unrecognized")
+        return v.lower()
+
+    # @root_validator
+    # def _validate(cls, values: dict):
+    #     if not EMAIL_REGEX.match(values.get("email")):
+    #         raise ValueError("Invalid email address")
+    #     if 5 > len(values.get("password")) > 250:
+    #         raise ValueError("Password must be between 5 and 250 characters")
+    #     if 3 > len(values.get("username")) > 20:
+    #         raise ValueError("Username must be between 3 and 20 characters")
+    #     return values
 
 
 class UserPasswordRegistration(CoreModel):
-    """
-    Mandatory password + salt combo for registration
-    """
 
-    password: constr(min_length=7, max_length=100)
+    password: str
     salt: str
 
 
 class UserUpdate(CoreModel):
-    """
-    Users are allowed to update their email, username or password
-    """
 
-    password: Optional[str]
-    old_password: Optional[constr(min_length=7, max_length=50)]
+    password: Optional[constr(min_length=7, max_length=100)]  # type: ignore
+    old_password: Optional[constr(min_length=7, max_length=100)]  # type: ignore
     email: Optional[EmailStr]
-    username: Optional[constr(min_length=3, max_length=50, regex="^[a-zA-Z0-9_-]+$")]
+    username: Optional[constr(min_length=3, max_length=50, regex="^[a-zA-Z0-9_-]+$")]  # type: ignore
+
+    # @root_validator
+    # def _validate(cls, values: dict):
+    #     if values.get("email") and not EMAIL_REGEX.match(values.get("email")):
+    #         raise ValueError("Invalid email address")
+    #     if values.get("password") and 5 > len(values.get("password")) > 250:
+    #         raise ValueError("Password must be between 5 and 250 characters")
+    #     if values.get("username") and 3 > len(values.get("username")) > 20:
+    #         raise ValueError("Username must be between 3 and 20 characters")
+    #     return values
 
 
 class RoleUpdate(CoreModel):
-    """
-    Admin users can update the role of other users
-    """
 
-    email: EmailStr
+    email: str
     role: Role
 
 
-class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):
-    """
-    Add in user's hashed password and salt
-    """
-
-    password: constr(min_length=7, max_length=100)
-    salt: str
-
-
-class UserPublic(IDModelMixin, DateTimeModelMixin, UserBase):
-    """
-    By accepting an optional access_token attribute, we can now return the
-    user along with their token as soon as they've registered.
-    We also have the ability to attach a user profile
-    """
-
+class UserPublic(GetUserRow):
+    # user_id: int
     access_token: Optional[AccessToken]
-    profile: Optional[ProfilePublic]
+    # profile: Optional[ProfilePublic]

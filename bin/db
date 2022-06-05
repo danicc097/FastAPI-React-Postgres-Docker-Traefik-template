@@ -1,44 +1,46 @@
 #!/bin/bash
 
-#
-# Backup or restore a database in the given environment.
-# Example: db restore dev
-#
-
 set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
+ensure_pwd_is_top_level_repo
+
+# TODO should allow restore from one env to another if flags --from and --to are both set and are valid env names
+
 ENV=$(get_env_suffix "$2")
-DUMPS_FOLDER="myapp_postgres_dumps_$ENV"
+DUMPS_FOLDER="$HOME/myapp_postgres_dumps_$ENV"
 DUMP_PREFIX="dump_$ENV"
 
 case $1 in
 dump)
   echo "Dumping database to $DUMPS_FOLDER"
-  mkdir -p ~/"$DUMPS_FOLDER"
-
-  docker exec -t postgres_db_myapp_"$ENV" pg_dump --data-only -T alembic_version -U postgres | gzip >~/"$DUMPS_FOLDER"/"$DUMP_PREFIX""_$(date +%d-%m-%Y"_"%H_%M_%S)".gz
+  mkdir -p "$DUMPS_FOLDER"
+  ALEMBIC_VERSION=$(docker exec -i postgres_db_myapp_"$ENV" psql -qtAX -U postgres -d postgres -c "SELECT version_num FROM alembic_version;")
+  docker exec -t postgres_db_myapp_"$ENV" pg_dump -U postgres -d postgres | gzip >"$DUMPS_FOLDER"/"$DUMP_PREFIX""_$(date +%d-%m-%Y"_"%H_%M_%S)""_$ALEMBIC_VERSION".gz
   ;;
 
 restore)
-  _confirm "Do you want to restore from $DUMPS_FOLDER in the $ENV environment?"
+  _confirm "Do you want to restore from $(green "$DUMPS_FOLDER") in the $(red "$ENV") environment?"
   echo "Restoring database from $DUMPS_FOLDER"
-  last_bkp_file=$(find ~/"$DUMPS_FOLDER"/ -name '*.gz' | grep "$DUMP_PREFIX" | sort -r | head -n 1)
+  last_bkp_file=$(find "$DUMPS_FOLDER"/ -name '*.gz' | grep "$DUMP_PREFIX" | sort -r | head -n 1)
 
   if [ -z "$last_bkp_file" ]; then
     err "No $DUMP_PREFIX* file found in $DUMPS_FOLDER"
-    exit 1
   fi
 
   echo "Restoring database from $last_bkp_file"
-  # must get rid of everything, including alembic_version which won't be restored and needs to be updated
-  docker exec -it backend_myapp_"$ENV" /bin/bash -c "alembic downgrade base"
+  bin/reset-database "$ENV"
+  gunzip -c "$last_bkp_file" | docker exec -i postgres_db_myapp_"$ENV" psql -U postgres -d postgres
+  dump_alembic_version=$(docker exec -i postgres_db_myapp_"$ENV" psql -qtAX -U postgres -d postgres -c "SELECT version_num FROM alembic_version;")
+  file_alembic_version=$(echo "$last_bkp_file" | sed -E 's/.*_([0-9]+)\..*/\1/')
+  echo "dump alembic_version: $dump_alembic_version"
+  echo "file alembic_version: $file_alembic_version"
+  if [ "$dump_alembic_version" != "$file_alembic_version" ]; then
+    err "alembic_version mismatch: dump $dump_alembic_version != file $file_alembic_version"
+  fi
   docker exec -it backend_myapp_"$ENV" /bin/bash -c "alembic upgrade head"
-  gunzip -c "$last_bkp_file" | docker exec -i postgres_db_myapp_"$ENV" psql -U postgres
-
   ;;
-# create a help case with --h or -h or --help
 *)
   echo "Usage: $0 {dump|restore} [env]"
   exit 1

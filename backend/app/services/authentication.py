@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, Type
+from typing import Optional, Union
 
 import bcrypt
 import jwt
@@ -11,16 +11,17 @@ from app.core.config import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     JWT_ALGORITHM,
     JWT_AUDIENCE,
-    JWT_TOKEN_PREFIX,
     UNIQUE_KEY,
 )
+from app.core.errors import BaseAppException
+from app.db.gen.queries.users import GetUserRow, RegisterNewUserRow
 from app.models.token import JWTCreds, JWTMeta, JWTPayload
-from app.models.user import UserBase, UserInDB, UserPasswordRegistration
+from app.models.user import UserPasswordRegistration
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-class AuthException(Exception):
+class AuthException(BaseAppException):
     pass
 
 
@@ -43,15 +44,12 @@ class AuthService:
     def create_access_token_for_user(
         self,
         *,
-        # switching to the parent class that both UserInDB and UserPublic inherit from
-        # - UserBase. This ensures that our access token is created for instances of
-        # both models without failure.
-        user: UserBase,
+        user: Union[RegisterNewUserRow, GetUserRow],
         secret_key: str = str(UNIQUE_KEY),
         audience: str = JWT_AUDIENCE,
         expires_in: int = ACCESS_TOKEN_EXPIRE_MINUTES,
     ) -> Optional[str]:
-        if not user or not isinstance(user, UserBase):
+        if not user:
             return None
 
         jwt_meta = JWTMeta(
@@ -64,25 +62,19 @@ class AuthService:
             **jwt_meta.dict(),
             **jwt_creds.dict(),
         )
-        # NOTE - previous versions of pyjwt ("<2.0") returned the token as bytes insted of a string.
-        # That is no longer the case and the `.decode("utf-8")` has been removed.
-        access_token = jwt.encode(token_payload.dict(), secret_key, algorithm=JWT_ALGORITHM)
 
-        return access_token
+        return jwt.encode(token_payload.dict(), secret_key, algorithm=JWT_ALGORITHM)
 
     def get_username_from_token(self, *, token: str, secret_key: str) -> Optional[str]:
         try:
-            decoded_token = jwt.decode(
-                token,
-                str(secret_key),
-                audience=JWT_AUDIENCE,
-                algorithms=[JWT_ALGORITHM],
-            )
+            decoded_token = jwt.decode(token, secret_key, audience=JWT_AUDIENCE, algorithms=[JWT_ALGORITHM])
+
             payload = JWTPayload(**decoded_token)
-        except (jwt.PyJWTError, ValidationError):
+        except (jwt.PyJWTError, ValidationError) as e:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate token credentials.",
                 headers={"WWW-Authenticate": "Bearer"},
-            )
+            ) from e
+
         return payload.username

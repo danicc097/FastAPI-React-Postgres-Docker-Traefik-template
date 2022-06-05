@@ -1,4 +1,7 @@
+import { Users } from '../initialData/users'
 import loginPo from '../pages/login.po'
+
+jest.retryTimes(3)
 
 beforeEach(async () => {
   await loginPo.go()
@@ -15,15 +18,15 @@ afterEach(async () => {
 
 describe('Test logins', () => {
   it.each`
-    userTitle             | error                                | expectResponse
-    ${'unregisteredUser'} | ${'Authentication was unsuccessful'} | ${false}
-    ${'admin'}            | ${''}                                | ${false}
-    ${'verified'}         | ${''}                                | ${false}
-    ${'unverified'}       | ${'Current user is not verified'}    | ${false}
+    user                  | error                             | expectResponse
+    ${'unregisteredUser'} | ${'could not be authenticated'}   | ${false}
+    ${'admin'}            | ${''}                             | ${false}
+    ${'verified'}         | ${''}                             | ${false}
+    ${'unverified'}       | ${'Current user is not verified'} | ${false}
   `(
     'should display an appropiate error in a callout message box',
-    async ({ userTitle, error, expectResponse }: { userTitle: userType; error: string; expectResponse: boolean }) => {
-      await loginPo.login(userTitle, expectResponse)
+    async ({ user, error, expectResponse }: { user: keyof Users; error: string; expectResponse: boolean }) => {
+      await loginPo.login(user, expectResponse)
       const calloutErrors = (await loginPo.getFormCalloutErrors()).toString()
       expect(calloutErrors).toEqual(expect.stringMatching(error))
     },

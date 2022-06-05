@@ -3,7 +3,6 @@ import find from 'lodash/find'
 import findIndex from 'lodash/findIndex'
 
 import {
-  EuiCollapsibleNav,
   EuiCollapsibleNavGroup,
   EuiHeaderSectionItemButton,
   EuiHeaderLogo,
@@ -20,18 +19,9 @@ import {
   EuiListGroup,
   useGeneratedHtmlId,
 } from '@elastic/eui'
-import styled from 'styled-components'
 import { useNavigate } from 'react-router-dom'
-import { schema } from 'src/types/schema_override'
-
-const StyledEuiCollapsibleNav = styled(EuiCollapsibleNav)`
-  &&& {
-    /* push collapsible nav down */
-    margin-top: ${(props) => props.theme.euiHeaderHeight};
-    /* and then bring hidden items below up */
-    padding-bottom: ${(props) => props.theme.euiHeaderHeight};
-  }
-`
+import { schema } from 'src/types/schemaOverride'
+import { StyledEuiCollapsibleNav } from './CollapsibleNav.styles'
 
 type CollapsibleNavProps = {
   user: schema['UserPublic']
@@ -47,7 +37,7 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
       isActive: true,
       'aria-current': true,
       onClick: () => {
-        null
+        navigate('/')
       },
       pinnable: false,
     },
@@ -79,7 +69,7 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
     {
       label: 'Knowledge levels',
       onClick: () => {
-        null
+        navigate('/knowledge-levels')
       },
     },
     {
@@ -129,14 +119,15 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
   const [navIsDocked, setNavIsDocked] = useState<boolean>(
     JSON.parse(String(localStorage.getItem('euiCollapsibleNavExample--isDocked'))) || false,
   )
-  /**
-   * Accordion toggling
-   */
+
+  const adminGroup = 'Admin'
+  const learnGroup = 'Learn'
+  const skillsGroup = 'Skills'
+
   const [openGroups, setOpenGroups] = useState(
     JSON.parse(String(localStorage.getItem('openNavGroups'))) || ['Learn', 'Skills', 'Admin'],
   )
 
-  // Save which groups are open and which are not with state and local store
   const toggleAccordion = (isOpen: boolean, title?: string) => {
     if (!title) return
     const itExists = openGroups.includes(title)
@@ -153,9 +144,6 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
     localStorage.setItem('openNavGroups', JSON.stringify(openGroups))
   }
 
-  /**
-   * Pinning
-   */
   const [pinnedItems, setPinnedItems] = useState<EuiPinnableListGroupItemProps[]>(
     JSON.parse(String(localStorage.getItem('pinnedItems'))) || [],
   )
@@ -181,9 +169,6 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
     }
   }
 
-  /**
-   * Show links in navbar group according to state
-   */
   function alterLinksWithCurrentState(
     links: EuiPinnableListGroupItemProps[],
     showPinned = false,
@@ -209,6 +194,7 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
 
   return (
     <StyledEuiCollapsibleNav
+      // className="eui-yScroll" // breaks right close button
       id={collapsibleNavId}
       aria-label="Main navigation"
       isOpen={navIsOpen}
@@ -229,13 +215,12 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
         setNavIsOpen(false)
         localStorage.setItem('euiCollapsibleNavExample--isOpen', JSON.stringify(false))
       }}
-      maskProps={{ headerZindexLocation: 'below' }} /* optional */
+      maskProps={{ headerZindexLocation: 'below' }}
     >
-      {/* Shaded pinned section always with a home item */}
       <EuiFlexItem grow={false} style={{ flexShrink: 0 }}>
         <EuiCollapsibleNavGroup background="light" style={{ maxHeight: '40vh' }}>
           <EuiPinnableListGroup
-            aria-label="Pinned links" // A11y : Since this group doesn't have a visible `title` it should be provided an accessible description
+            aria-label="Pinned links"
             listItems={alterLinksWithCurrentState(TopLinks).concat(alterLinksWithCurrentState(pinnedItems, true))}
             unpinTitle={addLinkNameToUnpinTitle}
             onPinClick={removePin}
@@ -247,9 +232,8 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
         </EuiCollapsibleNavGroup>
       </EuiFlexItem>
 
-      {/* Dark deployments section */}
       <EuiFlexItem grow={false} style={{ flexShrink: 0 }}>
-        <EuiCollapsibleNavGroup isCollapsible={false} background="dark">
+        {/* <EuiCollapsibleNavGroup isCollapsible={false} background="dark">
           <EuiListGroup
             color="ghost"
             maxWidth="none"
@@ -266,30 +250,25 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
               },
             ]}
           />
-        </EuiCollapsibleNavGroup>
+        </EuiCollapsibleNavGroup> */}
       </EuiFlexItem>
 
       <EuiHorizontalRule margin="none" />
 
-      <EuiFlexItem>
-        {/* Learn section */}
+      {/* <EuiFlexItem>
         <EuiCollapsibleNavGroup
           title={
-            <a
-              className="eui-textInheritColor"
-              href="#/navigation/collapsible-nav"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <a href="#/navigation/collapsible-nav" onClick={(e) => e.stopPropagation()}>
               Training
             </a>
           }
           iconType="training"
-          isCollapsible={true}
-          initialIsOpen={openGroups.includes('Learn')}
-          onToggle={(isOpen: boolean) => toggleAccordion(isOpen, 'Learn')}
+          isCollapsible
+          initialIsOpen={openGroups.includes(learnGroup)}
+          onToggle={(isOpen: boolean) => toggleAccordion(isOpen, learnGroup)}
         >
           <EuiPinnableListGroup
-            aria-label="Learn" // A11y : EuiCollapsibleNavGroup can't correctly pass the `title` as the `aria-label` to the right HTML element, so it must be added manually
+            aria-label={learnGroup}
             listItems={alterLinksWithCurrentState(LearnLinks)}
             pinTitle={addLinkNameToPinTitle}
             onPinClick={addPin}
@@ -299,31 +278,28 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
             size="s"
           />
         </EuiCollapsibleNavGroup>
-      </EuiFlexItem>
+      </EuiFlexItem> */}
 
-      {/* use className="eui-yScroll" to allow scrolling for current item */}
-      <EuiFlexItem className="eui-yScroll">
-        {/* Learn section */}
-        <EuiCollapsibleNavGroup
+      <EuiFlexItem
+      // className="eui-yScroll"
+      >
+        {/* <EuiCollapsibleNavGroup
           title={
             <a
-              className="eui-textInheritColor eui-yScroll"
-              // href="#/navigation/collapsible-nav"
               onClick={(e) => {
                 e.stopPropagation()
-                navigate('/skills')
               }}
             >
               My skills
             </a>
           }
           iconType="canvasApp"
-          isCollapsible={true}
-          initialIsOpen={openGroups.includes('Skills')}
-          onToggle={(isOpen: boolean) => toggleAccordion(isOpen, 'Skills')}
+          isCollapsible
+          initialIsOpen={openGroups.includes(skillsGroup)}
+          onToggle={(isOpen: boolean) => toggleAccordion(isOpen, skillsGroup)}
         >
           <EuiPinnableListGroup
-            aria-label="Skills" // A11y : EuiCollapsibleNavGroup can't correctly pass the `title` as the `aria-label` to the right HTML element, so it must be added manually
+            aria-label={skillsGroup}
             listItems={alterLinksWithCurrentState(SkillsLinks)}
             pinTitle={addLinkNameToPinTitle}
             onPinClick={addPin}
@@ -332,16 +308,12 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
             gutterSize="none"
             size="s"
           />
-        </EuiCollapsibleNavGroup>
+        </EuiCollapsibleNavGroup> */}
 
-        {/* Admin section */}
-        {user?.profile && user?.is_superuser ? (
+        {user?.email && user?.is_superuser ? (
           <EuiCollapsibleNavGroup
-            className="eui-yScroll"
             title={
               <a
-                className="eui-textInheritColor"
-                // href="#/navigation/collapsible-nav"
                 onClick={(e) => {
                   e.stopPropagation()
                 }}
@@ -350,12 +322,12 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
               </a>
             }
             iconType="securityApp"
-            isCollapsible={true}
-            initialIsOpen={openGroups.includes('Admin')}
-            onToggle={(isOpen: boolean) => toggleAccordion(isOpen, 'Admin')}
+            isCollapsible
+            initialIsOpen={openGroups.includes(adminGroup)}
+            onToggle={(isOpen: boolean) => toggleAccordion(isOpen, adminGroup)}
           >
             <EuiPinnableListGroup
-              aria-label="Admin" // A11y : EuiCollapsibleNavGroup can't correctly pass the `title` as the `aria-label` to the right HTML element, so it must be added manually
+              aria-label={adminGroup}
               listItems={alterLinksWithCurrentState(AdminLinks)}
               pinTitle={addLinkNameToPinTitle}
               onPinClick={addPin}
@@ -368,7 +340,6 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
         ) : null}
       </EuiFlexItem>
 
-      {/* (UN)DOCK BUTTON */}
       <EuiFlexItem grow={false}>
         <span />
         <EuiCollapsibleNavGroup>
@@ -380,17 +351,6 @@ const CollapsibleNav = ({ user }: CollapsibleNavProps) => {
             }}
           >
             {navIsDocked ? 'Undock sidebar' : 'Dock sidebar'}
-          </EuiButton>
-        </EuiCollapsibleNavGroup>
-      </EuiFlexItem>
-
-      {/* ADD DATA BUTTON */}
-      <EuiFlexItem grow={false}>
-        {/* Span fakes the nav group into not being the first item and therefore adding a top border */}
-        <span />
-        <EuiCollapsibleNavGroup>
-          <EuiButton fill fullWidth iconType="plusInCircleFilled">
-            Add data
           </EuiButton>
         </EuiCollapsibleNavGroup>
       </EuiFlexItem>

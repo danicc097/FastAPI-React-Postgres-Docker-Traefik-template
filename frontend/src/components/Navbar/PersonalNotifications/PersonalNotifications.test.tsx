@@ -3,15 +3,22 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
 import { BrowserRouter } from 'react-router-dom'
-// this is an overridden render from @testing-library/react
+import { vi } from 'vitest'
 import { render as renderWithStore } from 'src/test/test-utils'
 import { testInitialState } from 'src/test/test-state'
 import PersonalNotifications from './PersonalNotifications'
 
+const mEventSourceInstance = {
+  addEventListener: vi.fn(),
+}
+const mEventSource: any = jest.fn(() => mEventSourceInstance)
+
+global.EventSource = mEventSource
+
 test('Renders content', async () => {
   renderWithStore(
     <BrowserRouter>
-      <PersonalNotifications />
+      <PersonalNotifications user={testInitialState.auth.user} />
     </BrowserRouter>,
     { initialState: testInitialState },
   )

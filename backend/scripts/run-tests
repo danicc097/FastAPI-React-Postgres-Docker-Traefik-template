@@ -1,0 +1,15 @@
+#!/bin/bash
+set -e
+
+PARAMS=""
+
+function get_test_mode {
+  case $1 in
+  xdist) echo "-n auto --dist loadfile ${2:5}" ;;
+  *) echo "$2" ;;
+  esac
+}
+
+PARAMS="$(get_test_mode "$1" "${*:1}")"
+echo "Running tests with params: $PARAMS"
+docker exec backend_myapp_dev /bin/bash -c "pytest --asyncio-mode=auto --durations=5 $PARAMS" # HTTPX_LOG_LEVEL=trace

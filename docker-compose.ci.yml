@@ -56,7 +56,7 @@ services:
     labels:
       # Explicitly tell Traefik to expose this container
       - traefik.enable=true
-      - traefik.http.routers.myappreact.rule=Host(`myapp-frontend.testing.localhost`)
+      - traefik.http.routers.myappreact.rule=Host(`myapp.testing.localhost`)
       # we're NOT using nginx in dev Dockerfile, NOT 80
       - traefik.port=${FRONTEND_PORT_CI}
       - traefik.docker.network=traefik-net

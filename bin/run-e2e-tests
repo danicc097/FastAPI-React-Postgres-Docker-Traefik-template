@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+source "${BASH_SOURCE%/*}/.helpers.sh"
+
+BASEDIR=$(dirname "$0")
+PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
+
+if [ "$1" = "ci" ]; then
+  red "Running E2E tests for CI..."
+  mv .env.ci .env
+  mv .env.ci .env.dev
+  mv backend/.env.ci backend/.env.dev
+  mv frontend/.env.ci frontend/.env.development
+else # dev
+  red "Running E2E tests for $PROJECT_PREFIX..."
+fi
+
+yes | dcompose dev up --build
+
+# shellcheck disable=SC2086
+DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose --project-name "$PROJECT_PREFIX"_e2e -f docker-compose.e2e.yml --env-file ".env.dev" up -d --build
+./frontend/scripts/generate-ts-types.sh "e2e"
+"${BASEDIR}"/e2e-tests "e2e"

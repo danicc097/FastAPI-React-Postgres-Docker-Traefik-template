@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthenticatedUser } from 'src/hooks/auth/useAuthenticatedUser'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 import { extractErrorMessages } from 'src/utils/errors'
 import { _getFormErrors } from 'src/utils/validation'
 
@@ -30,13 +30,8 @@ export const useRegistrationForm = () => {
     setForm((form) => ({ ...form, passwordConfirm: value }))
   }
 
-  /**
-   * Retrieve form errors specific to the current form.
-   * Form-specific errors should be set in its own form key
-   */
   const getFormErrors = () => _getFormErrors(form, errors, hasSubmitted, authErrorList)
 
-  // if the user is already authenticated, redirect them to the profile page instead
   useEffect(() => {
     if (user?.email && isAuthenticated) {
       return navigate('/profile')

@@ -16,27 +16,28 @@ import {
   EuiTitle,
 } from '@elastic/eui'
 import _, { capitalize } from 'lodash'
-import React, { Fragment, useEffect, useState } from 'react'
+import React, { Fragment, useEffect, useReducer, useState } from 'react'
 import { useAllUsers } from 'src/hooks/admin/useAllUsers'
 import { useRoleUpdateForm } from 'src/hooks/admin/useRoleUpdateForm'
 import { AdminActionType } from 'src/redux/modules/admin/admin'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 import { getColorForRole } from 'src/utils/colors'
 import { joinWithAnd } from 'src/utils/format'
-import { getAllowedRoles, ROLE_PERMISSIONS } from 'src/utils/permissions'
-import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
+import { getImplicitRoles, ROLE_PERMISSIONS } from 'src/services/permissions'
+import AdminPageBase from '../AdminPageBase/AdminPageBase'
 
 export default function UserPermissionsPage() {
   const noSelection = '...'
 
+  const [forceRerender, setForceRerender] = useState(false)
   const [emailSelection, setEmailSelection] = useState<any>(noSelection)
   const [roleSelection, setRoleSelection] = useState('user' as schema['Role'])
   const [userOptions, setUserOptions] = useState<Array<EuiSelectableOption<any>>>(undefined)
-  const { allUsers } = useAllUsers()
+  const { allUsers, fetchAllUsers } = useAllUsers()
   const { updateUserRole, getFormErrors, form, setForm, errors, setErrors, setHasSubmitted } = useRoleUpdateForm()
 
   useEffect(() => {
-    if (userOptions === undefined) {
+    if (userOptions === undefined || forceRerender) {
       setUserOptions(
         allUsers
           ? allUsers.map((user) => ({
@@ -47,10 +48,11 @@ export default function UserPermissionsPage() {
             }))
           : undefined,
       )
+      setForceRerender(!forceRerender)
     } else {
       setUserOptions(userOptions)
     }
-  }, [userOptions, allUsers])
+  }, [userOptions, allUsers, forceRerender])
 
   const onEmailSelectableChange = (newOptions) => {
     setUserOptions(newOptions)
@@ -65,8 +67,9 @@ export default function UserPermissionsPage() {
     setHasSubmitted(true)
     const action = await updateUserRole({ role_update: form })
     if (action.type !== AdminActionType.UPDATE_USER_ROLE_SUCCESS) {
-      setErrors(action.error)
+      setErrors((errors) => ({ ...errors, form: 'There was an error updating the user role' }))
     }
+    setForceRerender(true)
     closeModal()
   }
 
@@ -96,7 +99,6 @@ export default function UserPermissionsPage() {
   const onRoleUpdateSubmit = async (e) => {
     e.preventDefault()
 
-    // cant change form in modal
     setForm((form) => ({ ...form, email: emailSelection }))
     console.log(`onRoleUpdateSubmit called with: ${emailSelection} and ${roleSelection}`)
     showModal()
@@ -124,8 +126,8 @@ export default function UserPermissionsPage() {
     </div>
   )
 
-  const roleOptions: EuiSuperSelectProps<string>['options'] = Object.keys(ROLE_PERMISSIONS).map(
-    (key: Partial<schema['Role']>) => ({
+  const roleOptions: EuiSuperSelectProps<schema['Role']>['options'] = Object.keys(ROLE_PERMISSIONS).map(
+    (key: schema['Role']) => ({
       value: key,
       inputDisplay: capitalize(key),
       dropdownDisplay: (
@@ -133,7 +135,7 @@ export default function UserPermissionsPage() {
           <strong>{capitalize(key)}</strong>
           <EuiText size="s" color="subdued">
             <p className="euiTextColor--subdued">
-              Has access privileges encompassing {joinWithAnd(getAllowedRoles(key))}.
+              Has access privileges encompassing {joinWithAnd(getImplicitRoles(key))}.
             </p>
           </EuiText>
         </Fragment>
@@ -151,16 +153,26 @@ export default function UserPermissionsPage() {
 
   const element = (
     <>
-      <EuiForm component="form" onSubmit={onRoleUpdateSubmit}>
+      <EuiForm
+        component="form"
+        onSubmit={onRoleUpdateSubmit}
+        isInvalid={Boolean(getFormErrors().length)}
+        error={getFormErrors()}
+      >
         <EuiFlexGroup direction="column">
           <EuiFlexItem grow={false}>
-            <EuiFormRow fullWidth label="Select the user's email" error={getFormErrors()}>
+            <EuiFormRow
+              fullWidth
+              label="Select the user's email"
+              error={getFormErrors()}
+              isInvalid={Boolean(errors.email)}
+            >
               <EuiSelectable
                 aria-label="Searchable example"
                 data-test-subj="roleUpdateForm__selectable"
                 searchable
                 searchProps={{
-                  onSearch: (searchValue, matchingOptions) => {
+                  onChange: (searchValue, matchingOptions) => {
                     null
                   },
                 }}
@@ -209,5 +221,5 @@ export default function UserPermissionsPage() {
       {modal}
     </>
   )
-  return <AdminPageTemplate title={title} element={element} />
+  return <AdminPageBase title={title} element={element} />
 }

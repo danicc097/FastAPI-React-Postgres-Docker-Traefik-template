@@ -1,120 +1,76 @@
-from typing import Union
+from contextlib import asynccontextmanager, contextmanager
+from typing import Optional, Union
+
+from celery_once import AlreadyQueued
 from fastapi import HTTPException
 from loguru import logger
-from starlette.responses import Response
+from sqlalchemy.exc import InterfaceError, ResourceClosedError
+from sqlalchemy.ext.asyncio import AsyncConnection
 from starlette.status import (
-    HTTP_400_BAD_REQUEST,
-    HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_503_SERVICE_UNAVAILABLE,
 )
-from functools import wraps
-import app.db.repositories.global_notifications as global_notif_repo
-import app.db.repositories.pwd_reset_req as pwd_reset_req_repo
-import app.db.repositories.users as users_repo
-from contextlib import asynccontextmanager
 
-BASE_EXCEPTION = HTTPException(
+from app.core.config import is_creating_initial_data, is_testing
+from app.core.errors import BaseAppException
+
+UNHANDLED_EXCEPTION = HTTPException(
     status_code=HTTP_500_INTERNAL_SERVER_ERROR,
     detail="An unknown error occurred.",
 )
 
 
 @asynccontextmanager
-async def exception_handler():
-    """
-    Context manager to handle route exceptions that arise from repositories
-    """
+async def exception_handler(conn: Optional[AsyncConnection] = None, close_conn: bool = True):
     try:
+        logger.warning(f"Using connection {id(conn)}")
         yield
     except Exception as e:
+        if conn and not is_testing():
+            logger.critical(f"Rolling back transaction for connection {id(conn)}")
+            await conn.rollback()
         raise _exception_handler(e) from e
+    finally:
+        if conn and (not is_testing() and not is_creating_initial_data()):
+            logger.critical(f"Closing connection {id(conn)}")  # back to pool
+            await conn.commit()
+            if close_conn:
+                await conn.close()
 
 
-def _exception_handler(e: Union[Exception, HTTPException]) -> Union[Exception, HTTPException]:
-    """
-    Handles repo errors by mapping them to HTTP exceptions.
-    """
-    # handle repo exceptions
-    if isinstance(e, users_repo.UsersRepoException):
-        return users_repo_exception_to_response(e)
-    if isinstance(e, pwd_reset_req_repo.UserPwdReqRepoException):
-        return pwd_reset_req_repo_exception_to_response(e)
-    if isinstance(e, global_notif_repo.GlobalNotificationsRepoException):
-        return global_notifications_repo_exception_to_response(e)
-    # but return rest of http exceptions as they come
-    else:
-        logger.opt(exception=True).error(e)
-        return e
-
-
-def users_repo_exception_to_response(e: Exception) -> HTTPException:
-    """
-    Map ``UsersRepoException`` to HTTP exceptions.
-    """
-    if isinstance(e, users_repo.EmailAlreadyExistsError):
-        return HTTPException(
+@contextmanager
+def task_exception_handler():
+    try:
+        yield
+    except AlreadyQueued as e:
+        raise HTTPException(
             status_code=HTTP_409_CONFLICT,
-            detail=e.msg,
-        )
-    elif isinstance(e, users_repo.UsernameAlreadyExistsError):
-        return HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail=e.msg,
-        )
-    elif isinstance(e, users_repo.UserNotFoundError):
-        return HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=e.msg,
-        )
-    elif isinstance(e, users_repo.InvalidUpdateError):
-        return HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=e.msg,
-        )
-    elif isinstance(e, users_repo.IncorrectPasswordError):
-        return HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=e.msg,
-        )
-    else:
-        logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+            detail="Task already queued.",
+        ) from e
 
 
-def pwd_reset_req_repo_exception_to_response(e: Exception) -> HTTPException:
-    """
-    Map ``UsersRepoException`` to HTTP exceptions.
-    """
-    if isinstance(e, pwd_reset_req_repo.RequestDoesNotExistError):
-        return HTTPException(
-            status_code=HTTP_404_NOT_FOUND,
-            detail=e.msg,
-        )
-    elif isinstance(e, pwd_reset_req_repo.UserAlreadyRequestedError):
-        return HTTPException(
-            status_code=HTTP_409_CONFLICT,
-            detail=e.msg,
-        )
-    else:
-        logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+def _exception_handler(exc: Union[Exception, HTTPException]) -> Union[Exception, HTTPException]:
 
+    if isinstance(exc, HTTPException):
+        logger.error(exc)
+        return exc
 
-def global_notifications_repo_exception_to_response(e: Exception) -> HTTPException:
-    """
-    Map ``GlobalNotificationsRepoException`` to HTTP exceptions.
-    """
-    if isinstance(e, global_notif_repo.InvalidGlobalNotificationError):
+    if isinstance(exc, BaseAppException):
+        logger.error(f"{exc.user} - {exc.msg}")
         return HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=e.msg,
+            status_code=exc.status_code,
+            detail=exc.msg,
+            headers=getattr(exc, "headers", None),
         )
-    if isinstance(e, global_notif_repo.InvalidParametersError):
+
+    if isinstance(exc, InterfaceError) or isinstance(exc, ResourceClosedError):
+        logger.error(f"{exc}")
         return HTTPException(
-            status_code=HTTP_400_BAD_REQUEST,
-            detail=e.msg,
+            status_code=HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"Database is unavailable: {exc.__class__.__name__}",
         )
-    else:
-        logger.opt(exception=True).error(e)
-        return BASE_EXCEPTION
+
+    logger.error(exc)
+    logger.opt(exception=True).error(exc)
+    return UNHANDLED_EXCEPTION

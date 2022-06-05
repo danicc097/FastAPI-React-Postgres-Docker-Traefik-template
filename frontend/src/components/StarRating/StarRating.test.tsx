@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event'
 import StarRating from './StarRating'
 import '@testing-library/jest-dom'
 import { BrowserRouter } from 'react-router-dom'
-// this is an overridden render from @testing-library/react
+
 import { render as renderWithStore } from 'src/test/test-utils'
 
 test('Renders content', async () => {
-  renderWithStore(<StarRating className="star-rating" />)
+  renderWithStore(<StarRating className="star-rating" initialRating={0} />)
 })

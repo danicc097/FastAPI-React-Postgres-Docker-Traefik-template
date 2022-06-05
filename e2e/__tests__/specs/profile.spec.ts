@@ -1,5 +1,7 @@
-import { users } from '../data/users'
+import { users } from '../initialData/users'
 import profilePo from '../pages/profile.po'
+
+jest.retryTimes(3)
 
 const newUsername = 'newUsername'
 const newPassword = 'newPassword'

@@ -10,9 +10,6 @@ type ProtectedRouteProps = {
   verifiedUserRoute?: boolean
 }
 
-/**
- * Restrict a route to specific users and protect against unauthenticated users
- */
 export default function ProtectedRoute({
   component: Component,
   adminRoute = false,

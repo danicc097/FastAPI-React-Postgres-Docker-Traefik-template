@@ -1,0 +1,3 @@
+- Error boundaries:
+  - https://dev.to/barnabas19/error-handling-in-react-3h0a
+  - https://kentcdodds.com/blog/use-react-error-boundary-to-handle-errors-in-react
