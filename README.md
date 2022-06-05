@@ -10,6 +10,7 @@
     - [Backend dev setup](#backend-dev-setup)
     - [Frontend dev setup](#frontend-dev-setup)
     - [E2E dev setup](#e2e-dev-setup)
+    - [Run E2E tests](#run-e2e-tests)
     - [Traefik setup](#traefik-setup)
   - [Azure pipelines](#azure-pipelines)
   - [Troubleshooting](#troubleshooting)
@@ -40,6 +41,14 @@ Create ``.env.development`` and ``.env.production`` from ``.env.template``.
 
 ```bash
 cd e2e && npm install
+```
+
+### Run E2E tests
+
+This will setup dev environment normally but run the tests in a bundled frontend.
+
+```bash
+bin/run-e2e-tests
 ```
 
 ### Traefik setup
