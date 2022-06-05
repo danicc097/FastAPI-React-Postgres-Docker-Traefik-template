@@ -4,12 +4,18 @@ set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
+BIN_DIR="$(
+  cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit
+  pwd -P
+)"
+ROOT_DIR="$(dirname "$BIN_DIR")"
+
 if [ "$1" = "ci" ]; then
   red "Running E2E tests for CI..."
-  mv .env.ci .env
-  mv .env.ci .env.dev
-  mv backend/.env.ci backend/.env.dev
-  mv frontend/.env.ci frontend/.env.development
+  mv "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env
+  mv "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
+  mv "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
+  mv "$ROOT_DIR"/frontend/.env.ci "$ROOT_DIR"/frontend/.env.development
 else # dev
   red "Running E2E tests for $PROJECT_PREFIX..."
 fi
