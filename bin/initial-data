@@ -21,3 +21,4 @@ docker exec -t postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d test -c
 docker exec -t backend_myapp_"$_ENV" alembic downgrade base
 docker exec -t backend_myapp_"$_ENV" alembic upgrade head
 docker exec -t backend_myapp_"$_ENV" /bin/bash -c "DATASET=$ENV python3 -m initial_data.main"
+green "Initial data loaded"
