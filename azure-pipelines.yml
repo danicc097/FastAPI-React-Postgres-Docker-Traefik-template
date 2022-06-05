@@ -48,7 +48,7 @@ variables:
   # REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
 
 
-  System.Debug: true # see debug logs for every pipeline
+  # System.Debug: true # see debug logs for every pipeline
   # tag: "$(Build.BuildNumber)" # incremental build id as image tag
   # DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
   # DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
@@ -235,33 +235,15 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: Debug directories
-            inputs:
-              targetType: inline
-              script: |
-                SEARCH_PATH=/home/vsts/work  # or any colon-delimited list of paths
-                IFS=':' read -r -a PathDirs <<< "$SEARCH_PATH"
-                echo "##[debug] Found directories"
-                for element in "${PathDirs[@]}"; do
-                    echo "$element"
-                done;
-                echo;
-                echo;
-                echo "##[debug] Found files"
-                for element in "${PathDirs[@]}"; do
-                    find "$element" -type f
-                done
-              workingDirectory: "$(Build.SourcesDirectory)"
-              failOnStderr: false
-
-          - task: Bash@3
             displayName: Build with dcompose
+            timeoutInMinutes: 10
             inputs:
               targetType: inline
               script: |
                 bin/run-e2e-tests ci
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
+
 
           # - bash: |
           #     docker exec backend_myapp_ci /bin/bash -c "

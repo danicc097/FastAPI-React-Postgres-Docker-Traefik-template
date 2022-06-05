@@ -47,15 +47,15 @@ CREATE TABLE users (
     PRIMARY KEY (user_id)
 );
 
-CREATE UNIQUE INDEX ix_users_email ON users (email);
-
 CREATE INDEX ix_users_last_personal_notification_at ON users (last_personal_notification_at);
+
+CREATE INDEX ix_users_last_global_notification_at ON users (last_global_notification_at);
+
+CREATE UNIQUE INDEX ix_users_email ON users (email);
 
 CREATE INDEX ix_users_role ON users (role);
 
 CREATE UNIQUE INDEX ix_users_username ON users (username);
-
-CREATE INDEX ix_users_last_global_notification_at ON users (last_global_notification_at);
 
 CREATE TRIGGER update_user_modtime
             BEFORE UPDATE
@@ -128,9 +128,9 @@ CREATE TABLE personal_notifications (
     FOREIGN KEY(receiver_email) REFERENCES users (email) ON DELETE CASCADE
 );
 
-CREATE INDEX ix_personal_notifications_created_at ON personal_notifications (created_at);
-
 CREATE INDEX ix_personal_notifications_updated_at ON personal_notifications (updated_at);
+
+CREATE INDEX ix_personal_notifications_created_at ON personal_notifications (created_at);
 
 INSERT INTO alembic_version (version_num) VALUES ('00000001') RETURNING alembic_version.version_num;
 
