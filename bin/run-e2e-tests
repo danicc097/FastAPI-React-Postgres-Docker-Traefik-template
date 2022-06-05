@@ -4,9 +4,6 @@ set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
-BASEDIR=$(dirname "$0")
-PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
-
 if [ "$1" = "ci" ]; then
   red "Running E2E tests for CI..."
   mv .env.ci .env
@@ -16,6 +13,9 @@ if [ "$1" = "ci" ]; then
 else # dev
   red "Running E2E tests for $PROJECT_PREFIX..."
 fi
+
+BASEDIR=$(dirname "$0")
+PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
 
 yes | dcompose dev up --build
 

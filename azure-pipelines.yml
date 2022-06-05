@@ -220,7 +220,7 @@ stages:
             inputs:
               targetType: inline
               script: |
-                sudo apt-get install -y npm && sudo npm install -g pnpm && \
+                sudo apt-get install -y nodejs npm && sudo npm install -g pnpm && \
                 cd frontend && pnpm i
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
