@@ -5,8 +5,8 @@
 # specific for python: https://ep2020.europython.eu/media/conference/slides/CeKGczx-best-practices-for-production-ready-docker-packaging.pdf
 FROM python:3.9.5-slim-buster
 
-ARG USER_ID=1000
-ARG GROUP_ID=1000
+ARG USER_ID=1500
+ARG GROUP_ID=1500
 
 WORKDIR /backend
 ENV PYTHONDONTWRITEBYTECODE 1
