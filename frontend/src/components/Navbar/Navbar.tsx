@@ -204,9 +204,8 @@ export default function Navbar() {
         },
         {
           items: [
-            user?.is_verified ? <GlobalNotifications user={user} /> : null, // TODO only receiver is user's role
-            // user?.is_verified ? <PersonalNotifications user={user} /> : null, // TODO only where receiver is user's email
-            user?.is_superuser ? <PersonalNotifications user={user} /> : null, // TODO enable when ready
+            user?.is_verified ? <GlobalNotifications user={user} /> : null, // notify if receiver is user's role
+            user?.is_verified ? <PersonalNotifications user={user} /> : null, // notify if receiver is user's email
             <EuiPopover
               id="avatar-menu"
               key={'765'}
