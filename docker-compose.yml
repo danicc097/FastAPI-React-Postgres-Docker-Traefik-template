@@ -100,6 +100,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.${APP_ENV:?not set}
+      args:
+        - "CONTAINER_USER=${CONTAINER_USER:?not set}"
     command: celery -A app.celery.worker:celery_app worker --loglevel INFO --logfile=./celery-${APP_ENV:?not set}.log --hostname=worker_1_${APP_ENV:?not set}@%h -Q myapp_queue_${APP_ENV:?not set} --task-events # -Q queue1,queue2 (although should work by default on all configured queues without this flag)
     #  --without-heartbeat --without-gossip --without-mingle (flower maybe wont work with these on?)
     volumes:
