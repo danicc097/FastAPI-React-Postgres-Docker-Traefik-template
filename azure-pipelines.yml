@@ -234,26 +234,32 @@ stages:
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
 
-          - bash: |
-              SEARCH_PATH=/home/vsts/work  # or any colon-delimited list of paths
-              IFS=':' read -r -a PathDirs <<< "$SEARCH_PATH"
-              echo "##[debug] Found directories"
-              for element in "${PathDirs[@]}"; do
-                  echo "$element"
-              done;
-              echo;
-              echo;
-              echo "##[debug] Found files"
-              for element in "${PathDirs[@]}"; do
-                  find "$element" -type f
-              done
+          - task: Bash@3
+            displayName: E2E package installation
+            inputs:
+              targetType: inline
+              script: |
+                SEARCH_PATH=/home/vsts/work  # or any colon-delimited list of paths
+                IFS=':' read -r -a PathDirs <<< "$SEARCH_PATH"
+                echo "##[debug] Found directories"
+                for element in "${PathDirs[@]}"; do
+                    echo "$element"
+                done;
+                echo;
+                echo;
+                echo "##[debug] Found files"
+                for element in "${PathDirs[@]}"; do
+                    find "$element" -type f
+                done
+              workingDirectory: "$(Build.SourcesDirectory)"
+              failOnStderr: false
 
           - task: Bash@3
             displayName: Build with dcompose
             inputs:
               targetType: inline
               script: |
-                bin/run-e2e-tests ci
+                ls -a && bin/run-e2e-tests ci
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
 
