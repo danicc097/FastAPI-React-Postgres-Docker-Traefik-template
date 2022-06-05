@@ -195,7 +195,7 @@ stages:
                   "dev.localhost" "*.dev.localhost" \
                   "prod.localhost" "*.prod.localhost" \
               workingDirectory: "$(TRAEFIK_CERTIFICATES_DIR)"
-              failOnStderr: false # mkcert output gets interpreted as error
+              failOnStderr: true
               # noProfile: true
 
           - task: DockerCompose@0
