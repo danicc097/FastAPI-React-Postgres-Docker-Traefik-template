@@ -211,7 +211,8 @@ stages:
             inputs:
               targetType: inline
               script: |
-                sudo bash backend/docs/sudo_install_tooling.sh && bash backend/docs/install_sqlc_custom.sh
+                sudo bash backend/docs/sudo_install_tooling.sh && bash backend/docs/install_sqlc_custom.sh && \
+                sudo apt-get install -y npm && sudo npm install -g pnpm
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
 
@@ -220,7 +221,6 @@ stages:
             inputs:
               targetType: inline
               script: |
-                sudo apt-get install -y npm && sudo npm install -g pnpm && \
                 cd frontend && pnpm i
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
@@ -235,7 +235,7 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: E2E package installation
+            displayName: Debug directories
             inputs:
               targetType: inline
               script: |
