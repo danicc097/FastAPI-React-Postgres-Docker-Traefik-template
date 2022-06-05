@@ -14,10 +14,10 @@ else
   (This will destroy all data in the $(red "$ENV") environment)"
 fi
 
-docker exec -it postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d postgres -c "CREATE DATABASE test OWNER postgres;" || echo "Database test already exists. Skipping"
-docker exec -it postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d test -c "select pg_terminate_backend(pid) \
+docker exec -t postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d postgres -c "CREATE DATABASE test OWNER postgres;" || echo "Database test already exists. Skipping"
+docker exec -t postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d test -c "select pg_terminate_backend(pid) \
                      from pg_stat_activity \
                      where datname='postgres'" || echo "No running postgres processes. Skipping"
-docker exec -it backend_myapp_"$_ENV" alembic downgrade base
-docker exec -it backend_myapp_"$_ENV" alembic upgrade head
-docker exec -it backend_myapp_"$_ENV" /bin/bash -c "DATASET=$ENV python3 -m initial_data.main"
+docker exec -t backend_myapp_"$_ENV" alembic downgrade base
+docker exec -t backend_myapp_"$_ENV" alembic upgrade head
+docker exec -t backend_myapp_"$_ENV" /bin/bash -c "DATASET=$ENV python3 -m initial_data.main"
