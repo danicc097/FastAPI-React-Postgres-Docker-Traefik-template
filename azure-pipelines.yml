@@ -195,7 +195,7 @@ stages:
                   "dev.localhost" "*.dev.localhost" \
                   "prod.localhost" "*.prod.localhost" \
               workingDirectory: "$(TRAEFIK_CERTIFICATES_DIR)"
-              failOnStderr: false
+              failOnStderr: true
               # noProfile: true
 
           - task: DockerCompose@0
@@ -214,7 +214,7 @@ stages:
                 sudo bash backend/docs/sudo_install_tooling.sh && bash backend/docs/install_sqlc_custom.sh && \
                 sudo apt-get install -y npm && sudo npm install -g pnpm
               workingDirectory: "$(Build.SourcesDirectory)"
-              failOnStderr: false
+              failOnStderr: true
 
           - task: Bash@3
             displayName: Frontend package installation
@@ -223,7 +223,7 @@ stages:
               script: |
                 cd frontend && pnpm i
               workingDirectory: "$(Build.SourcesDirectory)"
-              failOnStderr: false
+              failOnStderr: true
 
           - task: Bash@3
             displayName: E2E package installation
@@ -232,7 +232,7 @@ stages:
               script: |
                 cd e2e && npm install
               workingDirectory: "$(Build.SourcesDirectory)"
-              failOnStderr: false
+              failOnStderr: true
 
           - task: Bash@3
             displayName: Debug directories
@@ -252,16 +252,16 @@ stages:
                     find "$element" -type f
                 done
               workingDirectory: "$(Build.SourcesDirectory)"
-              failOnStderr: false
+              failOnStderr: true
 
           - task: Bash@3
             displayName: Build with dcompose
             inputs:
               targetType: inline
               script: |
-                ls -a && bin/run-e2e-tests ci
+                bin/run-e2e-tests ci
               workingDirectory: "$(Build.SourcesDirectory)"
-              failOnStderr: false
+              failOnStderr: true
 
           # - bash: |
           #     docker exec backend_myapp_ci /bin/bash -c "
