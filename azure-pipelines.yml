@@ -220,7 +220,7 @@ stages:
             inputs:
               targetType: inline
               script: |
-                curl -fsSL https://get.pnpm.io/install.sh | sh -
+                curl -fsSL https://get.pnpm.io/install.sh | sh - && \
                 cd frontend && pnpm i
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
