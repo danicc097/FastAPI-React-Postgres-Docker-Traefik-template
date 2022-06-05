@@ -5,9 +5,6 @@ from pydantic import BaseModel, validator
 
 
 class CoreModel(BaseModel):
-    """
-    Any common logic to be shared by all models goes here
-    """
 
     pass
 
@@ -22,8 +19,5 @@ class DateTimeModelMixin(BaseModel):
 
 
 class IDModelMixin(BaseModel):
-    """
-    To be used by all models that have an ID primary key column.
-    """
 
     id: int

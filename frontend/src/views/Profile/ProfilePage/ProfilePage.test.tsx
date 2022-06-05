@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import ProfilePage from './ProfilePage'
 import '@testing-library/jest-dom'
 import { BrowserRouter } from 'react-router-dom'
-// this is an overridden render from @testing-library/react
+
 import { render as renderWithStore } from 'src/test/test-utils'
 import configureReduxStore from 'src/redux/store'
 import { testInitialState } from 'src/test/test-state'

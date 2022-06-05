@@ -3,47 +3,127 @@
 repos:
   - repo: local
     hooks:
-      # requires dev compose up and running
       - id: get-updated-api-schema
         name: get-updated-api-schema
-        entry: frontend/scripts/frontend-generate-ts-types.sh
+        entry: frontend/scripts/generate-ts-types.sh dev
         language: script
         types: [text]
         pass_filenames: false
         always_run: true
         verbose: true
+        files: ^backend/
+
+      - id: sql-format-and-align
+        name: sql-format-and-align
+        entry: backend/scripts/sql-format.sh
+        language: script
+        types: [text]
+        pass_filenames: false
+        always_run: true
+        verbose: true
+        files: ^backend/
+        exclude: ^(backend/app/db/gen/)
+
+      - id: sqlc-gen
+        name: sqlc-gen
+        entry: backend/scripts/generate-sqlc.sh
+        language: script
+        types: [text]
+        pass_filenames: false
+        always_run: true
+        verbose: true
+        files: ^backend/
+
+      # - id: client-gen
+      #   name: client-gen
+      #   entry: backend/scripts/generate-client.sh
+      #   language: script
+      #   types: [text]
+      #   pass_filenames: false
+      #   always_run: true
+      #   verbose: true
+      #   files: ^backend/
+
+      # - id: get-updated-models
+      #   name: get-updated-models
+      #   entry: backend/scripts/generate-postgrest.sh
+      #   language: script
+      #   types: [text]
+      #   pass_filenames: false
+      #   always_run: true
+      #   verbose: true
+
+      # - id: sql-format
+      #   files: ^backend/
+      #   name: sql-format
+      #   entry: bash -c 'cd backend/app/db/repositories/queries && sqlfluff fix --force . --dialect postgres'
+      #   language: system
+      #   types: [text]
+      #   pass_filenames: false
+
+  # FIXME possible culprit of random change in lines triggers new docker build, quite annoying
+  # e.g. black==22.1 --> black==22.1.0 and cache is invalidated
+  # - repo: https://github.com/jazzband/pip-tools
+  #   rev: 6.5.1
+  #   hooks:
+  #     # order matters, dev-deps depends on regular deps
+  #     - id: pip-compile
+  #       entry: bash -c 'cd backend && source .venv/bin/activate && pip-compile requirements.in'
+  #       language: system
+  #       types: [text]
+  #       name: pip-compile requirements.in
+  #       files: ^backend/requirements.in$
+  #     - id: pip-compile
+  #       entry: bash -c 'cd backend && source .venv/bin/activate && pip-compile requirements-dev.in'
+  #       language: system
+  #       types: [text]
+  #       name: pip-compile requirements-dev.in
+  #       files: ^backend/requirements-dev.in$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^(backend/app/db/gen/)
       - id: end-of-file-fixer
+        exclude: ^(backend/app/db/gen/)
       - id: check-yaml
-      - id: check-added-large-files
-        args: ["--maxkb=2000"]
-      - id: no-commit-to-branch
-        args: ["--branch", "master", "--branch", "main"]
+      # - id: check-added-large-files
+      #   args: ["--maxkb=2000"]
+      # - id: no-commit-to-branch
+      #   args: ["--branch", "master", "--branch", "main"]
+
+  - repo: https://github.com/PyCQA/autoflake
+    # check version in pipfile lock
+    rev: v1.4
+    hooks:
+      - id: autoflake
+        args: ["--in-place", "--recursive", "--remove-all-unused-imports"]
+        exclude: ^(backend/app/db/gen/)
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     # check version in pipfile lock
-    rev: v0.910
+    rev: v0.942
     hooks:
       - id: mypy
         files: ^backend/ # only check py files in backend
         additional_dependencies: [pydantic] # add if use pydantic
+        exclude: ^(backend/app/db/gen/)
 
   - repo: https://github.com/psf/black
     # check version in pipfile lock
-    rev: 21.9b0
+    rev: 22.1.0
     hooks:
       - id: black
         args: [--config=backend/pyproject.toml] # it's nested, not being picked up otherwise
+        exclude: ^(backend/app/db/gen/)
 
   - repo: https://github.com/PyCQA/isort
     # check version in pipfile lock
     rev: 5.9.3
     hooks:
       - id: isort
+        exclude: ^(backend/app/db/gen/)
 
   # run after black
   - repo: https://gitlab.com/pycqa/flake8
@@ -52,6 +132,7 @@ repos:
     hooks:
       - id: flake8
         args: ["--config=backend/tox.ini"]
+        exclude: ^(backend/app/db/gen/)
 
   - repo: local
     hooks:

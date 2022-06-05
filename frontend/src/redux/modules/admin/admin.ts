@@ -1,11 +1,8 @@
-// TODO use action.data as source of truth for reducers.
-// e.g.: dispatch( {...} , data: { newStuff: arrayOfStuff, isRemoval: true, ... } )
-
 import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
 import { UiActionCreators } from '../ui/ui'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 import { errorState, loadingState } from '../../utils/slices'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 
@@ -13,14 +10,13 @@ type AdminDataType = {
   unverifiedUsers?: Array<schema['UserPublic']>
   passwordResetRequests?: Array<schema['PasswordResetRequest']>
   allUsers?: Array<schema['UserPublic']>
-  //   [key: number]: Array<schema['OfferPublic']>
 }
 
-type initialStateType = {
+export type initialStateType = {
   admin: {
     isLoading: boolean
-    error?: schema['HTTPValidationError'] | GenObjType<string>
-    data?: AdminDataType | GenObjType<null>
+    error?: schema['HTTPValidationError'] | Record<string, string>
+    data?: AdminDataType | Record<string, null>
   }
 }
 
@@ -64,9 +60,6 @@ export enum AdminActionType {
   REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE = 'admin/REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE',
 }
 
-/**
- * @param isRemoval whether it's a removal or addition of unverified users
- */
 function updateStateOfUnverifiedUsers(
   state: initialStateType['admin'],
   users: Array<schema['UserPublic']>,
@@ -81,8 +74,7 @@ function updateStateOfUnverifiedUsers(
       ...(users?.length > 0
         ? {
             unverifiedUsers: isRemoval
-              ? // filter where oldUser's email key is not in the new array's object's email key
-                state.data.unverifiedUsers.filter(
+              ? state.data.unverifiedUsers.filter(
                   (oldUser) => !users.some((newUser) => newUser.email === oldUser.email),
                 )
               : [...users],
@@ -92,12 +84,9 @@ function updateStateOfUnverifiedUsers(
   }
 }
 
-/*
-isRemoval: whether it's a removal or addition of unverified users
-*/
 function updateStateOfPasswordResetRequests(
   state: initialStateType['admin'],
-  requests: Array<schema['PasswordResetRequestCreate']> | Array<any>,
+  requests: Array<schema['CreatePasswordResetRequestParams']> | Array<any>,
   isRemoval: boolean,
 ) {
   return {
@@ -109,8 +98,7 @@ function updateStateOfPasswordResetRequests(
       ...(requests?.length > 0
         ? {
             passwordResetRequests: isRemoval
-              ? // removing requests from the store is done individually by email
-                state.data.passwordResetRequests.filter((existingRequest) => requests[0] !== existingRequest.email)
+              ? state.data.passwordResetRequests.filter((existingRequest) => requests[0] !== existingRequest.email)
               : [...requests],
           }
         : {}),
@@ -118,7 +106,6 @@ function updateStateOfPasswordResetRequests(
   }
 }
 
-// recommended to enforce the return type of reducers to prevent "nevers", for instance
 export default function adminReducer(
   state: initialStateType['admin'] = initialState.admin,
   action: AnyAction,
@@ -168,7 +155,31 @@ export default function adminReducer(
     case AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE:
       return updateStateOfPasswordResetRequests(state, action.data, true)
 
-    // remove data when user logs out
+    case AdminActionType.UPDATE_USER_ROLE:
+      return loadingState(state)
+
+    case AdminActionType.UPDATE_USER_ROLE_SUCCESS:
+      return {
+        ...state,
+        isLoading: false,
+        error: null,
+        data: {
+          ...state.data,
+          allUsers: state.data.allUsers?.map((user) => {
+            if (user?.email === action.data?.email) {
+              return {
+                ...user,
+                role: action.data?.role,
+              }
+            }
+            return user
+          }),
+        },
+      }
+
+    case AdminActionType.UPDATE_USER_ROLE_FAILURE:
+      return errorState(state, action)
+
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.admin
 
@@ -190,14 +201,9 @@ type ActionCreators = {
   fetchAllNonVerifiedUsers: () => any
   verifyUsers: ({ userEmails }: AdminActionsParams) => any
   fetchAllPasswordResetUsers: () => any
-  /**
-   * Accept a password reset request created by a user.
-   * Also used to manually reset passwords.
-   */
+
   resetPasswordForUser: ({ email }: AdminActionsParams) => any
-  /**
-   * Delete a password reset request created by a user.
-   */
+
   deletePasswordResetRequest: ({ request }: AdminActionsParams) => any
   _removeResetPasswordRequestFromStore: ({ email }: AdminActionsParams) => any
   updateUserRole: ({ role_update }: AdminActionsParams) => any
@@ -222,6 +228,9 @@ AdminActionCreators.fetchAllUsers = () => {
           data: {},
           params: {},
         },
+        onSuccess: (res) => {
+          return dispatch({ type: AdminActionType.FETCH_ALL_USERS_SUCCESS, data: res.data })
+        },
       }),
     )
   }
@@ -229,10 +238,8 @@ AdminActionCreators.fetchAllUsers = () => {
 
 AdminActionCreators.fetchAllNonVerifiedUsers = () => {
   return async (dispatch: AppDispatch) => {
-    // set the request headers (override defaultOptions)
     const headers = {}
-    // we HAVE TO _return_ a dispatch, else we won't get the
-    // returns of onSuccess or onFailure and verify types
+
     return dispatch(
       apiClient({
         url: `/admin/users-unverified/`,
@@ -247,6 +254,9 @@ AdminActionCreators.fetchAllNonVerifiedUsers = () => {
           data: {},
           params: {},
         },
+        onSuccess: (res) => {
+          return dispatch({ type: AdminActionType.FETCH_ALL_UNVERIFIED_USERS_SUCCESS, data: res.data })
+        },
       }),
     )
   }
@@ -254,10 +264,8 @@ AdminActionCreators.fetchAllNonVerifiedUsers = () => {
 
 AdminActionCreators.verifyUsers = ({ userEmails }) => {
   return async (dispatch: AppDispatch) => {
-    // set the request headers (override defaultOptions)
     const headers = {}
-    // we HAVE TO _return_ a dispatch, else we won't get the
-    // returns of onSuccess or onFailure and verify types
+
     return dispatch(
       apiClient({
         url: `/admin/users-unverified/`,
@@ -269,7 +277,7 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
         },
         options: {
           headers,
-          // fastapi will only grab 'user_emails' from body
+
           data: { user_emails: userEmails },
           params: {},
         },
@@ -278,41 +286,45 @@ AdminActionCreators.verifyUsers = ({ userEmails }) => {
           dispatch({ type: AdminActionType.VERIFY_USERS_SUCCESS, data: res.data })
           dispatch(
             UiActionCreators.addToast({
-              id: 'verify-user-toast-success',
-              title: `Successfully verified users!`,
-              color: 'success',
-              iconType: 'checkInCircleFilled',
-              toastLifeTimeMs: 5000,
-              text: 'All selected users have had their email verified',
+              toast: {
+                id: 'verify-user-toast-success',
+                title: `Successfully verified users!`,
+                color: 'success',
+                iconType: 'checkInCircleFilled',
+                toastLifeTimeMs: 5000,
+                text: 'All selected users have had their email verified',
+              },
             }),
           )
 
-          return {
+          return dispatch({
             type: AdminActionType.VERIFY_USERS_SUCCESS,
             success: true,
             status: res.status,
             data: res.data,
-          }
+          })
         },
         onFailure: (res) => {
           console.log('onFailure: ', res)
           dispatch(
             UiActionCreators.addToast({
-              id: 'verify-user-toast-failure',
-              title: 'Failure!',
-              color: 'danger',
-              iconType: 'crossInACircleFilled',
-              toastLifeTimeMs: 15000,
-              text: `We couldn't verify the given users.\n ${res.error?.detail}`,
+              toast: {
+                id: 'verify-user-toast-failure',
+                title: 'Failure!',
+                color: 'danger',
+                iconType: 'crossInACircleFilled',
+                toastLifeTimeMs: 15000,
+                text: `We couldn't verify the given users.\n ${res.error?.detail}`,
+              },
             }),
           )
-          return {
+          return dispatch({
             type: AdminActionType.VERIFY_USERS_FAILURE,
             success: false,
             status: res.status,
             data: res.data,
             error: res.error?.data?.detail,
-          }
+          })
         },
       }),
     )
@@ -334,13 +346,16 @@ AdminActionCreators.fetchAllPasswordResetUsers = () => {
           data: {},
           params: {},
         },
+        onSuccess: (res) => {
+          return dispatch({ type: AdminActionType.FETCH_ALL_PASSWORD_RESET_REQUESTS_SUCCESS, data: res.data })
+        },
       }),
     )
   }
 }
 
 AdminActionCreators.resetPasswordForUser = ({ email }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     const headers = {}
     return dispatch(
       apiClient({
@@ -353,7 +368,7 @@ AdminActionCreators.resetPasswordForUser = ({ email }) => {
         },
         options: {
           headers,
-          // fastapi will only grab 'email' from body
+
           data: { email },
           params: {},
         },
@@ -361,42 +376,46 @@ AdminActionCreators.resetPasswordForUser = ({ email }) => {
           dispatch(AdminActionCreators._removeResetPasswordRequestFromStore({ email }))
           dispatch(
             UiActionCreators.addToast({
-              id: 'reset-user-password-success',
-              title: `Successfully reset password!`,
-              color: 'success',
-              iconType: 'checkInCircleFilled',
-              toastLifeTimeMs: 5000,
-              text: `User with email:'${email}' has had its password reset.`,
+              toast: {
+                id: 'reset-user-password-success',
+                title: `Successfully reset password!`,
+                color: 'success',
+                iconType: 'checkInCircleFilled',
+                toastLifeTimeMs: 5000,
+                text: `User with email:'${email}' has had its password reset.`,
+              },
             }),
           )
           console.log('onSuccess: ', res)
 
-          return {
+          return dispatch({
             type: AdminActionType.RESET_PASSWORD_FOR_USER_SUCCESS,
             success: true,
             status: res.status,
             data: res.data,
-          }
+          })
         },
         onFailure: (res) => {
           console.log('onFailure: ', res)
           dispatch(
             UiActionCreators.addToast({
-              id: 'reset-user-password-failure',
-              title: 'Failure!',
-              color: 'danger',
-              iconType: 'crossInACircleFilled',
-              toastLifeTimeMs: 15000,
-              text: `Couldn't reset password for user with email:'${email}'.`,
+              toast: {
+                id: 'reset-user-password-failure',
+                title: 'Failure!',
+                color: 'danger',
+                iconType: 'crossInACircleFilled',
+                toastLifeTimeMs: 15000,
+                text: `Couldn't reset password for user with email:'${email}'.`,
+              },
             }),
           )
-          return {
+          return dispatch({
             type: AdminActionType.RESET_PASSWORD_FOR_USER_FAILURE,
             success: false,
             status: res.status,
             data: res.data,
             error: res.error?.data?.detail,
-          }
+          })
         },
       }),
     )
@@ -404,14 +423,12 @@ AdminActionCreators.resetPasswordForUser = ({ email }) => {
 }
 
 AdminActionCreators.deletePasswordResetRequest = ({ request }) => {
-  return (dispatch: AppDispatch) => {
-    // set the request headers (override defaultOptions)
+  return async (dispatch: AppDispatch) => {
     const headers = {}
-    // we HAVE TO _return_ a dispatch, else we won't get the
-    // returns of onSuccess or onFailure and verify types
+
     return dispatch(
       apiClient({
-        url: `/admin/delete-password-reset-request/${request.id}/`,
+        url: `/admin/delete-password-reset-request/${request.password_reset_request_id}/`,
         method: 'delete',
         types: {
           REQUEST: AdminActionType.DELETE_PASSWORD_RESET_REQUEST,
@@ -424,31 +441,31 @@ AdminActionCreators.deletePasswordResetRequest = ({ request }) => {
         },
         onSuccess: (res) => {
           dispatch(AdminActionCreators._removeResetPasswordRequestFromStore({ email: request.email }))
-          return {
+          return dispatch({
             type: AdminActionType.DELETE_PASSWORD_RESET_REQUEST_SUCCESS,
             success: true,
             status: res.status,
             data: res.data,
-          }
+          })
         },
         onFailure: (res) => {
           console.log('onFailure: ', res)
-          return {
+          return dispatch({
             type: AdminActionType.DELETE_PASSWORD_RESET_REQUEST_FAILURE,
             success: false,
             status: res.status,
             data: res.data,
             error: res.error?.data?.detail,
-          }
+          })
         },
       }),
     )
   }
 }
 
-// we can directly dispatch an action that edits the store
+// TODO get rid of this
 AdminActionCreators._removeResetPasswordRequestFromStore = ({ email }) => {
-  return (dispatch: AppDispatch) => {
+  return async (dispatch: AppDispatch) => {
     return dispatch({ type: AdminActionType.REMOVE_PASSWORD_RESET_REQUEST_FROM_STORE, data: [email] })
   }
 }
@@ -467,37 +484,39 @@ AdminActionCreators.updateUserRole = ({ role_update }) => {
         },
         options: {
           headers,
-          // fastapi will only grab 'role_update' key from body
+
           data: { role_update },
           params: {},
         },
         onSuccess: (res) => {
           dispatch(
             UiActionCreators.addToast({
-              id: 'update-user-role-success',
-              title: `Successfully updated user role!`,
-              color: 'success',
-              iconType: 'checkInCircleFilled',
-              toastLifeTimeMs: 5000,
-              text: `User with email:'${role_update.email}' has had its role updated to '${role_update.role}'.`,
+              toast: {
+                id: 'update-user-role-success',
+                title: `Successfully updated user role!`,
+                color: 'success',
+                iconType: 'checkInCircleFilled',
+                toastLifeTimeMs: 5000,
+                text: `User with email:'${role_update.email}' has had its role updated to '${role_update.role}'.`,
+              },
             }),
           )
-          return {
+          return dispatch({
             type: AdminActionType.UPDATE_USER_ROLE_SUCCESS,
             success: true,
             status: res.status,
-            data: res.data,
-          }
+            data: role_update,
+          })
         },
         onFailure: (res) => {
           console.log('onFailure: ', res)
-          return {
+          return dispatch({
             type: AdminActionType.UPDATE_USER_ROLE_FAILURE,
             success: false,
             status: res.status,
             data: res.data,
             error: res.error?.data?.detail,
-          }
+          })
         },
       }),
     )

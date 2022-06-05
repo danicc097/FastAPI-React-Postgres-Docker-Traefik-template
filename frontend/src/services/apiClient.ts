@@ -1,13 +1,15 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { AppDispatch } from 'src/redux/store'
+import { isSerializable } from 'src/utils/errors'
 import { formatURL, Params } from 'src/utils/urls'
 
-type HttpMethodFunction = (
-  url: string,
-  options: GenObjType<any>,
-  data?: any,
-  ...args: any
-) => Promise<AxiosResponse<any>>
+type HttpMethodFunctionParams = {
+  url: string
+  options: AxiosRequestConfig
+  data?: any
+}
+
+type HttpMethodFunction = ({ url, options, data }: HttpMethodFunctionParams) => Promise<AxiosResponse<any>>
 
 interface HttpMethods {
   get: HttpMethodFunction
@@ -16,19 +18,63 @@ interface HttpMethods {
   delete: HttpMethodFunction
 }
 
-const getClient = (token: string | null = null): HttpMethods => {
+const getClient = (token: string = null): HttpMethods => {
+  // right now defaultOptions will be completely overwritten if any other headers are passed in
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
+    },
+  }
+  const optionsOverride = {
+    headers: {
       Authorization: token ? `Bearer ${token}` : '',
     },
   }
-
   return {
-    get: (url, options = {}) => axios.get(url, { ...defaultOptions, ...options }),
-    post: (url, data, options = {}) => axios.post(url, data, { ...defaultOptions, ...options }),
-    put: (url, data, options = {}) => axios.put(url, data, { ...defaultOptions, ...options }),
-    delete: (url, options = {}) => axios.delete(url, { ...defaultOptions, ...options }),
+    get: ({ url, options = {} }) =>
+      axios.get(url, {
+        ...defaultOptions,
+        ...{
+          ...options,
+          headers: {
+            ...options.headers,
+            ...(token ? optionsOverride.headers : {}),
+          },
+        },
+      }),
+    post: ({ url, data, options = {} }) =>
+      axios.post(url, data, {
+        ...defaultOptions,
+        ...{
+          ...options,
+          headers: {
+            ...options.headers,
+            ...(token ? optionsOverride.headers : {}),
+          },
+        },
+      }),
+    put: ({ url, data, options = {} }) =>
+      axios.put(url, data, {
+        ...defaultOptions,
+        ...{
+          ...options,
+          headers: {
+            ...options.headers,
+            ...(token ? optionsOverride.headers : {}),
+          },
+        },
+      }),
+    delete: ({ url, options = {} }) =>
+      axios.delete(url, {
+        ...defaultOptions,
+        ...{
+          ...options,
+          headers: {
+            ...options.headers,
+            ...(token ? optionsOverride.headers : {}),
+          },
+        },
+      }),
   }
 }
 
@@ -44,28 +90,23 @@ type ApiClientType = {
   url: string
   method: 'get' | 'post' | 'put' | 'delete'
   types: { REQUEST: string; SUCCESS: string; FAILURE: string }
-  options: GenObjType<any>
-  onSuccess?: (res: ApiClientResponse) => ApiClientResponse | void
-  onFailure?: (res: ApiClientResponse) => ApiClientResponse | void
+  options: AxiosRequestConfig
+  onSuccess?: (res: ApiClientResponse & Partial<AxiosResponse>) => ApiClientResponse | void
+  onFailure?: (res: ApiClientResponse & Partial<AxiosResponse>) => ApiClientResponse | void
 }
 
-/**
- * Ensure onSuccess and onFailure return a ApiClientResponse object to have proper
- * handling in consumer components, and that everything is async.
- *
- * @param url - relative api endpoint url
- * @param method - HTTP method
- * @param types - object with three keys representing the different action types
- * @param options - object with potential data and query params
- * @param onSuccess - callback to run with the returned data, if any
- * @param onFailure - callback to run with the returned error, if any
- */
+type SimpleApiClientType = {
+  url: string
+  method: 'get' | 'post' | 'put' | 'delete'
+  options: AxiosRequestConfig
+}
+
 const apiClient =
   ({
     url,
     method,
     types: { REQUEST, SUCCESS, FAILURE },
-    options: { data, params },
+    options: { data, params, ...options },
     onSuccess = (res) => ({
       type: res.type,
       success: true,
@@ -84,26 +125,50 @@ const apiClient =
     const client = getClient(token)
 
     dispatch({ type: REQUEST })
+
     const urlPath = formatURL(url, params)
+    console.log(`[apiClient] ${method} ${urlPath}`)
 
     const methodFunction = client[method as keyof HttpMethods]
     try {
-      const res = await methodFunction(urlPath, data)
-      dispatch({ type: SUCCESS, data: res.data })
-      // calls the default onSuccess if not overwritten
+      const res = await methodFunction({ url: urlPath, options, data })
+
       return onSuccess({ type: SUCCESS, ...res })
     } catch (error: any) {
-      // errors have the same structure but are returned as an error object
       console.log('ERROR in apiClient: ', error?.response?.data)
 
+      // TODO handle some 401 errors from backend properly, currently yields unserializable error
       dispatch({
         type: FAILURE,
-        error: error?.response?.data?.detail ? error.response.data : error,
+        error: isSerializable(error?.response?.data?.detail)
+          ? error?.response?.data
+          : isSerializable(error)
+          ? error
+          : 'Unserializable error',
       })
 
-      // calls the default onFailure if not overwritten
       return onFailure({ type: FAILURE, status: error.status, error: error.response })
     }
   }
 
 export default apiClient
+
+export async function simpleApiClient({
+  url,
+  method,
+  options: { data, params, ...options },
+}: SimpleApiClientType): Promise<AxiosResponse<any>> {
+  const token = localStorage.getItem('access_token')
+  const client = getClient(token)
+
+  const urlPath = formatURL(url, params)
+  console.log(`[apiClient] ${method} ${urlPath}`)
+
+  const methodFunction = client[method as keyof HttpMethods]
+  try {
+    return await methodFunction({ url: urlPath, options, data })
+  } catch (error: any) {
+    console.log('ERROR in simpleApiClient: ', JSON.stringify(error))
+    return error
+  }
+}

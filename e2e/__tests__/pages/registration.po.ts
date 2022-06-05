@@ -1,4 +1,4 @@
-import { users } from '../data/users'
+import { Users, users } from '../initialData/users'
 import BasePO from './base.po'
 
 class RegistrationPO extends BasePO {
@@ -6,7 +6,7 @@ class RegistrationPO extends BasePO {
     await this.navigate('/registration')
   }
 
-  async register(user: keyof usersType): Promise<void> {
+  async register(user: keyof Users): Promise<void> {
     // avatar leads to login page if unauthenticated
     await this.waitForVisibleSelectorAndClick("[data-test-subj='avatar']")
     // a link to the registration form in login page should appear

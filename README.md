@@ -62,8 +62,9 @@ cd e2e && npm install
 
 ### Traefik setup
 
-Create certificates with ``mkcert``. For ``linux`` desktop:
+Create certificates with ``mkcert``.
 
+For ``linux`` VM:
 ```bash
 mkdir traefik/certificates
 cd traefik/certificates
@@ -72,9 +73,17 @@ wget https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.
 chmod +x mkcert
 sudo mv mkcert /usr/bin/
 source ~/.bashrc
-mkcert --cert-file localhost.pem --key-file localhost-key.pem  "dev.localhost" "*.dev.localhost" "prod.localhost" "*.prod.localhost" "testing.localhost" "*.testing.localhost" "wiki.localhost"
+mkcert --cert-file localhost.pem --key-file localhost-key.pem  "dev.localhost" "*.dev.localhost" "prod.localhost" "*.prod.localhost" "e2e.localhost" "*.e2e.localhost" "e2e.localhost" "*.e2e.localhost" "wiki.localhost"
 mkcert --install
 ```
+
+For ``Windows``:
+Copy the CAROOT from the virtualmachine:
+`cat "$(mkcert -CAROOT)/rootCA.pem"`
+over to windows:
+`code "$(.\mkcert.exe -CAROOT)/rootCA.pem"`
+
+Run `mkcert --install` for the first time to create a CAROOT. Then replace the contents and run `mkcert -install` again to update the CAROOT.
 
 ## VSCode optional setup
 

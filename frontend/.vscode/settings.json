@@ -1,0 +1,12 @@
+{
+  "eslint.nodePath": ".yarn/sdks",
+  "prettier.prettierPath": ".yarn/sdks/prettier/index.js",
+  "search.exclude": {
+    "**/.pnp.*": true,
+    "**/.yarn": true,
+    "**/node_modules": true
+  },
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "workbench.colorTheme": "Default Dark+",
+  "typescript.tsdk": "node_modules/typescript/lib"
+}

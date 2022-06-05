@@ -1,7 +1,7 @@
 import React from 'react'
-import { EuiAvatar } from '@elastic/eui'
+import { EuiAvatar, EuiAvatarProps } from '@elastic/eui'
 import { getAvatarName } from 'src/utils/format'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 
 export type UserAvatarProps = {
   user: schema['UserPublic']
@@ -18,15 +18,16 @@ export default function UserAvatar({
   type = 'user',
   color = '#eee',
 }: UserAvatarProps) {
-  const imageUrl = user?.profile?.image
-  const EuiAvatarProps = {
+  const imageUrl = user?.image
+  const EuiAvatarProps: EuiAvatarProps = {
     size: size,
     name: getAvatarName({ user }),
-    // imageUrl: imageUrl,
-    // initialsLength: imageUrl ? null : initialsLength,
+    style: {
+      fontWeight: 'bold',
+    },
     type: type,
     color: color,
-    ...(imageUrl ? { imageUrl } : { initialsLength }), // either initials are passed as prop, or an image.
+    ...(imageUrl ? { imageUrl } : { initialsLength }),
   }
 
   return <EuiAvatar {...EuiAvatarProps} />

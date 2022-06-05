@@ -1,8 +1,8 @@
 {
   "exclude": ["playground_tests", "node_modules", "build", ".vscode"],
   "compilerOptions": {
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ESNext",
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "allowJs": false,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -15,6 +15,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "isolatedModules": true,
+    "noUnusedLocals": false,
     "allowUnreachableCode": true,
     "noEmit": true,
     "jsx": "react-jsx",
@@ -22,7 +23,18 @@
     "rootDir": "./src",
     "sourceMap": true,
     "noEmitOnError": true,
-    "types": ["node", "webpack-env", "jest", "react", "react-dom", "styled-components", "react-redux"]
+    "types": [
+      "vite/client",
+      "vitest/globals",
+      // "vite-plugin-svgr/client",
+      "node",
+      "webpack-env",
+      "jest",
+      "react",
+      "react-dom",
+      "styled-components",
+      "react-redux"
+    ]
   },
-  "include": ["src", "schema_override.d.ts"]
+  "include": ["src", "jest.config.js"]
 }

@@ -1,0 +1,20 @@
+
+FROM node:14.17-alpine
+
+# RUN curl -f https://get.pnpm.io/v6.32.js | node - add --global pnpm
+RUN npm i -g pnpm@6.32
+WORKDIR /frontend
+
+
+ENV PATH /frontend/node_modules/.bin:$PATH
+
+COPY package.json /frontend
+COPY pnpm-lock.yaml /frontend
+
+# RUN pnpm install
+
+
+COPY . /frontend
+
+ENV TSC_WATCHFILE "UseFsEventsWithFallbackDynamicPolling"
+CMD ["pnpm", "run", "start"]

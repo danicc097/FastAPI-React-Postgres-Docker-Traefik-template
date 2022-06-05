@@ -1,6 +1,6 @@
 import ReactDOM from 'react-dom'
 import React, { useState, Fragment } from 'react'
-import { getAllowedRoles, ROLE_PERMISSIONS } from '../../../utils/permissions'
+import { getAllowedRoles, ROLE_PERMISSIONS } from '../../../services/permissions'
 import { joinWithAnd } from '../../../utils/format'
 
 import {
@@ -24,11 +24,10 @@ import {
 
 import { useGeneratedHtmlId } from '@elastic/eui'
 import { EuiSuperSelectProps } from '@elastic/eui/src/components'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 import { useGlobalNotificationsForm } from 'src/hooks/forms/useGlobalNotificationsForm'
 import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { GlobalNotificationsActionType } from '../../../redux/modules/feed/globalNotifications'
-import { useGlobalNotificationsFeed } from '../../../hooks/feed/useGlobalNotificationsFeed'
 import { capitalize, some } from 'lodash'
 
 export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFlyout?: () => void }) {
@@ -47,7 +46,6 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
     })
   }
 
-  // don't forget async...
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -62,7 +60,6 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
 
     const action = await createNotification({ notification: form })
 
-    // reset the password form state if the login attempt is not successful
     if (action?.type !== GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS) {
       setErrors((errors) => ({ ...errors, form: 'There was an error creating the notification' }))
     } else {
@@ -83,8 +80,8 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
   }
   const showModal = () => setIsModalVisible(true)
 
-  const roleOptions: EuiSuperSelectProps<string>['options'] = Object.keys(ROLE_PERMISSIONS).map(
-    (key: Partial<schema['Role']>) => ({
+  const roleOptions: EuiSuperSelectProps<schema['Role']>['options'] = Object.keys(ROLE_PERMISSIONS).map(
+    (key: schema['Role']) => ({
       value: key,
       inputDisplay: capitalize(key),
       dropdownDisplay: (
@@ -105,6 +102,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
       onSubmit={handleSubmit}
       isInvalid={Boolean(getFormErrors().length)}
       error={getFormErrors()}
+      style={{ maxWidth: '380px' }}
     >
       <EuiFormRow label="Title" isInvalid={Boolean(errors.title)} error="Please enter a valid title">
         <EuiFieldText
@@ -179,7 +177,7 @@ export default function GlobalNotificationsModalForm({ closeFlyout }: { closeFly
           name="receiver_role"
           options={roleOptions}
           valueOfSelected={receiverRole}
-          onChange={(value: any) => {
+          onChange={(value) => {
             onSuperSelectChange(value)
             setForm((form) => ({ ...form, receiver_role: value }))
           }}

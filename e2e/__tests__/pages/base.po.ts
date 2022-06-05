@@ -1,8 +1,10 @@
 import chalk from 'chalk'
 import { ElementHandle, Page } from 'puppeteer'
-import { users } from '../data/users'
+import { Users, users } from '../initialData/users'
 import * as expectPup from 'expect-puppeteer'
 import { createFunctionWaitForIdleNetwork, createFunctionWaitUntilHTMLRendered } from '../utils/network'
+import { globalNotifications } from '../initialData/globalNotifications'
+import { personalNotifications } from '../initialData/personalNotifications'
 
 export default abstract class BasePO {
   protected readonly FRONTEND_URL = FRONTEND_URL
@@ -10,6 +12,8 @@ export default abstract class BasePO {
   protected readonly $CalloutErrorContainer = '.euiForm__error'
   private readonly $ConfirmModal = "[data-test-subj='confirmModalConfirmButton']"
   private readonly $CancelModal = "[data-test-subj='confirmModalCancelButton']"
+  private readonly $headerPersonalNotificationsButton = "[data-test-subj='headerPersonalNotificationsButton']"
+  private readonly $headerGlobalNotificationsButton = "[data-test-subj='headerGlobalNotificationsButton']"
 
   /**
    * Throw an error if ``failTimeout`` is reached and there are pending requests.
@@ -98,38 +102,111 @@ export default abstract class BasePO {
     return Promise.all(errors.map((error) => error.evaluate((node) => node.textContent)))
   }
 
+  async openGlobalNotifications() {
+    await this.waitForSelectorAndClick(this.$headerGlobalNotificationsButton)
+  }
+
+  async closeGlobalNotifications() {
+    await this.waitForSelectorAndClick('[data-test-subj="euiFlyoutCloseButton"]')
+  }
+
+  async viewGlobalNotificationData(id: number) {
+    // : Promise<NotificationAlert[]>
+    await this.openGlobalNotifications()
+    const $xNotification = `[@data-test-subj="global-notifications-alert-${id}"]`
+    await page.waitForXPath(`//*${$xNotification}`, { timeout: 7000 })
+    const key = `testnotification${id}` as keyof typeof globalNotifications
+    expect(globalNotifications[key].receiver_role).toBe('admin')
+    const $xTitle = `//*${$xNotification}//*[contains(text(), "${globalNotifications[key].title}")]`
+    const $xBody = `//*${$xNotification}//*[contains(text(), "${globalNotifications[key].body}")]`
+    const $xLink = `//*${$xNotification}//*[contains(text(), "${globalNotifications[key].link}")]`
+    const $xLabel = `//*${$xNotification}//*[contains(text(), "${globalNotifications[key].label}")]`
+
+    const notification = await page.evaluate(
+      (xTitle, xBody, xLink, xLabel) => {
+        const title = document.evaluate(xTitle, document, null, XPathResult.STRING_TYPE, null).stringValue
+        const body = document.evaluate(xBody, document, null, XPathResult.STRING_TYPE, null).stringValue
+        const link = document.evaluate(xLink, document, null, XPathResult.STRING_TYPE, null).stringValue
+        const label = document.evaluate(xLabel, document, null, XPathResult.STRING_TYPE, null).stringValue
+        return { title, body, link, label } as NotificationAlert
+      },
+      $xTitle,
+      $xBody,
+      $xLink,
+      $xLabel,
+    )
+
+    await this.closeGlobalNotifications()
+
+    return notification
+  }
+
+  async openPersonalNotifications() {
+    await this.waitForSelectorAndClick(this.$headerPersonalNotificationsButton)
+    await this.waitUntilHTMLRendered(page, 150)
+  }
+
+  async viewPersonalNotificationData(id: number) {
+    await this.openPersonalNotifications()
+
+    const $xNotification = `@data-test-subj="personal-notifications-alert-${id}"`
+    await page.waitForXPath(`//*[${$xNotification}]`, { timeout: 7000 })
+    const key = `testnotification${id}` as keyof typeof personalNotifications
+    expect(personalNotifications[key].receiver_email).toBe(users.admin.email)
+    const $xTitle = `//*[${$xNotification} and //*[text()="${personalNotifications[key].title}"]]`
+    const $xBody = `//*[${$xNotification} and //*[text()="${personalNotifications[key].body}"]]`
+    const $xLink = `//*[${$xNotification} and //*[text()="${personalNotifications[key].link}"]]`
+    const $xLabel = `//*[${$xNotification} and //*[text()="${personalNotifications[key].label}"]]`
+
+    const notification = await page.evaluate(
+      (xTitle, xBody, xLink, xLabel) => {
+        const title = document.evaluate(xTitle, document, null, XPathResult.STRING_TYPE, null).stringValue
+        const body = document.evaluate(xBody, document, null, XPathResult.STRING_TYPE, null).stringValue
+        const link = document.evaluate(xLink, document, null, XPathResult.STRING_TYPE, null).stringValue
+        const label = document.evaluate(xLabel, document, null, XPathResult.STRING_TYPE, null).stringValue
+        return { title, body, link, label } as NotificationAlert
+      },
+      $xTitle,
+      $xBody,
+      $xLink,
+      $xLabel,
+    )
+
+    return notification
+  }
+
   async waitForSelectorAndSelect($selector: string, value: string) {
-    await this.waitUntilHTMLRendered(page, 50)
-    await page.waitForSelector($selector, { timeout: 5000 })
+    await this.waitUntilHTMLRendered(page, 25)
+    await page.waitForSelector($selector, { timeout: 3000 })
     await page.select($selector, value)
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForSelector($selector, { timeout: 5000 })
+    await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForSelector($selector, { timeout: 3000 })
     await page.click($selector, { delay: 50 })
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForVisibleSelectorAndClick($selector: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForSelector($selector, { visible: true, timeout: 5000 })
+    await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForSelector($selector, { visible: true, timeout: 3000 })
     await page.click($selector, { delay: 50 })
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForSelectorAndType($selector: string, text: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForSelector($selector, { timeout: 5000 })
+    await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForSelector($selector, { timeout: 3000 })
 
     await page.type($selector, text)
   }
 
   /** Increase wait time for rendering to avoid random failures */
   async waitForXPathAndClick($xXPath: string): Promise<void> {
-    await this.waitUntilHTMLRendered(page, 100)
-    await page.waitForXPath($xXPath, { timeout: 5000 })
+    await this.waitUntilHTMLRendered(page, 50)
+    await page.waitForXPath($xXPath, { timeout: 3000 })
 
     const elements = await page.$x($xXPath)
     await elements[0]?.click()
@@ -162,13 +239,13 @@ export default abstract class BasePO {
   }
 
   /** Ensure a specific user is logged in */
-  async isLoggedIn(user: userType | updatableUserType): Promise<boolean> {
+  async isLoggedIn(user: keyof Users): Promise<boolean> {
     await this.waitUntilHTMLRendered(page, 50)
     return await page.$(`[title='${users[user].username}']`).then((ele) => !!ele)
   }
 
   /** Login as a predefined user */
-  async login(user: userType | updatableUserType, expectSuccess: boolean = false): Promise<void> {
+  async login(user: keyof Users, expectSuccess: boolean = false): Promise<void> {
     await this.navigate(`/login`)
     await this.waitUntilHTMLRendered(page, 50)
     const isLoggedIn: boolean = await this.retry(
@@ -201,13 +278,10 @@ export default abstract class BasePO {
   /**
    * Intercept an user's password request right after a triggering event is emitted.
    */
-  async interceptPasswordReset(
-    trigger: () => Promise<void>,
-    user: userType | updatableUserType,
-  ): Promise<string | undefined> {
+  async interceptPasswordReset(trigger: () => Promise<void>, user: keyof Users): Promise<string | undefined> {
     let newPassword
 
-    await trigger().then(() =>
+    trigger().then(() =>
       page.once('response', async (response) => {
         if (response.request().url().includes('reset-user-password')) {
           // equivalent to response.buffer().toString('utf-8')

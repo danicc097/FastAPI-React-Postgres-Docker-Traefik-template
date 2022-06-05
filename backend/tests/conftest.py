@@ -1,196 +1,253 @@
 import os
-import random
-import warnings
-from typing import Callable, Dict, List, Union
+from pathlib import Path
+from typing import AsyncGenerator, Callable, Dict, Generator
 
 import alembic.command
+import pyfakefs.fake_filesystem
 import pytest
-import sqlalchemy
+import pytest_asyncio
 from alembic.config import Config
 from asgi_lifespan import LifespanManager
-from databases import Database
-from fastapi import FastAPI
+from fakeredis import FakeStrictRedis
+from fastapi import FastAPI, Request
 from httpx import AsyncClient
-from sqlalchemy.orm.session import close_all_sessions
+from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncConnection
 
-from app.core.config import JWT_TOKEN_PREFIX, UNIQUE_KEY, is_testing
-from app.db.repositories.users import UsersRepository
-from app.models.user import Role, RoleUpdate, UserCreate, UserInDB, UserPublic
+from app.api.dependencies.database import get_async_conn, get_new_async_conn
+from app.db.gen.queries.models import Role
+from app.db.gen.queries.users import RegisterNewUserRow
+from app.models.user import RoleUpdate, UserCreate
 from app.services import auth_service
-from initial_data.utils import change_user_role
+from app.services.users import UsersService
 
 os.environ["TESTING"] = "1"
 
+from app.core import config as config  # noqa: E402
 
-# Not recommended: persist db in "session" scope (don't apply_migrations on each test execution)
-# That will cause tests to fail if we modify conftest state, e.g. verify a user that's used as an
-# unverified user in another test.
-# an alternative is to use ``async with app.state._db.transaction(force_rollback=True):``
-# but it rolls back every single transaction, which won't allow us to test multiple queries
-# that depend on each other for the test to be useful.
-# "module" will persist db changes between tests files and is a nice balance
-@pytest.fixture(scope="module")
-def apply_migrations():
-    """
-    Determine when migrations should be applied
-    """
-    assert is_testing()
-    config = Config("alembic.ini")
-    alembic.command.upgrade(config, "head")
+config.DATABASE_URL = config.TEST_DB_URL
+config.MAX_OVERFLOW = 200
+config.POOL_SIZE = 20
+config.ECHO = False
+# sys.stdout = sys.stderr  # xdist
 
-    # When using yield, the code block below is executed as teardown code regardless of the test(s) outcome
-    yield
-    # allow all tests to execute with the current scope, then roll back to prevent database changes propagating.
-    # requires that all clients are closed.
-    # ? foolish attempts to close connections that dont seem to work for some reason
-    # await db.disconnect()
-    # close_all_sessions()
-    alembic.command.downgrade(config, "base")
+############# CELERY #############
 
 
-# Create a new application for every executed test.
-# When you include the fixture name in the parameter of a test function, module, class or project,
-# pytest knows it has to run it before running the test.
-# * `function` is the default scope -> the fixture is destroyed at the end of the test.
-# * i.e. we're creating a new `app` for every test module (.py).
-# * However, the same `app` is used anywhere this fixture is used, e.g. db(),
-# * it doesn't create a new one since it knows it already exists.
 @pytest.fixture
-def app(apply_migrations) -> FastAPI:
+def redis(monkeypatch):
+    fake_redis = FakeStrictRedis()
+    fake_redis.flushall()
+    monkeypatch.setattr("celery_once.backends.redis.Redis.redis", fake_redis)
+    return fake_redis
+
+
+@pytest.fixture(scope="session")
+def celery_enable_logging():
+    return True
+
+
+@pytest.fixture(scope="session")
+def celery_config():
+    os.environ["CELERY_BROKER_URL"] = "memory://"
+    os.environ["CELERY_RESULT_BACKEND"] = "rpc"
+    return {
+        "broker_url": "memory://",
+        "result_backend": "rpc",
+        "task_always_eager": True,  # run in same thread, should enable mocking. Not recommended as per docs but give no alternative to mocking.
+        "task_eager_propagates": True,
+        "worker_send_task_events": True,  # remove  AttributeError("'NoneType' object has no attribute 'groups'")
+        "task_send_sent_event": True,  # remove  AttributeError("'NoneType' object has no attribute 'groups'")
+        "ONCE": {
+            "backend": "celery_once.backends.Redis",
+            "settings": {"url": "redis://", "default_timeout": 60 * 60},
+        },
+        "task_default_queue": f"myapp_queue_{config.APP_ENV}",
+    }
+
+
+# see https://www.distributedpython.com/2018/10/26/celery-execution-pool/
+# @pytest.fixture(scope="session")
+# def celery_worker_pool():
+#     return "prefork"
+
+
+@pytest.fixture(scope="session")
+def celery_worker_parameters():
+    """Redefine this fixture to change the init parameters of Celery workers.
+
+    This can be used e. g. to define queues the worker will consume tasks from.
+
+    The dict returned by your fixture will then be used
+    as parameters when instantiating :class:`~celery.worker.WorkController`.
+    """
+    return {
+        # For some reason this `celery.ping` is not registed IF our own worker is still
+        # running. To avoid failing tests in that case, we disable the ping check.
+        # see: https://github.com/celery/celery/issues/3642#issuecomment-369057682
+        # here is the ping task: `from celery.contrib.testing.tasks import ping`
+        "perform_ping_check": False,
+        # "queues": ("high-prio", "low-prio"),
+        # "exclude_queues": ("celery"),
+    }
+
+
+@pytest.fixture(scope="session")
+def celery_includes():
+    return ["app.celery.tasks"]
+
+
+############# PYFAKEFS #############
+
+
+@pytest.fixture
+def pyfakefs_fs(
+    fs: pyfakefs.fake_filesystem.FakeFilesystem,  # function-scoped
+):
+    yield fs
+
+
+############# ASYNCIO #############
+
+
+# @pytest.fixture(scope="session")
+# def event_loop():
+#     return asyncio.get_event_loop()
+
+
+############# DATABASE #############
+
+
+@pytest_asyncio.fixture(scope="module")
+def apply_migrations():
+    assert config.is_testing()
+
+    cfg = Config("alembic.ini")
+    alembic.command.upgrade(cfg, "head")
+    yield
+    alembic.command.downgrade(cfg, "base")
+
+
+async def get_async_conn_test(request: Request) -> AsyncGenerator[AsyncConnection, None]:
+    yield request.app.state._conn
+
+
+@pytest_asyncio.fixture(scope="function")
+async def new_conn(app: FastAPI) -> AsyncGenerator[AsyncConnection, None]:
+    async with app.state._engine.connect() as conn:
+        try:
+            yield conn
+        finally:
+            await conn.close()
+
+
+############# FASTAPI #############
+
+
+@pytest.fixture(scope="module")
+def app(apply_migrations) -> Generator[FastAPI, None, None]:
+    """
+    For startup and shutdown events to happen, include at least a client in test functions.
+    """
     from app.api.server import get_application
 
-    return get_application()
+    app = get_application()
+    # NOT commit'ing and rollback'ing in the exception handler is a must for tests
+    app.dependency_overrides[get_async_conn] = get_async_conn_test
+    app.dependency_overrides[get_new_async_conn] = get_async_conn_test
+
+    yield app
 
 
-@pytest.fixture
-def db(app: FastAPI) -> Database:
-    """
-    Current app's ``Database`` object to be used in other fixtures.
-    NOTE: use app.state._db in a test instead or through a repository's ``db`` property.
-    """
-    return app.state._db
-
-
-# TODO FIX: seems to override clients when we use create_authorized_client
-# multiple times in the same test function
-# NOTES on how to fix:
-# - ``with`` cleans up afterwards...
-# - Reference https://www.python-httpx.org/async/#opening-and-closing-clients
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI):
-    """
-    Creates a new unauthenticated ``client`` able to make requests.
-    Note: every time we yield we override any other ``client`` instances
-    IMPORTANT: the previous client that uses ``client``
-    will be closed when a new one is generated.
-    """
     async with LifespanManager(app):
         async with AsyncClient(
             app=app,
-            base_url="http://testserver",
+            base_url="http://test:8999",
             headers={"Content-Type": "application/json"},
         ) as client:
+            # IMPORTANT: at this point, startup event has run
+            app.state._conn = await app.state._engine.connect()
             yield client
-        # close the connect when done
-        # await client.aclose()
+            await app.state._conn.close()
 
 
-# this will mess up apply_migrations on scope change due
-# to having more than one client connected
-# and requires force closing all sessions
-@pytest.fixture
+@pytest_asyncio.fixture
 async def admin_client(app: FastAPI):
-    """
-    Creates a new unauthenticated ``admin_client`` able to make requests.
-    IMPORTANT: the previous client that uses ``admin_client``
-    will be closed when a new one is generated.
-    """
+
     async with LifespanManager(app):
         async with AsyncClient(
             app=app,
-            base_url="http://testserver",
+            base_url="http://test:8999",
             headers={"Content-Type": "application/json"},
         ) as client:
+            # IMPORTANT: at this point, startup event has run
+            app.state._conn = await app.state._engine.connect()
             yield client
+            await app.state._conn.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client_2(app: FastAPI):
-    """
-    Creates a new unauthenticated ``client_2`` able to make requests.
-    IMPORTANT: the previous client that uses ``client_2``
-    will be closed when a new one is generated.
-    """
+
     async with LifespanManager(app):
         async with AsyncClient(
             app=app,
-            base_url="http://testserver",
+            base_url="http://test:8999",
             headers={"Content-Type": "application/json"},
         ) as client:
+            # IMPORTANT: at this point, startup event has run
+            app.state._conn = await app.state._engine.connect()
             yield client
+            await app.state._conn.close()
 
 
-@pytest.fixture
-def user_fixture(request):
-    """
-    Return an user fixture.
-    """
+@pytest_asyncio.fixture
+def get_fixture(request):
+
     return request.getfixturevalue(request.param)
 
 
-@pytest.fixture
-def authorized_client(client: AsyncClient, test_user: UserPublic) -> AsyncClient:
-    """
-    Creates an authorized ``test_user`` to test authorized requests instead
-    of the generic ``client`` fixture.
-    A new database session is created when the fixture is called.
-    """
-    access_token = auth_service.create_access_token_for_user(user=test_user, secret_key=str(UNIQUE_KEY))
+@pytest_asyncio.fixture
+def authorized_client(client: AsyncClient, test_user: RegisterNewUserRow) -> AsyncClient:
+
+    access_token = auth_service.create_access_token_for_user(user=test_user, secret_key=str(config.UNIQUE_KEY))
     client.headers = {
-        **client.headers,  # type: ignore
-        "Authorization": f"{JWT_TOKEN_PREFIX} {access_token}",
+        **client.headers,
+        "Authorization": f"{config.JWT_TOKEN_PREFIX} {access_token}",
     }
     return client
 
 
-@pytest.fixture
-def superuser_client(admin_client: AsyncClient, test_admin_user: UserPublic) -> AsyncClient:
-    """
-    Creates an authorized ``superuser_client`` with admin privileges and its own
-    admin_client to prevent overriding it in tests where multiple clients are needed.
-    A new database session is created when the fixture is called.
-    """
-    access_token = auth_service.create_access_token_for_user(user=test_admin_user, secret_key=str(UNIQUE_KEY))
+@pytest_asyncio.fixture
+def superuser_client(admin_client: AsyncClient, test_admin_user: RegisterNewUserRow) -> AsyncClient:
+
+    access_token = auth_service.create_access_token_for_user(user=test_admin_user, secret_key=str(config.UNIQUE_KEY))
     admin_client.headers = {
-        **admin_client.headers,  # type: ignore
-        "Authorization": f"{JWT_TOKEN_PREFIX} {access_token}",
+        **admin_client.headers,
+        "Authorization": f"{config.JWT_TOKEN_PREFIX} {access_token}",
     }
     return admin_client
 
 
-@pytest.fixture
-def test_2_client(client_2: AsyncClient, test_user4: UserPublic) -> AsyncClient:
-    access_token = auth_service.create_access_token_for_user(user=test_user4, secret_key=str(UNIQUE_KEY))
+@pytest_asyncio.fixture
+def test_2_client(client_2: AsyncClient, test_user4: RegisterNewUserRow) -> AsyncClient:
+    access_token = auth_service.create_access_token_for_user(user=test_user4, secret_key=str(config.UNIQUE_KEY))
     client_2.headers = {
-        **client_2.headers,  # type: ignore
-        "Authorization": f"{JWT_TOKEN_PREFIX} {access_token}",
+        **client_2.headers,
+        "Authorization": f"{config.JWT_TOKEN_PREFIX} {access_token}",
     }
     return client_2
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 def create_authorized_client(client: AsyncClient) -> Callable:
-    """
-    Allows to authorize any user fixture (test_user[i], etc.)
-    IMPORTANT: It will override other clients created with this function since we're using the
-    same ``client`` fixture instance.
-    """
-
-    def _create_authorized_client(*, user: UserInDB) -> AsyncClient:
-        access_token = auth_service.create_access_token_for_user(user=user, secret_key=str(UNIQUE_KEY))
+    def _create_authorized_client(*, user: RegisterNewUserRow) -> AsyncClient:
+        access_token = auth_service.create_access_token_for_user(user=user, secret_key=str(config.UNIQUE_KEY))
         client.headers = {
-            **client.headers,  # type: ignore
-            "Authorization": f"{JWT_TOKEN_PREFIX} {access_token}",
+            **client.headers,
+            "Authorization": f"{config.JWT_TOKEN_PREFIX} {access_token}",
         }
         client.headers
         return client
@@ -200,205 +257,162 @@ def create_authorized_client(client: AsyncClient) -> Callable:
 
 async def user_fixture_helper(
     *,
-    db: Database,
+    new_conn: AsyncConnection,
     new_user: UserCreate,
-    to_public: bool = True,
+    get_db_data: bool = True,
     admin: bool = False,
     verified: bool = False,
-) -> Union[UserInDB, UserPublic]:
-    user_repo = UsersRepository(db)
-    # when we call the fixture again, we don't want to create a new user
-    existing_user = await user_repo.get_user_by_email(email=new_user.email, to_public=to_public)
+):
+    users_service = UsersService(new_conn)
+
+    existing_user = await users_service.get_user_by_email(email=new_user.email, get_db_data=get_db_data)
     if existing_user:
         return existing_user
-    # first time call will run this
-    user = await user_repo.register_new_user(new_user=new_user, to_public=to_public, admin=admin, verified=verified)
+
+    user = await users_service.register_new_user(new_user=new_user, admin=admin, verified=verified)
     if not user:
         raise Exception("Failed to return user from fixture")
     if admin:
-        await change_user_role(db, RoleUpdate(email=user.email, role=Role.admin))
-    return user
+        await users_service.update_user_role(RoleUpdate(email=user.email, role=Role.ADMIN))
+    await new_conn.commit()  # not using routes -> commit manually
+    return await users_service.get_user_by_email(email=new_user.email, get_db_data=get_db_data)
 
 
 ###############################################################################
 
-# * map usernames to keys for convenience
+
 TEST_USERS: Dict[str, UserCreate] = {
     "test_user_db": UserCreate(
-        email="user_db@myapp.com",
+        email=EmailStr("user_db@myapp.com"),
         username="test_user_db",
         password="initialPassword",
     ),
     "test_admin_user": UserCreate(
-        email="admin@myapp.com",
+        email=EmailStr("admin@myapp.com"),
         username="test_admin_user",
         password="initialPassword",
     ),
     "test_unverified_user": UserCreate(
-        email="unverified@myapp.com",
+        email=EmailStr("unverified@myapp.com"),
         username="test_unverified_user",
         password="initialPassword",
     ),
     "test_unverified_user2": UserCreate(
-        email="unverified2@myapp.com",
+        email=EmailStr("unverified2@myapp.com"),
         username="test_unverified_user2",
         password="initialPassword",
     ),
     "test_user": UserCreate(
-        email="user@myapp.com",
+        email=EmailStr("user@myapp.com"),
         username="test_user",
         password="initialPassword",
     ),
     "test_user2": UserCreate(
-        email="user2@myapp.com",
+        email=EmailStr("user2@myapp.com"),
         username="test_user2",
         password="initialPassword",
     ),
     "test_user3": UserCreate(
-        email="user3@myapp.com",
+        email=EmailStr("user3@myapp.com"),
         username="test_user3",
         password="initialPassword",
     ),
     "test_user4": UserCreate(
-        email="user4@myapp.com",
+        email=EmailStr("user4@myapp.com"),
         username="test_user4",
         password="initialPassword",
     ),
     "test_user5": UserCreate(
-        email="user5@myapp.com",
+        email=EmailStr("user5@myapp.com"),
         username="test_user5",
         password="initialPassword",
     ),
     "test_user6": UserCreate(
-        email="user6@myapp.com",
+        email=EmailStr("user6@myapp.com"),
         username="test_user6",
         password="initialPassword",
     ),
     "test_user7": UserCreate(
-        email="user7@myapp.com",
+        email=EmailStr("user7@myapp.com"),
         username="test_user7",
         password="initialPassword",
     ),
 }
 
 
-@pytest.fixture
-async def test_user_db(db: Database) -> UserInDB:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user_db"].email,
-        username=TEST_USERS["test_user_db"].username,
-        password=TEST_USERS["test_user_db"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, to_public=False)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user_db(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user_db"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, get_db_data=True)
 
 
-@pytest.fixture
-async def test_admin_user(db: Database) -> UserInDB:
-    new_user = UserCreate(
-        email=TEST_USERS["test_admin_user"].email,
-        username=TEST_USERS["test_admin_user"].username,
-        password=TEST_USERS["test_admin_user"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, admin=True, to_public=False)  # type: ignore
+@pytest_asyncio.fixture
+async def test_admin_user(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_admin_user"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True, admin=True, get_db_data=True)
 
 
-@pytest.fixture
-async def test_unverified_user(db: Database) -> UserInDB:
-    new_user = UserCreate(
-        email=TEST_USERS["test_unverified_user"].email,
-        username=TEST_USERS["test_unverified_user"].username,
-        password=TEST_USERS["test_unverified_user"].password,
-    )
+@pytest_asyncio.fixture
+async def test_unverified_user(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_unverified_user"]
 
-    return await user_fixture_helper(db=db, new_user=new_user, to_public=False)  # type: ignore
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, get_db_data=True)
 
 
-@pytest.fixture
-async def test_unverified_user2(db: Database) -> UserInDB:
-    new_user = UserCreate(
-        email=TEST_USERS["test_unverified_user2"].email,
-        username=TEST_USERS["test_unverified_user2"].username,
-        password=TEST_USERS["test_unverified_user2"].password,
-    )
+@pytest_asyncio.fixture
+async def test_unverified_user2(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_unverified_user2"]
 
-    return await user_fixture_helper(db=db, new_user=new_user, to_public=False)  # type: ignore
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, get_db_data=True)
 
 
-@pytest.fixture
-async def test_user(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user"].email,
-        username=TEST_USERS["test_user"].username,
-        password=TEST_USERS["test_user"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
-async def test_user2(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user2"].email,
-        username=TEST_USERS["test_user2"].username,
-        password=TEST_USERS["test_user2"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user2(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user2"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
-async def test_user3(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user3"].email,
-        username=TEST_USERS["test_user3"].username,
-        password=TEST_USERS["test_user3"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user3(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user3"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
-async def test_user4(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user4"].email,
-        username=TEST_USERS["test_user4"].username,
-        password=TEST_USERS["test_user4"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user4(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user4"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
-async def test_user5(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user5"].email,
-        username=TEST_USERS["test_user5"].username,
-        password=TEST_USERS["test_user5"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user5(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user5"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
-async def test_user6(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user6"].email,
-        username=TEST_USERS["test_user6"].username,
-        password=TEST_USERS["test_user6"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user6(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user6"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
-async def test_user7(db: Database) -> UserPublic:
-    new_user = UserCreate(
-        email=TEST_USERS["test_user7"].email,
-        username=TEST_USERS["test_user7"].username,
-        password=TEST_USERS["test_user7"].password,
-    )
-    return await user_fixture_helper(db=db, new_user=new_user, verified=True)  # type: ignore
+@pytest_asyncio.fixture
+async def test_user7(new_conn: AsyncConnection):
+    new_user = TEST_USERS["test_user7"]
+    return await user_fixture_helper(new_conn=new_conn, new_user=new_user, verified=True)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_list(
-    test_user3: UserPublic,
-    test_user4: UserPublic,
-    test_user5: UserPublic,
-    test_user6: UserPublic,
-) -> List[UserPublic]:
+    test_user3: RegisterNewUserRow,
+    test_user4: RegisterNewUserRow,
+    test_user5: RegisterNewUserRow,
+    test_user6: RegisterNewUserRow,
+) -> list[RegisterNewUserRow]:
     return [test_user3, test_user4, test_user5, test_user6]

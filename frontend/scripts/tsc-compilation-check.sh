@@ -12,4 +12,4 @@ if [[ $(basename "$PWD") != "$REPO_NAME" ]]; then
   exit 1
 fi
 
-! "$SCRIPTS_DIR"/../.yarn/sdks/typescript/bin/tsc -p ./frontend | grep -- ' error'
+! "$SCRIPTS_DIR"/../node_modules/.bin/tsc -p ./frontend | grep -- ' error'

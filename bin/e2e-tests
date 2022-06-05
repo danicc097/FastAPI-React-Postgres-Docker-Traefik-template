@@ -1,36 +1,14 @@
 #!/bin/bash
 
-#
-# Run E2E tests in the "e2e" environment.
-#
-
 set -e
 
-# RED='\033[0;31m'
-# GREEN='\033[0;32m'
-
 source "${BASH_SOURCE%/*}/.helpers.sh"
-
-ENV="e2e"
-
-until [ "$(docker exec backend_myapp_"$ENV" /bin/bash -c 'echo ready')" = "ready" ]; do
-  printf 'waiting for E2E container for start...\n'
-  sleep 5
-done
-
-# in case of cert error, run mkcert again as per README
-until [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-frontend.testing.localhost")" == "200" ] &&
-  [ "$(curl -s -o /dev/null -w "%{http_code}" "https://myapp-backend.testing.localhost/docs")" == "200" ]; do
-  printf 'Waiting for services to start...\n'
-  sleep 5
-done
 
 BIN_DIR="$(
   cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit
   pwd -P
 )"
 
-"$BIN_DIR"/initial-data "$ENV"
-
 cd "$BIN_DIR"/../e2e || exit
+sleep 5
 npm run test-local:headless

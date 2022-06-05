@@ -1,0 +1,1 @@
+PGPASSWORD=postgres psql -d postgres -U postgres -h localhost -p 55360

@@ -1,0 +1,44 @@
+# TODO caching pip for dev:
+# - hack: https://medium.com/@scythargon/cache-for-python-pip-downloads-and-wheels-in-docker-67f24e7cd84e
+# - using docker's buildkit (now stable): https://pythonspeed.com/articles/docker-cache-pip-downloads/
+# Other dockerfile best practices: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+# specific for python: https://ep2020.europython.eu/media/conference/slides/CeKGczx-best-practices-for-production-ready-docker-packaging.pdf
+FROM python:3.9.5-slim-buster
+
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+WORKDIR /backend
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY ./requirements.txt /backend/requirements.txt
+COPY ./requirements-dev.txt /backend/requirements-dev.txt
+
+# TODO --cache-from
+RUN --mount=type=cache,target=/root/.cache/pip \
+  apt-get update \
+  && BUILD_DEPS='libpq-dev libffi-dev musl-dev gcc' \
+  && DEBIAN_FRONTEND=noninteractive \
+  && apt-get install -y netcat tesseract-ocr ${BUILD_DEPS} \
+  && apt-get clean \
+  && pip install --upgrade pip \
+  && pip install virtualenv \
+  && virtualenv .venv \
+  && pip install pip-tools \
+  && pip-sync requirements.txt requirements-dev.txt \
+  && apt-get autoremove -y ${BUILD_DEPS} \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists /tmp/* /var/tmp/*
+
+COPY . /backend
+
+RUN groupadd -g $GROUP_ID rootless
+RUN useradd -m rootless -u $USER_ID -g $GROUP_ID
+RUN mkdir -p /backend/logs
+RUN chmod 755 /backend
+RUN touch /backend/celery-dev.log
+
+ENV TESSDATA_PREFIX /usr/share/tesseract-ocr/4.00/tessdata
+
+USER rootless

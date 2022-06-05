@@ -1,34 +1,43 @@
-
+# TODO caching pip for dev:
+# - hack: https://medium.com/@scythargon/cache-for-python-pip-downloads-and-wheels-in-docker-67f24e7cd84e
+# - using docker's buildkit (now stable): https://pythonspeed.com/articles/docker-cache-pip-downloads/
+# Other dockerfile best practices: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+# specific for python: https://ep2020.europython.eu/media/conference/slides/CeKGczx-best-practices-for-production-ready-docker-packaging.pdf
 FROM python:3.9.5-slim-buster
 
-WORKDIR /backend
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONBUFFERED=1
+ARG USER_ID=1000
+ARG GROUP_ID=1000
 
-COPY ./Pipfile /backend/Pipfile
-COPY ./Pipfile.lock /backend/Pipfile.lock
-# use -d to include dev dependencies with pipenv lock
-# dont use --no-install-recommends (psycopg2 error)
-RUN apt-get update \
+WORKDIR /backend
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+COPY ./requirements.txt /backend/requirements.txt
+
+# TODO --cache-from
+RUN --mount=type=cache,target=/root/.cache/pip \
+  apt-get update \
   && BUILD_DEPS='libpq-dev libffi-dev musl-dev gcc' \
   && DEBIAN_FRONTEND=noninteractive \
-  && apt-get install -y netcat ${BUILD_DEPS} \
+  && apt-get install -y netcat tesseract-ocr ${BUILD_DEPS} \
   && apt-get clean \
-  && pip install psycopg2 \
   && pip install --upgrade pip \
-  && pip install pipenv \
+  && pip install virtualenv \
   && virtualenv .venv \
-  && pipenv lock -r >requirements.txt \
-  && rm -rf .venv Pipfile Pipfile.lock \
-  # && exit \
-  && pip install -r requirements.txt \
+  && pip install pip-tools \
+  && pip-sync requirements.txt \
   && apt-get autoremove -y ${BUILD_DEPS} \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists /tmp/* /var/tmp/*
 
 COPY . /backend
 
-RUN useradd -m rootless -u 1500
-RUN chown -R rootless:rootless /backend
+RUN groupadd -g $GROUP_ID rootless
+RUN useradd -m rootless -u $USER_ID -g $GROUP_ID
+RUN mkdir -p /backend/logs
 RUN chmod 755 /backend
+RUN touch /backend/celery-prod.log
+
+ENV TESSDATA_PREFIX /usr/share/tesseract-ocr/4.00/tessdata
+
 USER rootless

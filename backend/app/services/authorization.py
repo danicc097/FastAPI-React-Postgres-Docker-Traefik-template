@@ -1,17 +1,17 @@
-from app.models.user import Role
+from app.db.gen.queries.models import Role
 
 ROLE_PERMISSIONS = {
-    Role.user: [
-        Role.user.value,
+    Role.USER: [
+        Role.USER,
     ],
-    Role.manager: [
-        Role.manager.value,
-        Role.user.value,
+    Role.MANAGER: [
+        Role.MANAGER,
+        Role.USER,
     ],
-    Role.admin: [
-        Role.admin.value,
-        Role.manager.value,
-        Role.user.value,
+    Role.ADMIN: [
+        Role.ADMIN,
+        Role.MANAGER,
+        Role.USER,
     ],
 }
 """

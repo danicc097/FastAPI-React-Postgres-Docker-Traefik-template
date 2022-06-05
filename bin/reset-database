@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+source "${BASH_SOURCE%/*}/.helpers.sh"
+
+ENV=$(get_env_suffix "$1")
+
+echo -e "\e[31mWARNING: This will drop the database.\e[0m"
+_confirm "Do you want to reset the database in the $(red "$ENV") environment?"
+
+docker exec -it postgres_db_myapp_"${ENV}" psql --no-psqlrc -U postgres -d postgres -c "CREATE DATABASE test OWNER postgres;" || echo "Database test already exists. Skipping"
+docker exec -it postgres_db_myapp_"${ENV}" dropdb -f 'postgres'
+docker exec -it postgres_db_myapp_"${ENV}" psql --no-psqlrc -U postgres -d test -c "CREATE DATABASE postgres;"
+# docker exec -it backend_myapp_"$ENV" alembic upgrade head

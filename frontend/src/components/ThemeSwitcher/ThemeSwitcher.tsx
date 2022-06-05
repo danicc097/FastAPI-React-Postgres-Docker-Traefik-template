@@ -1,68 +1,21 @@
 import { EuiSwitch, EuiText } from '@elastic/eui'
-import React, { Dispatch, SetStateAction } from 'react'
-import styled from 'styled-components'
-import { customThemeDark, customThemeLight } from 'src/components/Layout/Layout'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import React, { Dispatch, SetStateAction, useEffect } from 'react'
 import { faSun, faMoon } from '@fortawesome/free-solid-svg-icons'
+import { useTheme } from 'src/themes/useTheme'
+import { Switch, StyledFontAwesomeIcon } from './ThemeSwitcher.styles'
 
-const Switch = styled.div`
-  display: flex;
-  justify-content: space-between;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  align-items: center;
-`
+export function ThemeSwitcher() {
+  const { setTheme } = useTheme()
+  const [checked, setChecked] = React.useState(localStorage.getItem('theme') === 'dark')
 
-const StyledFontAwesomeIcon = styled(FontAwesomeIcon)`
-  padding-right: 5px;
-  font-size: large;
-`
-
-type ThemeSwitcherProps = {
-  currentTheme: string
-  setTheme: Dispatch<any>
-  setProviderTheme: Dispatch<any>
-}
-
-export function ThemeSwitcher({ currentTheme, setTheme, setProviderTheme }: ThemeSwitcherProps) {
-  const [checked, setChecked] = React.useState(currentTheme === 'dark' ? true : false)
-
-  // only way to have both of them in the build output. Additionally,
-  // they override each other upon import, hence reloading the page is needed
-  // TODO check new theme provider from eui when its more mature
-  const ThemeDark = React.lazy(() => import('src/themes/ThemeDarkAmsterdam'))
-  const ThemeLight = React.lazy(() => import('src/themes/ThemeLightAmsterdam'))
-
-  React.useEffect(() => {
-    // checked has been changed to the desired value already
-    localStorage.setItem('theme', checked ? 'dark' : 'light')
-    if (checked) {
-      setTheme(customThemeDark)
-      setProviderTheme(customThemeDark)
-    } else {
-      setTheme(customThemeLight)
-      setProviderTheme(customThemeLight)
-    }
-    setProviderTheme(checked ? customThemeDark : customThemeLight)
+  useEffect(() => {
+    setTheme(checked ? 'dark' : 'light')
   }, [checked])
 
-  const toggleTheme = () => {
-    setChecked(!checked)
-
-    setTimeout(() => {
-      // only way to force re-render and get rid of old css
-      // without writing more abominable code
-      window.location.reload()
-    }, 50)
-  }
   return (
     <Switch className="theme-switcher">
-      <React.Suspense fallback={null}>
-        {localStorage.getItem('theme') === 'dark' && <ThemeDark />}
-        {localStorage.getItem('theme') === 'light' && <ThemeLight />}
-      </React.Suspense>
       <StyledFontAwesomeIcon icon={faSun} size="lg" />
-      <EuiSwitch label="" checked={checked} onChange={toggleTheme} />
+      <EuiSwitch label="" checked={checked} onChange={() => setChecked(!checked)} />
       <StyledFontAwesomeIcon icon={faMoon} size="lg" />
     </Switch>
   )

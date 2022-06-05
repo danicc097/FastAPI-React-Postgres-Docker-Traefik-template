@@ -1,0 +1,314 @@
+{
+    "users": {
+        "admin": {
+            "email": "admin@myapp.com",
+            "password": "12341234",
+            "username": "admin",
+            "role": "admin",
+            "verified": true,
+            "admin": true
+        },
+        "manager": {
+            "email": "manager@myapp.com",
+            "password": "12341234",
+            "username": "manager",
+            "role": "manager",
+            "verified": true,
+            "admin": false
+        },
+        "verified": {
+            "email": "verified@myapp.com",
+            "password": "12341234",
+            "username": "verified",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "unverified": {
+            "email": "unverified@myapp.com",
+            "password": "12341234",
+            "username": "unverified",
+            "role": "user",
+            "verified": false,
+            "admin": false
+        },
+        "unverified2": {
+            "email": "unverified2@myapp.com",
+            "password": "12341234",
+            "username": "unverified2",
+            "role": "user",
+            "verified": false,
+            "admin": false
+        },
+        "profileTestUser": {
+            "email": "thiscanbeupdated@myapp.com",
+            "password": "12341234",
+            "username": "thiscanbeupdated",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "toBeVerified": {
+            "email": "tobeverified@myapp.com",
+            "password": "12341234",
+            "username": "toBeVerified",
+            "role": "user",
+            "verified": false,
+            "admin": false
+        },
+        "passwordResetTestUser0": {
+            "email": "passwordresettestuser0@myapp.com",
+            "password": "12341234",
+            "username": "passwordResetTestUser0",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "passwordResetTestUser1": {
+            "email": "passwordresettestuser1@myapp.com",
+            "password": "12341234",
+            "username": "passwordResetTestUser1",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser0": {
+            "email": "testuser0@myapp.com",
+            "password": "12341234",
+            "username": "testuser0",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser1": {
+            "email": "testuser1@myapp.com",
+            "password": "12341234",
+            "username": "testuser1",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser2": {
+            "email": "testuser2@myapp.com",
+            "password": "12341234",
+            "username": "testuser2",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser3": {
+            "email": "testuser3@myapp.com",
+            "password": "12341234",
+            "username": "testuser3",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser4": {
+            "email": "testuser4@myapp.com",
+            "password": "12341234",
+            "username": "testuser4",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser5": {
+            "email": "testuser5@myapp.com",
+            "password": "12341234",
+            "username": "testuser5",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser6": {
+            "email": "testuser6@myapp.com",
+            "password": "12341234",
+            "username": "testuser6",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser7": {
+            "email": "testuser7@myapp.com",
+            "password": "12341234",
+            "username": "testuser7",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser8": {
+            "email": "testuser8@myapp.com",
+            "password": "12341234",
+            "username": "testuser8",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        },
+        "testuser9": {
+            "email": "testuser9@myapp.com",
+            "password": "12341234",
+            "username": "testuser9",
+            "role": "user",
+            "verified": true,
+            "admin": false
+        }
+    },
+    "password_reset_requests": {
+        "testpasswordresetrequest0": {
+            "email": "passwordresettestuser0@myapp.com",
+            "message": "This is test message 0"
+        },
+        "testpasswordresetrequest1": {
+            "email": "passwordresettestuser1@myapp.com",
+            "message": "This is test message 1"
+        }
+    },
+    "global_notifications": {
+        "testnotification1": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 1",
+            "body": "Test notification 1 body",
+            "label": "label 1",
+            "link": "https://www.google.com"
+        },
+        "testnotification2": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 2",
+            "body": "Test notification 2 body",
+            "label": "label 2",
+            "link": "https://www.google.com"
+        },
+        "testnotification3": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 3",
+            "body": "Test notification 3 body",
+            "label": "label 3",
+            "link": "https://www.google.com"
+        },
+        "testnotification4": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 4",
+            "body": "Test notification 4 body",
+            "label": "label 4",
+            "link": "https://www.google.com"
+        },
+        "testnotification5": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 5",
+            "body": "Test notification 5 body",
+            "label": "label 5",
+            "link": "https://www.google.com"
+        },
+        "testnotification6": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 6",
+            "body": "Test notification 6 body",
+            "label": "label 6",
+            "link": "https://www.google.com"
+        },
+        "testnotification7": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 7",
+            "body": "Test notification 7 body",
+            "label": "label 7",
+            "link": "https://www.google.com"
+        },
+        "testnotification8": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 8",
+            "body": "Test notification 8 body",
+            "label": "label 8",
+            "link": "https://www.google.com"
+        },
+        "testnotification9": {
+            "sender": "admin@myapp.com",
+            "receiver_role": "admin",
+            "title": "Test notification 9",
+            "body": "Test notification 9 body",
+            "label": "label 9",
+            "link": "https://www.google.com"
+        }
+    },
+    "personal_notifications": {
+        "testnotification1": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 1",
+            "body": "Test personal notification 1 body",
+            "label": "label 1",
+            "link": "https://www.google.com"
+        },
+        "testnotification2": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 2",
+            "body": "Test personal notification 2 body",
+            "label": "label 2",
+            "link": "https://www.google.com"
+        },
+        "testnotification3": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 3",
+            "body": "Test personal notification 3 body",
+            "label": "label 3",
+            "link": "https://www.google.com"
+        },
+        "testnotification4": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 4",
+            "body": "Test personal notification 4 body",
+            "label": "label 4",
+            "link": "https://www.google.com"
+        },
+        "testnotification5": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 5",
+            "body": "Test personal notification 5 body",
+            "label": "label 5",
+            "link": "https://www.google.com"
+        },
+        "testnotification6": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 6",
+            "body": "Test personal notification 6 body",
+            "label": "label 6",
+            "link": "https://www.google.com"
+        },
+        "testnotification7": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 7",
+            "body": "Test personal notification 7 body",
+            "label": "label 7",
+            "link": "https://www.google.com"
+        },
+        "testnotification8": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 8",
+            "body": "Test personal notification 8 body",
+            "label": "label 8",
+            "link": "https://www.google.com"
+        },
+        "testnotification9": {
+            "sender": "admin@myapp.com",
+            "receiver_email": "admin@myapp.com",
+            "title": "Test personal notification 9",
+            "body": "Test personal notification 9 body",
+            "label": "label 9",
+            "link": "https://www.google.com"
+        }
+    }
+}

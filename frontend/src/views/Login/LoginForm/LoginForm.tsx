@@ -1,24 +1,18 @@
 import { connect } from 'react-redux'
 import { Link } from 'react-router-dom'
 import { EuiButton, EuiFieldText, EuiForm, EuiFormRow, EuiFieldPassword, EuiSpacer } from '@elastic/eui'
-import styled from 'styled-components'
 import React from 'react'
 
 import { StyledLink } from 'src/components/StyledComponents/StyledComponents'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { useLoginForm } from 'src/hooks/forms/useLoginForm'
-
-const LoginFormWrapper = styled.div`
-  padding: 2rem;
-  max-width: 400px;
-`
+import { LoginFormWrapper } from './LoginForm.styles'
 
 export default function LoginForm() {
   const { form, setForm, errors, setErrors, isLoading, getFormErrors, setHasSubmitted, requestUserLogin } =
     useLoginForm()
 
-  // don't forget async...
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -31,16 +25,12 @@ export default function LoginForm() {
 
     const action = await requestUserLogin({ email: form.email, password: form.password })
 
-    // reset the password form state if the login attempt is not successful
     if (action?.type !== AuthActionType.FETCHING_USER_FROM_TOKEN_SUCCESS) {
       setForm((form) => ({ ...form, password: '' }))
     }
   }
   return (
     <LoginFormWrapper>
-      {/* EuiForm component renders as a div by default, but we can pass in component="form"
-        EuiForm and EuiFormRow both accept an isInvalid flag and error prop (error text to display)
-        We can also pass isInvalid to EuiFieldText and EuiFieldPassword to give additional feedback */}
       <EuiForm
         component="form"
         onSubmit={handleSubmit}

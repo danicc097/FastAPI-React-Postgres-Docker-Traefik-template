@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  db:
+    image: mariadb:10.4.8
+    container_name: bookstack-db
+    networks:
+      - traefik-net
+    environment:
+      - MYSQL_ROOT_PASSWORD=bookstack
+      - MYSQL_DATABASE=bookstack
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=bookstack
+    ports:
+      - 3307:3306
+    volumes:
+      - bookstack-db:/var/lib/mysql
+    restart: unless-stopped
+
+  app:
+    image: solidnerd/bookstack:21.12
+    container_name: bookstack-app
+    networks:
+      - traefik-net
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db:3306
+      - DB_DATABASE=bookstack
+      - DB_USERNAME=bookstack
+      - DB_PASSWORD=bookstack
+      - APP_URL=https://wiki.localhost
+      - FILE_UPLOAD_SIZE_LIMIT=50
+    volumes:
+      - bookstack-uploads:/var/www/bookstack/public/uploads
+      - bookstack-storage-uploads:/var/www/bookstack/storage/uploads
+    ports:
+      - 8087:8080
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bookstack.rule=Host(`wiki.localhost`)
+      - traefik.docker.network=traefik-net
+      - traefik.http.routers.bookstack.entrypoints=websecure
+      - traefik.http.routers.bookstack.tls=true
+      - traefik.http.services.bookstack.loadbalancer.server.port=8080
+    restart: unless-stopped
+
+networks:
+  traefik-net:
+    name: traefik-net
+    external: true
+
+volumes:
+  bookstack-db:
+  bookstack-uploads:
+  bookstack-storage-uploads:

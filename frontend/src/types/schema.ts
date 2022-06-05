@@ -5,234 +5,471 @@
  */
 
 export interface paths {
-  "/api/users/": {
-    post: operations["users_register_new_user_api_users__post"];
+  "/v1/users/": {
+    post: operations["users_register_new_user_v1_users__post"];
   };
-  "/api/users/me/": {
-    get: operations["users_get_current_user_api_users_me__get"];
-    /** Update the user's profile. */
-    put: operations["users_update_user_by_id_api_users_me__put"];
+  "/v1/users/me/": {
+    get: operations["users_get_current_user_v1_users_me__get"];
+    put: operations["users_update_user_by_id_v1_users_me__put"];
   };
-  "/api/users/login/token/": {
-    post: operations["users_login_email_and_password_api_users_login_token__post"];
+  "/v1/users/login/token/": {
+    post: operations["users_login_email_and_password_v1_users_login_token__post"];
   };
-  "/api/users/request-password-reset/": {
-    /** Any client, including unauthorized, can request a password reset that needs admin approval. */
-    post: operations["users_request_password_reset_api_users_request_password_reset__post"];
+  "/v1/users/request-password-reset/": {
+    post: operations["users_request_password_reset_v1_users_request_password_reset__post"];
   };
-  "/api/users/notifications-by-last-read/": {
-    get: operations["users_get_feed_by_last_read_api_users_notifications_by_last_read__get"];
+  "/v1/users/global-notifications/": {
+    get: operations["users_get_global_notifications_v1_users_global_notifications__get"];
   };
-  "/api/users/notifications/": {
-    get: operations["users_get_feed_api_users_notifications__get"];
+  "/v1/users/personal-notifications/": {
+    get: operations["users_get_personal_notifications_v1_users_personal_notifications__get"];
   };
-  "/api/users/check-user-has-unread-notifications/": {
-    /**
-     * Hit the server to check if the user has unread notifications.
-     * It won't update the user's ``last_notification_at`` field.
-     */
-    get: operations["users_check_user_has_unread_notifications_api_users_check_user_has_unread_notifications__get"];
+  "/v1/users/create-personal-notification/": {
+    post: operations["users_create_personal_notification_v1_users_create_personal_notification__post"];
   };
-  "/api/profiles/{username}/": {
-    get: operations["profiles_get_profile_by_username_api_profiles__username___get"];
+  "/v1/users/delete-personal-notification/{id}/": {
+    delete: operations["users_delete_personal_notification_v1_users_delete_personal_notification__id___delete"];
   };
-  "/api/profiles/me/": {
-    put: operations["profiles_update_own_profile_api_profiles_me__put"];
+  "/v1/profiles/{username}/": {
+    get: operations["profiles_get_profile_by_username_v1_profiles__username___get"];
   };
-  "/api/admin/users/": {
-    /** List all users in the database. */
-    get: operations["admin_list_users_api_admin_users__get"];
+  "/v1/profiles/me/": {
+    put: operations["profiles_update_own_profile_v1_profiles_me__put"];
   };
-  "/api/admin/users-unverified/": {
-    /** List all unverified users. */
-    get: operations["admin_list_unverified_users_api_admin_users_unverified__get"];
-    /** Verify registered users via an array of emails. */
-    post: operations["admin_verify_users_by_email_api_admin_users_unverified__post"];
+  "/v1/admin/users/": {
+    get: operations["admin_list_users_v1_admin_users__get"];
   };
-  "/api/admin/reset-user-password/": {
-    /** Return a list of users that have requested a password reset. */
-    get: operations["admin_list_password_request_users_api_admin_reset_user_password__get"];
-    /** Reset password for any user by email. */
-    post: operations["admin_reset_user_password_by_email_api_admin_reset_user_password__post"];
+  "/v1/admin/users-unverified/": {
+    get: operations["admin_list_unverified_users_v1_admin_users_unverified__get"];
+    post: operations["admin_verify_users_by_email_v1_admin_users_unverified__post"];
   };
-  "/api/admin/delete-password-reset-request/{id}/": {
-    /** Delete a password reset request with id: ``id``. */
-    delete: operations["admin_delete_password_reset_request_api_admin_delete_password_reset_request__id___delete"];
+  "/v1/admin/reset-user-password/": {
+    get: operations["admin_list_password_request_users_v1_admin_reset_user_password__get"];
+    post: operations["admin_reset_user_password_by_email_v1_admin_reset_user_password__post"];
   };
-  "/api/admin/create-notification/": {
-    /** Create a new notification for selected user roles to receive. */
-    post: operations["admin_create_notification_api_admin_create_notification__post"];
+  "/v1/admin/delete-password-reset-request/{id}/": {
+    delete: operations["admin_delete_password_reset_request_v1_admin_delete_password_reset_request__id___delete"];
   };
-  "/api/admin/delete-notification/{id}/": {
-    /** Delete a notification with id: ``id``. */
-    delete: operations["admin_delete_notification_api_admin_delete_notification__id___delete"];
+  "/v1/admin/create-global-notification/": {
+    post: operations["admin_create_global_notification_v1_admin_create_global_notification__post"];
   };
-  "/api/admin/update-user-role/": {
-    /** Change role of user */
-    put: operations["admin_update_user_role_api_admin_update_user_role__put"];
+  "/v1/admin/delete-global-notification/{id}/": {
+    delete: operations["admin_delete_global_notification_v1_admin_delete_global_notification__id___delete"];
+  };
+  "/v1/admin/update-user-role/": {
+    put: operations["admin_update_user_role_v1_admin_update_user_role__put"];
+  };
+  "/v1/fileserver/files": {
+    get: operations["fileserver_get_files_structure_v1_fileserver_files_get"];
+  };
+  "/v1/sse/notifications-stream/": {
+    get: operations["sse_notifications_stream_v1_sse_notifications_stream__get"];
+  };
+  "/v1/stream/notifications/": {
+    get: operations["stream_notifications_v1_stream_notifications__get"];
+  };
+  "/v1/stream/streaming-test/": {
+    get: operations["stream_streaming_test_v1_stream_streaming_test__get"];
+  };
+  "/v1/celery/tasks/{task_id}/": {
+    get: operations["celery_get_task_status_v1_celery_tasks__task_id___get"];
+  };
+  "/v1/celery/vacuum-analyze/": {
+    get: operations["celery_vacuum_analyze_v1_celery_vacuum_analyze__get"];
   };
 }
 
 export interface components {
   schemas: {
-    /** ``access_token``: allows for flexibility to modify our authentication system. */
+    /** AccessToken */
     AccessToken: {
+      /** Access Token */
       access_token: string;
+      /** Token Type */
       token_type: string;
     };
-    Body_admin_create_notification_api_admin_create_notification__post: {
-      notification: components["schemas"]["GlobalNotificationCreate"];
+    /** Body_admin_create_global_notification_v1_admin_create_global_notification__post */
+    Body_admin_create_global_notification_v1_admin_create_global_notification__post: {
+      notification: components["schemas"]["CreateGlobalNotificationParams"];
     };
-    Body_admin_reset_user_password_by_email_api_admin_reset_user_password__post: {
+    /** Body_admin_reset_user_password_by_email_v1_admin_reset_user_password__post */
+    Body_admin_reset_user_password_by_email_v1_admin_reset_user_password__post: {
+      /**
+       * Email
+       * Format: email
+       */
       email: string;
     };
-    Body_admin_update_user_role_api_admin_update_user_role__put: {
+    /** Body_admin_update_user_role_v1_admin_update_user_role__put */
+    Body_admin_update_user_role_v1_admin_update_user_role__put: {
       role_update: components["schemas"]["RoleUpdate"];
     };
-    Body_admin_verify_users_by_email_api_admin_users_unverified__post: {
+    /** Body_admin_verify_users_by_email_v1_admin_users_unverified__post */
+    Body_admin_verify_users_by_email_v1_admin_users_unverified__post: {
+      /** User Emails */
       user_emails: string[];
     };
-    Body_profiles_update_own_profile_api_profiles_me__put: {
+    /** Body_profiles_update_own_profile_v1_profiles_me__put */
+    Body_profiles_update_own_profile_v1_profiles_me__put: {
       profile_update: components["schemas"]["ProfileUpdate"];
     };
-    Body_users_login_email_and_password_api_users_login_token__post: {
+    /** Body_users_create_personal_notification_v1_users_create_personal_notification__post */
+    Body_users_create_personal_notification_v1_users_create_personal_notification__post: {
+      notification: components["schemas"]["CreatePersonalNotificationParams"];
+    };
+    /** Body_users_login_email_and_password_v1_users_login_token__post */
+    Body_users_login_email_and_password_v1_users_login_token__post: {
+      /** Grant Type */
       grant_type?: string;
+      /** Username */
       username: string;
+      /** Password */
       password: string;
+      /** Scope */
       scope?: string;
+      /** Client Id */
       client_id?: string;
+      /** Client Secret */
       client_secret?: string;
     };
-    Body_users_register_new_user_api_users__post: {
+    /** Body_users_register_new_user_v1_users__post */
+    Body_users_register_new_user_v1_users__post: {
       new_user: components["schemas"]["UserCreate"];
     };
-    Body_users_request_password_reset_api_users_request_password_reset__post: {
-      password_request: components["schemas"]["PasswordResetRequestCreate"];
+    /** Body_users_request_password_reset_v1_users_request_password_reset__post */
+    Body_users_request_password_reset_v1_users_request_password_reset__post: {
+      reset_request: components["schemas"]["CreatePasswordResetRequestParams"];
     };
-    Body_users_update_user_by_id_api_users_me__put: {
+    /** Body_users_update_user_by_id_v1_users_me__put */
+    Body_users_update_user_by_id_v1_users_me__put: {
       user_update: components["schemas"]["UserUpdate"];
     };
-    /** Admins and authorized roles can send notifications to all users based on role. */
-    GlobalNotification: {
-      id: number;
-      created_at?: string;
-      updated_at?: string;
-      sender: string;
+    /** CreateGlobalNotificationParams */
+    CreateGlobalNotificationParams: {
+      /** Sender */
+      sender?: string;
       receiver_role: components["schemas"]["Role"];
+      /** Title */
       title: string;
+      /** Body */
       body: string;
+      /** Label */
       label: string;
+      /** Link */
       link?: string;
     };
-    /** Admins and authorized roles can send notifications to all users based on role. */
-    GlobalNotificationCreate: {
-      sender: string;
-      receiver_role: components["schemas"]["Role"];
+    /** CreatePasswordResetRequestParams */
+    CreatePasswordResetRequestParams: {
+      /** Email */
+      email: string;
+      /** Message */
+      message: string;
+    };
+    /** CreatePersonalNotificationParams */
+    CreatePersonalNotificationParams: {
+      /** Sender */
+      sender?: string;
+      /** Receiver Email */
+      receiver_email: string;
+      /** Title */
       title: string;
+      /** Body */
       body: string;
+      /** Label */
       label: string;
+      /** Link */
       link?: string;
     };
-    /** Contains relevant information to display a global notification. */
+    /**
+     * EventType
+     * @description An enumeration.
+     * @enum {string}
+     */
+    EventType: "is_update" | "is_create";
+    /** GlobalNotificationFeedItem */
     GlobalNotificationFeedItem: {
-      row_number?: number;
-      event_timestamp?: string;
-      id: number;
-      created_at?: string;
-      updated_at?: string;
-      sender: string;
+      /** Global Notification Id */
+      global_notification_id: number;
+      /** Sender */
+      sender?: string;
       receiver_role: components["schemas"]["Role"];
+      /** Title */
       title: string;
-      body: string;
+      /** Label */
       label: string;
+      /** Link */
       link?: string;
-      event_type?: "is_update" | "is_create";
+      /** Body */
+      body: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Event Timestamp
+       * Format: date-time
+       */
+      event_timestamp: string;
+      event_type: components["schemas"]["EventType"];
+      /** Row Number */
+      row_number: number;
     };
+    /** HTTPValidationError */
     HTTPValidationError: {
+      /** Detail */
       detail?: components["schemas"]["ValidationError"][];
     };
-    /** Users can request a password reset to an administrator. */
+    /** PasswordResetRequest */
     PasswordResetRequest: {
-      id: number;
-      created_at?: string;
-      updated_at?: string;
-      email: string;
-      message: string;
-    };
-    /** Users can request a password reset to an administrator. */
-    PasswordResetRequestCreate: {
-      email: string;
-      message: string;
-    };
-    /** To be used by all models that have an ID primary key column. */
-    ProfilePublic: {
-      full_name?: string;
-      phone_number?: string;
-      bio?: string;
-      image?: string;
-      created_at?: string;
-      updated_at?: string;
-      id: number;
-      user_id: number;
-      username?: string;
+      /** Password Reset Request Id */
+      password_reset_request_id: number;
+      /** Email */
       email?: string;
+      /** Message */
+      message?: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
-    /** Allow users to update any or no fields, as long as it's not user_id */
-    ProfileUpdate: {
+    /** PersonalNotificationFeedItem */
+    PersonalNotificationFeedItem: {
+      /** Personal Notification Id */
+      personal_notification_id: number;
+      /** Sender */
+      sender?: string;
+      /** Receiver Email */
+      receiver_email: string;
+      /** Title */
+      title: string;
+      /** Label */
+      label: string;
+      /** Link */
+      link?: string;
+      /** Body */
+      body: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Event Timestamp
+       * Format: date-time
+       */
+      event_timestamp: string;
+      event_type: components["schemas"]["EventType"];
+      /** Row Number */
+      row_number: number;
+    };
+    /** Profile */
+    Profile: {
+      /** Profile Id */
+      profile_id: number;
+      /** Full Name */
       full_name?: string;
+      /** Phone Number */
       phone_number?: string;
+      /** Bio */
       bio?: string;
+      /** Image */
+      image?: string;
+      /** User Id */
+      user_id: number;
+    };
+    /** ProfileUpdate */
+    ProfileUpdate: {
+      /** Full Name */
+      full_name?: string;
+      /** Phone Number */
+      phone_number?: string;
+      /** Bio */
+      bio?: string;
+      /**
+       * Image
+       * Format: uri
+       */
       image?: string;
     };
-    /** Access level for users. */
+    /**
+     * Role
+     * @description An enumeration.
+     * @enum {string}
+     */
     Role: "user" | "manager" | "admin";
-    /** Admin users can update the role of other users */
+    /** RoleUpdate */
     RoleUpdate: {
+      /** Email */
       email: string;
       role: components["schemas"]["Role"];
     };
-    /** Email, username, and password are required for registering a new user */
-    UserCreate: {
-      email: string;
-      password: string;
-      username: string;
+    /** TaskAccepted */
+    TaskAccepted: {
+      /** Task Id */
+      task_id?: string;
+      task_type?: components["schemas"]["TaskType"];
+    };
+    /** TaskStatus */
+    TaskStatus: {
+      /** Task Id */
+      task_id: string;
+      /** Task Status */
+      task_status?: string;
+      /** Task Result */
+      task_result?: unknown;
     };
     /**
-     * By accepting an optional access_token attribute, we can now return the
-     * user along with their token as soon as they've registered.
-     * We also have the ability to attach a user profile
+     * TaskType
+     * @description An enumeration.
+     * @enum {string}
      */
+    TaskType: "vacuum_analyze";
+    /** User */
+    User: {
+      /** User Id */
+      user_id: number;
+      /** Username */
+      username: string;
+      /** Email */
+      email: string;
+      role: components["schemas"]["Role"];
+      /** Is Verified */
+      is_verified: boolean;
+      /** Salt */
+      salt: string;
+      /** Password */
+      password: string;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Superuser */
+      is_superuser: boolean;
+      /**
+       * Last Global Notification At
+       * Format: date-time
+       */
+      last_global_notification_at: string;
+      /**
+       * Last Personal Notification At
+       * Format: date-time
+       */
+      last_personal_notification_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /** UserCreate */
+    UserCreate: {
+      /**
+       * Email
+       * Format: email
+       */
+      email: string;
+      /** Password */
+      password: string;
+      /** Username */
+      username: string;
+    };
+    /** UserPublic */
     UserPublic: {
-      email?: string;
-      username?: string;
-      is_verified?: boolean;
-      is_active?: boolean;
-      is_superuser?: boolean;
-      role?: components["schemas"]["Role"];
-      last_notification_at?: string;
-      created_at?: string;
-      updated_at?: string;
-      id: number;
+      /** Username */
+      username: string;
+      /** Email */
+      email: string;
+      role: components["schemas"]["Role"];
+      /** Is Verified */
+      is_verified: boolean;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Superuser */
+      is_superuser: boolean;
+      /**
+       * Last Global Notification At
+       * Format: date-time
+       */
+      last_global_notification_at: string;
+      /**
+       * Last Personal Notification At
+       * Format: date-time
+       */
+      last_personal_notification_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Full Name */
+      full_name?: string;
+      /** Phone Number */
+      phone_number?: string;
+      /** Bio */
+      bio?: string;
+      /** Image */
+      image?: string;
+      /** User Id */
+      user_id: number;
+      /** Salt */
+      salt?: unknown;
+      /** Password */
+      password?: unknown;
       access_token?: components["schemas"]["AccessToken"];
-      profile?: components["schemas"]["ProfilePublic"];
     };
-    /** Users are allowed to update their email, username or password */
+    /** UserUpdate */
     UserUpdate: {
+      /** Password */
       password?: string;
+      /** Old Password */
       old_password?: string;
+      /**
+       * Email
+       * Format: email
+       */
       email?: string;
+      /** Username */
       username?: string;
     };
+    /** ValidationError */
     ValidationError: {
+      /** Location */
       loc: string[];
+      /** Message */
       msg: string;
+      /** Error Type */
       type: string;
     };
   };
 }
 
 export interface operations {
-  users_register_new_user_api_users__post: {
+  users_register_new_user_v1_users__post: {
     responses: {
       /** Successful Response */
       201: {
@@ -249,11 +486,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_users_register_new_user_api_users__post"];
+        "application/json": components["schemas"]["Body_users_register_new_user_v1_users__post"];
       };
     };
   };
-  users_get_current_user_api_users_me__get: {
+  users_get_current_user_v1_users_me__get: {
     responses: {
       /** Successful Response */
       200: {
@@ -263,8 +500,7 @@ export interface operations {
       };
     };
   };
-  /** Update the user's profile. */
-  users_update_user_by_id_api_users_me__put: {
+  users_update_user_by_id_v1_users_me__put: {
     responses: {
       /** Successful Response */
       200: {
@@ -281,16 +517,16 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_users_update_user_by_id_api_users_me__put"];
+        "application/json": components["schemas"]["Body_users_update_user_by_id_v1_users_me__put"];
       };
     };
   };
-  users_login_email_and_password_api_users_login_token__post: {
+  users_login_email_and_password_v1_users_login_token__post: {
     responses: {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["AccessToken"];
+          "application/json": unknown;
         };
       };
       /** Validation Error */
@@ -302,12 +538,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/x-www-form-urlencoded": components["schemas"]["Body_users_login_email_and_password_api_users_login_token__post"];
+        "application/x-www-form-urlencoded": components["schemas"]["Body_users_login_email_and_password_v1_users_login_token__post"];
       };
     };
   };
-  /** Any client, including unauthorized, can request a password reset that needs admin approval. */
-  users_request_password_reset_api_users_request_password_reset__post: {
+  users_request_password_reset_v1_users_request_password_reset__post: {
     responses: {
       /** Successful Response */
       200: {
@@ -324,21 +559,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_users_request_password_reset_api_users_request_password_reset__post"];
+        "application/json": components["schemas"]["Body_users_request_password_reset_v1_users_request_password_reset__post"];
       };
     };
   };
-  users_get_feed_by_last_read_api_users_notifications_by_last_read__get: {
-    responses: {
-      /** Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["GlobalNotificationFeedItem"][];
-        };
-      };
-    };
-  };
-  users_get_feed_api_users_notifications__get: {
+  users_get_global_notifications_v1_users_global_notifications__get: {
     parameters: {
       query: {
         /** Number of notifications to retrieve */
@@ -362,21 +587,69 @@ export interface operations {
       };
     };
   };
-  /**
-   * Hit the server to check if the user has unread notifications.
-   * It won't update the user's ``last_notification_at`` field.
-   */
-  users_check_user_has_unread_notifications_api_users_check_user_has_unread_notifications__get: {
+  users_get_personal_notifications_v1_users_personal_notifications__get: {
+    parameters: {
+      query: {
+        /** Number of notifications to retrieve */
+        page_chunk_size?: number;
+        /** Used to determine the timestamp at which to begin querying for notification feed items. */
+        starting_date?: string;
+      };
+    };
     responses: {
       /** Successful Response */
       200: {
         content: {
-          "application/json": boolean;
+          "application/json": components["schemas"]["PersonalNotificationFeedItem"][];
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
   };
-  profiles_get_profile_by_username_api_profiles__username___get: {
+  users_create_personal_notification_v1_users_create_personal_notification__post: {
+    responses: {
+      /** Successful Response */
+      201: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Body_users_create_personal_notification_v1_users_create_personal_notification__post"];
+      };
+    };
+  };
+  users_delete_personal_notification_v1_users_delete_personal_notification__id___delete: {
+    parameters: {
+      path: {
+        id: number;
+      };
+    };
+    responses: {
+      /** Successful Response */
+      204: never;
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  profiles_get_profile_by_username_v1_profiles__username___get: {
     parameters: {
       path: {
         username: string;
@@ -386,7 +659,7 @@ export interface operations {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ProfilePublic"];
+          "application/json": components["schemas"]["Profile"];
         };
       };
       /** Validation Error */
@@ -397,56 +670,12 @@ export interface operations {
       };
     };
   };
-  profiles_update_own_profile_api_profiles_me__put: {
+  profiles_update_own_profile_v1_profiles_me__put: {
     responses: {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["ProfilePublic"];
-        };
-      };
-      /** Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Body_profiles_update_own_profile_api_profiles_me__put"];
-      };
-    };
-  };
-  /** List all users in the database. */
-  admin_list_users_api_admin_users__get: {
-    responses: {
-      /** Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["UserPublic"][];
-        };
-      };
-    };
-  };
-  /** List all unverified users. */
-  admin_list_unverified_users_api_admin_users_unverified__get: {
-    responses: {
-      /** Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["UserPublic"][];
-        };
-      };
-    };
-  };
-  /** Verify registered users via an array of emails. */
-  admin_verify_users_by_email_api_admin_users_unverified__post: {
-    responses: {
-      /** Successful Response */
-      200: {
-        content: {
-          "application/json": components["schemas"]["UserPublic"][];
+          "application/json": components["schemas"]["Profile"];
         };
       };
       /** Validation Error */
@@ -458,12 +687,48 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_admin_verify_users_by_email_api_admin_users_unverified__post"];
+        "application/json": components["schemas"]["Body_profiles_update_own_profile_v1_profiles_me__put"];
       };
     };
   };
-  /** Return a list of users that have requested a password reset. */
-  admin_list_password_request_users_api_admin_reset_user_password__get: {
+  admin_list_users_v1_admin_users__get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["User"][];
+        };
+      };
+    };
+  };
+  admin_list_unverified_users_v1_admin_users_unverified__get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": components["schemas"]["User"][];
+        };
+      };
+    };
+  };
+  admin_verify_users_by_email_v1_admin_users_unverified__post: {
+    responses: {
+      /** Successful Response */
+      204: never;
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Body_admin_verify_users_by_email_v1_admin_users_unverified__post"];
+      };
+    };
+  };
+  admin_list_password_request_users_v1_admin_reset_user_password__get: {
     responses: {
       /** Successful Response */
       200: {
@@ -473,8 +738,7 @@ export interface operations {
       };
     };
   };
-  /** Reset password for any user by email. */
-  admin_reset_user_password_by_email_api_admin_reset_user_password__post: {
+  admin_reset_user_password_by_email_v1_admin_reset_user_password__post: {
     responses: {
       /** Successful Response */
       200: {
@@ -491,12 +755,11 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_admin_reset_user_password_by_email_api_admin_reset_user_password__post"];
+        "application/json": components["schemas"]["Body_admin_reset_user_password_by_email_v1_admin_reset_user_password__post"];
       };
     };
   };
-  /** Delete a password reset request with id: ``id``. */
-  admin_delete_password_reset_request_api_admin_delete_password_reset_request__id___delete: {
+  admin_delete_password_reset_request_v1_admin_delete_password_reset_request__id___delete: {
     parameters: {
       path: {
         id: number;
@@ -506,7 +769,7 @@ export interface operations {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["PasswordResetRequest"][];
+          "application/json": unknown;
         };
       };
       /** Validation Error */
@@ -517,8 +780,45 @@ export interface operations {
       };
     };
   };
-  /** Create a new notification for selected user roles to receive. */
-  admin_create_notification_api_admin_create_notification__post: {
+  admin_create_global_notification_v1_admin_create_global_notification__post: {
+    responses: {
+      /** Successful Response */
+      201: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Body_admin_create_global_notification_v1_admin_create_global_notification__post"];
+      };
+    };
+  };
+  admin_delete_global_notification_v1_admin_delete_global_notification__id___delete: {
+    parameters: {
+      path: {
+        id: number;
+      };
+    };
+    responses: {
+      /** Successful Response */
+      204: never;
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  admin_update_user_role_v1_admin_update_user_role__put: {
     responses: {
       /** Successful Response */
       200: {
@@ -535,22 +835,79 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["Body_admin_create_notification_api_admin_create_notification__post"];
+        "application/json": components["schemas"]["Body_admin_update_user_role_v1_admin_update_user_role__put"];
       };
     };
   };
-  /** Delete a notification with id: ``id``. */
-  admin_delete_notification_api_admin_delete_notification__id___delete: {
+  fileserver_get_files_structure_v1_fileserver_files_get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  sse_notifications_stream_v1_sse_notifications_stream__get: {
+    parameters: {
+      query: {
+        /** token */
+        token?: string;
+        /** Max number of messages to return */
+        max_messages?: number;
+      };
+    };
+    responses: {
+      /** Successful Response */
+      200: unknown;
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  stream_notifications_v1_stream_notifications__get: {
+    parameters: {
+      query: {
+        /** Max number of messages to return */
+        max_messages?: number;
+      };
+    };
+    responses: {
+      /** Successful Response */
+      200: unknown;
+      /** Validation Error */
+      422: {
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  stream_streaming_test_v1_stream_streaming_test__get: {
+    responses: {
+      /** Successful Response */
+      200: {
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  celery_get_task_status_v1_celery_tasks__task_id___get: {
     parameters: {
       path: {
-        id: number;
+        task_id: unknown;
       };
     };
     responses: {
       /** Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["GlobalNotification"];
+          "application/json": components["schemas"]["TaskStatus"];
         };
       };
       /** Validation Error */
@@ -561,25 +918,13 @@ export interface operations {
       };
     };
   };
-  /** Change role of user */
-  admin_update_user_role_api_admin_update_user_role__put: {
+  celery_vacuum_analyze_v1_celery_vacuum_analyze__get: {
     responses: {
       /** Successful Response */
-      200: {
+      202: {
         content: {
-          "application/json": components["schemas"]["UserPublic"];
+          "application/json": components["schemas"]["TaskAccepted"];
         };
-      };
-      /** Validation Error */
-      422: {
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["Body_admin_update_user_role_api_admin_update_user_role__put"];
       };
     };
   };

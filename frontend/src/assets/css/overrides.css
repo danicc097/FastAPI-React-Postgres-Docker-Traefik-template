@@ -5,6 +5,7 @@ a:focus {
   text-decoration: none !important;
   color: dodgerblue;
 }
+
 .euiHeaderSectionItem:after {
   top: 0 !important;
 }

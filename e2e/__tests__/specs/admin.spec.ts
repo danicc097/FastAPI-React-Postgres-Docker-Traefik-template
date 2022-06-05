@@ -1,12 +1,14 @@
-import { users } from '../data/users'
+import { users } from '../initialData/users'
 import { PasswordResetPO, PasswordResetRequestsPO, UnverifiedUsersPO, AdminPO } from '../pages/admin.po'
 import profilePo from '../pages/profile.po'
-import { schema } from '../types/schema_override'
+import { schema } from '../types/schemaOverride'
 
 const passwordResetPo = new PasswordResetPO()
 const passwordResetRequestsPo = new PasswordResetRequestsPO()
 const unverifiedUsersPo = new UnverifiedUsersPO()
 const adminPo = new AdminPO()
+
+jest.retryTimes(3)
 
 // afterEach(async () => {
 //   await profilePo.waitUntilHTMLRendered(page, 25)
@@ -18,15 +20,13 @@ describe('Test admin functionality', () => {
   })
 
   test('verifying a user', async () => {
-    // await page.click("[data-test-subj='user-update-form']")
     await unverifiedUsersPo.go()
     await unverifiedUsersPo.selectFromUnverifiedUsersTable(users['toBeVerified'].email)
     await unverifiedUsersPo.waitUntilHTMLRendered(page, 100) // button will be rendered
-    await await unverifiedUsersPo.clickVerifyUsersButton()
+    await unverifiedUsersPo.clickVerifyUsersButton()
   })
 
   test('resetting a user`s password manually', async () => {
-    // await page.click("[data-test-subj='user-update-form']")
     await passwordResetPo.go()
     await passwordResetPo.selectFromPasswordResetTable(users['verified'].email)
     // button will be enabled
@@ -53,21 +53,21 @@ describe('Test admin functionality', () => {
   test('accepting and declining a user password reset request', async () => {
     await passwordResetRequestsPo.go()
 
-    // only passwordResetTestUser[*] are in the table
+    // only passwordResetTestUser0[*] are in the table
     const trigger = async () =>
-      await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser2'].email, 'reset')
+      await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser1'].email, 'reset')
 
     let newPassword
     while (!newPassword) {
       try {
-        newPassword = await passwordResetRequestsPo.interceptPasswordReset(trigger, 'passwordResetTestUser2')
+        newPassword = await passwordResetRequestsPo.interceptPasswordReset(trigger, 'passwordResetTestUser1')
       } catch (e) {}
     }
     // await page.waitForNetworkIdle()
     expect(newPassword).not.toBe('')
-    expect(users['passwordResetTestUser2'].password).toBe(newPassword)
+    expect(users['passwordResetTestUser1'].password).toBe(newPassword)
 
-    await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser'].email, 'delete')
+    await passwordResetRequestsPo.clickResetRequestsTableAction(users['passwordResetTestUser0'].email, 'delete')
   })
 
   // TODO notifications

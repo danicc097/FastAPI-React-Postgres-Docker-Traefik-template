@@ -18,11 +18,8 @@ import { useAllUsers } from 'src/hooks/admin/useAllUsers'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import { AdminActionType } from 'src/redux/modules/admin/admin'
 import { createTextFileWithCreds } from 'src/utils/files'
-import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
+import AdminPageBase from '../AdminPageBase/AdminPageBase'
 
-/**
- * Explicitly reset a user's password by email
- */
 export default function PasswordResetPage() {
   const noSelection = '...'
   const [passwordResetUsersWithLabel, setPasswordResetUsersWithLabel] = useState<any>()
@@ -30,7 +27,6 @@ export default function PasswordResetPage() {
   const { resetPasswordForUser } = usePasswordResetUsers()
   const { allUsers } = useAllUsers()
 
-  // fetch password reset users whenever the hook is called in a component and isAdmin
   useEffect(() => {
     if (passwordResetUsersWithLabel === undefined) {
       setPasswordResetUsersWithLabel(
@@ -66,7 +62,6 @@ export default function PasswordResetPage() {
     showModal()
   }
 
-  // confirm userUpdate modal
   const [isModalVisible, setIsModalVisible] = useState(false)
   const closeModal = () => setIsModalVisible(false)
   const showModal = () => setIsModalVisible(true)
@@ -124,7 +119,7 @@ export default function PasswordResetPage() {
                 data-test-subj="passwordResetForm__selectable"
                 searchable
                 searchProps={{
-                  onSearch: (searchValue, matchingOptions) => {
+                  onChange: (searchValue, matchingOptions) => {
                     null
                   },
                 }}
@@ -155,5 +150,5 @@ export default function PasswordResetPage() {
       {modal}
     </>
   )
-  return <AdminPageTemplate title={title} element={element} />
+  return <AdminPageBase title={title} element={element} />
 }

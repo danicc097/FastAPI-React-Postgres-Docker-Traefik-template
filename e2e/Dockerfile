@@ -1,3 +1,5 @@
+# DEPRECATED
+
 FROM node:14.18.0-alpine3.14 as nodebuild
 
 WORKDIR /e2e
@@ -22,10 +24,7 @@ ENV PATH /e2e/node_modules/.bin:$PATH
 ENV CI true
 
 COPY package.json /e2e
-COPY package-lock.json /e2e
-
-RUN npm install
-
+COPY pnpm-lock.yaml /e2e
 COPY . /e2e
 
 ARG HEADLESS

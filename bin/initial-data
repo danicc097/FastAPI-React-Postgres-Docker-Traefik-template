@@ -1,15 +1,23 @@
 #!/bin/bash
 
-#
-# Create backend data in the given environment.
-#
-
 set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
 ENV=$(get_env_suffix "$1")
 
-docker exec -it backend_myapp_"$ENV" alembic downgrade base # drop everything
-docker exec -it backend_myapp_"$ENV" alembic upgrade head
-docker exec -it backend_myapp_"$ENV" python3 -m initial_data."$ENV" # only way to run as part of the package
+if [ "$ENV" == "e2e" ]; then
+  _ENV="dev"
+else
+  _ENV="$ENV"
+  _confirm "Do you want to initialize the $ENV environment?
+  (This will destroy all data in the $(red "$ENV") environment)"
+fi
+
+docker exec -it postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d postgres -c "CREATE DATABASE test OWNER postgres;" || echo "Database test already exists. Skipping"
+docker exec -it postgres_db_myapp_"$_ENV" psql --no-psqlrc -U postgres -d test -c "select pg_terminate_backend(pid) \
+                     from pg_stat_activity \
+                     where datname='postgres'" || echo "No running postgres processes. Skipping"
+docker exec -it backend_myapp_"$_ENV" alembic downgrade base
+docker exec -it backend_myapp_"$_ENV" alembic upgrade head
+docker exec -it backend_myapp_"$_ENV" /bin/bash -c "DATASET=$ENV python3 -m initial_data.main"

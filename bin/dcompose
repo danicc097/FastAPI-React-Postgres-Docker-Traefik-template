@@ -1,12 +1,13 @@
 #!/bin/bash
 
-#
-# Run docker-compose commands in the given environment.
-# Example: dcompose e2e up
-#
-
 set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
+ensure_pwd_is_top_level_repo
+
+echo "Running sqlc..."
+backend/scripts/generate-sqlc || _confirm "Failed to run sqlc. Continue?"
+
+echo "Running docker compose..."
 docker_compose_in_env "$@"

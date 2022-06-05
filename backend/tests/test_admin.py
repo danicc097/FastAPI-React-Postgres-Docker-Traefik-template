@@ -1,95 +1,88 @@
-"""
-NOTE
-
-Some warnings to ignore because of 3.9, e.g. due to the code inside bcrypt:
-/usr/local/lib/python3.9/site-packages/passlib/handlers/bcrypt.py:378: DeprecationWarning: NotImplemented should not be used in a boolean context
-
-
-"""
 import json
-import os
+import re
+from contextlib import _AsyncGeneratorContextManager
 from datetime import datetime, timedelta
-from typing import Callable, Dict, List, Optional, Set, Type, Union, cast
+from typing import Callable, Dict, Set, cast
 
-import jwt
 import pytest
-from databases import Database
-from fastapi import FastAPI, HTTPException, status
-from httpx import AsyncClient
+from fastapi import FastAPI, status
+from httpx import AsyncClient, Response
 from loguru import logger
-from starlette.datastructures import Secret
-from starlette.status import (
-    HTTP_200_OK,
-    HTTP_201_CREATED,
-    HTTP_400_BAD_REQUEST,
-    HTTP_401_UNAUTHORIZED,
-    HTTP_403_FORBIDDEN,
-    HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY,
-)
+from sqlalchemy import text
 
-from app.core.config import (
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    DATABASE_URL,
-    JWT_ALGORITHM,
-    JWT_AUDIENCE,
-    JWT_TOKEN_PREFIX,
-    UNIQUE_KEY,
+from app.api.routes.admin import router as admin_router
+from app.db.gen.queries import models
+from app.db.gen.queries.global_notifications import (
+    CreateGlobalNotificationParams,
 )
-from app.db.repositories.global_notifications import (
-    GlobalNotificationsRepository,
+from app.db.gen.queries.models import PasswordResetRequest, Role
+from app.db.gen.queries.password_reset_requests import (
+    CreatePasswordResetRequestParams,
 )
-from app.db.repositories.users import UsersRepository
-from app.models.global_notifications import GlobalNotificationCreate
-from app.models.pwd_reset_req import (
-    PasswordResetRequest,
-    PasswordResetRequestCreate,
+from app.db.gen.queries.personal_notifications import (
+    CreatePersonalNotificationParams,
 )
-from app.models.token import JWTCreds, JWTMeta, JWTPayload
-from app.models.user import Role, RoleUpdate, UserCreate, UserInDB, UserPublic
-from app.services import auth_service
+from app.db.gen.queries.users import GetUserRow, RegisterNewUserRow
+from app.models.user import RoleUpdate
+from app.services.global_notifications import GlobalNotificationsService
+from app.services.personal_notifications import PersonalNotificationsService
+from app.services.users import UsersService
 from tests.conftest import TEST_USERS
 
 pytestmark = pytest.mark.asyncio
 
 
-ADMIN_ROUTES_GET = [
-    "admin:list-users",
-    "admin:list-unverified-users",
-    "admin:list-password-request-users",
-]
+def parse_jsons(res: bytes) -> list[Dict]:
+    s = res.decode("utf-8").strip()
+    jsons = []
+    start, end = s.find("{"), s.find("}")
+    while True:
+        try:
+            jsons.append(json.loads(s[start : end + 1]))
+        except ValueError:
+            end = end + 1 + s[end + 1 :].find("}")
+        else:
+            s = s[end + 1 :]
+            if not s:
+                break
+            start, end = s.find("{"), s.find("}")
+    return jsons
+
+
+ROUTES = [(route.name, route.methods, route.path) for route in admin_router.routes]  # type: ignore
 
 
 class TestAdminRoutes:
-    async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
-        for route in ADMIN_ROUTES_GET:
-            res = await client.get(app.url_path_for(route))
-            assert res.status_code != HTTP_404_NOT_FOUND
-
-    async def test_unregistered_user_cant_access_admin(self, app: FastAPI, client: AsyncClient) -> None:
-        for route in ADMIN_ROUTES_GET:
-            res = await client.get(app.url_path_for(route))
-            assert res.status_code == HTTP_401_UNAUTHORIZED  # authentication scope (unfortunate http code name)
-
-    async def test_regular_user_cant_access_admin(
+    @pytest.mark.parametrize(
+        "valid_status_codes, get_fixture",
+        (
+            ([status.HTTP_401_UNAUTHORIZED], "client"),
+            ([status.HTTP_403_FORBIDDEN], "authorized_client"),
+            ([status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_422_UNPROCESSABLE_ENTITY], "superuser_client"),
+        ),
+        indirect=["get_fixture"],
+    )
+    async def test_generic_access_level(
         self,
         app: FastAPI,
-        authorized_client: AsyncClient,
-        test_user: UserPublic,
+        valid_status_codes: Set[int],
+        get_fixture: AsyncClient,
     ) -> None:
-        for route in ADMIN_ROUTES_GET:
-            res = await authorized_client.get(app.url_path_for(route))
-            assert res.status_code == HTTP_403_FORBIDDEN  # authorization scope
+        client = get_fixture
+        for name, methods, path in ROUTES:
+            for method in methods:
+                path_params = re.search(r"{(.*[^}])}", path)
+                logger.critical(f"{path}---{name}---{method}---{path_params}")
+                client_method = getattr(client, method.lower())
+                if path_params:
+                    _path_params = {k: v for k, v in zip(path_params.groups(), range(len(path_params.groups())))}
+                    logger.critical(f"_path_params {_path_params}")
+                    res = await client_method(app.url_path_for(name, **_path_params))
+                else:
+                    res = await client_method(app.url_path_for(name))
+                assert res.status_code in valid_status_codes
 
-    async def test_admin_can_access_admin(
-        self,
-        app: FastAPI,
-        superuser_client: AsyncClient,
-        test_admin_user: UserInDB,
-    ) -> None:
-        for route in ADMIN_ROUTES_GET:
-            res = await superuser_client.get(app.url_path_for(route))
-            assert res.status_code != HTTP_403_FORBIDDEN
+        await app.state._conn.rollback()
 
 
 class TestAdminUserlistAccess:
@@ -97,13 +90,17 @@ class TestAdminUserlistAccess:
         self,
         app: FastAPI,
         superuser_client: AsyncClient,
-        test_user: UserPublic,
+        test_user: RegisterNewUserRow,
     ) -> None:
         res = await superuser_client.get(
             app.url_path_for("admin:list-users"),
         )
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) != 0
+        users = [models.User(**user) for user in res.json()]
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == 2
+        assert test_user.user_id in [user.user_id for user in users]
+
+        await app.state._conn.rollback()
 
 
 class TestAdminUserModification:
@@ -112,343 +109,590 @@ class TestAdminUserModification:
         app: FastAPI,
         create_authorized_client: Callable,
         superuser_client: AsyncClient,
-        test_unverified_user,
-        test_unverified_user2,
-        test_admin_user: UserInDB,
+        test_unverified_user: RegisterNewUserRow,
+        test_unverified_user2: RegisterNewUserRow,
+        test_admin_user: RegisterNewUserRow,
     ) -> None:
         res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_200_OK
-        unverified_user_emails = [UserPublic(**user).email for user in res.json()]
+        unverified_user_emails = [models.User(**user).email for user in res.json()]
+        assert res.status_code == status.HTTP_200_OK
         assert len(unverified_user_emails) == 2  # number of unverified fixtures used
 
         res = await superuser_client.post(
             app.url_path_for("admin:verify-users-by-email"),
             json={"user_emails": unverified_user_emails},
         )
-        assert res.status_code == HTTP_200_OK
-        verified_users = [UserPublic(**user) for user in res.json()]
-        assert verified_users[0].is_verified
-        assert verified_users[1].is_verified
+        assert res.status_code == status.HTTP_204_NO_CONTENT
 
-        # requests should be empty
         res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_200_OK
+        assert res.status_code == status.HTTP_200_OK
         assert len(res.json()) == 0
+
+        await app.state._conn.rollback()
 
     async def test_admin_has_access_to_password_reset_requests(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         superuser_client: AsyncClient,
-        test_user7: UserPublic,
-        test_user6: UserPublic,
-        test_admin_user: UserInDB,
+        test_user7: RegisterNewUserRow,
+        test_user6: RegisterNewUserRow,
+        test_admin_user: RegisterNewUserRow,
     ) -> None:
-        # make 2 users request a password reset
         for test_user in (test_user6, test_user7):
             test_user_client: AsyncClient = create_authorized_client(user=test_user)
-            pwd_reset_req = PasswordResetRequestCreate(
+            password_reset_request = CreatePasswordResetRequestParams(
                 email=test_user.email,
                 message=f"Help {test_user.username}, please",
             )
             # actually any client can request it since the user won't know its own password
-            # but there's no email server so this is as secure as we get
-            res = await test_user_client.post(
+            await test_user_client.post(
                 app.url_path_for("users:request-password-reset"),
-                json={"password_request": pwd_reset_req.dict()},
+                json={"reset_request": password_reset_request.dict()},
             )
 
-        # ensure we didn't break conftest client generators somehow
-        assert test_user_client != superuser_client
-
-        # get all users who requested a password reset
-        # superuser_client: AsyncClient = create_authorized_client(user=test_admin_user)
         res = await superuser_client.get(app.url_path_for("admin:list-password-request-users"))
-        assert res.status_code == HTTP_200_OK
         pwd_request_emails = [PasswordResetRequest(**user).email for user in res.json()]
+        assert res.status_code == status.HTTP_200_OK
         assert len(pwd_request_emails) == 2  # number of unverified fixtures used
 
-        # reset their passwords
         for test_user in (test_user6, test_user7):
-            # superuser_client: AsyncClient = create_authorized_client(user=test_admin_user)  # type: ignore
             res = await superuser_client.post(
                 app.url_path_for("admin:reset-user-password-by-email"),
                 json={"email": test_user.email},
             )
-            assert res.status_code == HTTP_200_OK
             new_pwd = res.json()
             previous_pwd = TEST_USERS[test_user.username].password  # type: ignore
+            assert res.status_code == status.HTTP_200_OK
             assert new_pwd != previous_pwd
-            print(f"{new_pwd=} - The previous password was {previous_pwd}")
-            # cannot create multiple clients to test login, that will override the admin one
-            # until create_authorized_client is fixed
+
             test_user_client: AsyncClient = create_authorized_client(user=test_user)  # type: ignore
             test_user_client.headers["content-type"] = "application/x-www-form-urlencoded"
             login_data = {
                 "username": test_user.email,
-                "password": new_pwd,  # insert user's plaintext password
+                "password": new_pwd,
             }
             res = await test_user_client.post(app.url_path_for("users:login-email-and-password"), data=login_data)
-            assert res.status_code == HTTP_200_OK
+            assert res.status_code == status.HTTP_200_OK
+
+        await app.state._conn.rollback()
 
     async def test_admin_cannot_reset_password_with_bad_email(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         superuser_client: AsyncClient,
-        # test_admin_user: UserInDB,
         test_2_client: AsyncClient,
-        # test_user4: UserPublic,
     ) -> None:
         res = await superuser_client.post(
             app.url_path_for("admin:reset-user-password-by-email"),
             json={"email": "unexistent@myapp.com"},
         )
-        # {'detail': 'User with email unexistent@myapp.com does not exist.'}
-        assert res.status_code != HTTP_200_OK
+        assert res.status_code != status.HTTP_200_OK
+
         res = await superuser_client.post(
             app.url_path_for("admin:reset-user-password-by-email"),
         )
-        # * notice why we need error extracting utils for frontend for multiple formats
-        # {'detail': [{'loc': ['body', 'email'], 'msg': 'field required', 'type': 'value_error.missing'}]}
-        assert res.status_code != HTTP_200_OK
+        assert res.status_code != status.HTTP_200_OK
+
+        await app.state._conn.rollback()
 
     async def test_admin_can_delete_a_user_password_reset_request(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         superuser_client: AsyncClient,
-        test_user: UserPublic,
+        test_user: RegisterNewUserRow,
     ) -> None:
-        pwd_reset_req = PasswordResetRequestCreate(
+        password_reset_request = CreatePasswordResetRequestParams(
             email=test_user.email,
             message=f"Help {test_user.username}, please",
         )
-
-        # actually any client can request it since the user won't know its own password
-        # but there's no email server so this is as secure as we get
         res = await superuser_client.post(
             app.url_path_for("users:request-password-reset"),
-            json={"password_request": pwd_reset_req.dict()},
+            json={"reset_request": password_reset_request.dict()},
         )
-        request_id = res.json()["id"]
-        # delete the made request
+        request_id = res.json()["password_reset_request_id"]
         res = await superuser_client.delete(app.url_path_for("admin:delete-password-reset-request", id=request_id))
+        assert res.status_code == status.HTTP_200_OK
 
-        assert res.status_code == HTTP_200_OK
-
-        # requests should be empty
-        res = await superuser_client.get(app.url_path_for("admin:list-unverified-users"))
-        assert res.status_code == HTTP_200_OK
+        res = await superuser_client.get(app.url_path_for("admin:list-password-request-users"))
+        assert res.status_code == status.HTTP_200_OK
         assert len(res.json()) == 0
+
+        await app.state._conn.rollback()
 
     async def test_admin_can_change_a_user_role(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         superuser_client: AsyncClient,
-        test_user7: UserPublic,
-        db: Database,
+        test_user7: RegisterNewUserRow,
     ) -> None:
-        user_repo = UsersRepository(db)
+        users_service = UsersService(app.state._conn)
         role_update = RoleUpdate(
-            role=Role.manager.value,
+            role=Role.MANAGER,
             email=test_user7.email,
         )
-
-        # actually any client can request it since the user won't know its own password
-        # but there's no email server so this is as secure as we get
         res = await superuser_client.put(
             app.url_path_for("admin:update-user-role"),
             json={"role_update": role_update.dict()},
         )
-        assert res.status_code == HTTP_200_OK
-        updated_user = await user_repo.get_user_by_email(email=role_update.email)
-        assert cast(UserPublic, updated_user).role == "manager"
+        assert res.status_code == status.HTTP_200_OK
+
+        updated_user = await users_service.get_user_by_email(email=role_update.email)
+        assert cast(GetUserRow, updated_user).role == "manager"
+
+        await app.state._conn.rollback()
 
 
 class TestAdminGlobalNotifications:
-    _n_notifications = 40
+    _n_notifications = 11
 
-    async def test_admin_can_create_notifications(
+    async def test_admin_can_create_global_notifications(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
-        authorized_client: AsyncClient,
+        # create_authorized_client: Callable,
+        # authorized_client: AsyncClient,
         superuser_client: AsyncClient,
-        test_admin_user: UserInDB,
-        test_user: UserPublic,
-        db: Database,
+        test_admin_user: RegisterNewUserRow,
+        authorized_client: AsyncClient,
+        # test_user: RegisterNewUserRow,
     ) -> None:
-        global_notification_repo = GlobalNotificationsRepository(db)
 
-        # required to test proper pagination later
-        assert self._n_notifications > global_notification_repo.page_chunk_size
+        gn_service = GlobalNotificationsService(app.state._conn)
 
-        for i in range(1, self._n_notifications + 1):
-            notification = GlobalNotificationCreate(
+        for i in range(self._n_notifications):
+            notification = CreateGlobalNotificationParams(
                 sender=test_admin_user.email,
-                receiver_role=Role.user.value,
+                receiver_role=Role.USER,
                 title=f"Test notification {i}",
                 body=f"This is test notification {i}",
                 label=f"Test label {i}",
-                link="https://www.google.com",
+                link=None,
             )
-
             res = await superuser_client.post(
-                app.url_path_for("admin:create-notification"),
+                app.url_path_for("admin:create-global-notification"),
                 json={"notification": notification.dict()},
             )
-            logger.info(notification)
-            logger.info(res.json())
-            assert res.status_code == HTTP_200_OK
+            assert res.status_code == status.HTTP_201_CREATED
 
-        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
-        logger.critical(f"query: {query}")
-        n_notifications = await db.fetch_val(query)
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.USER.value}'"
+        n_notifications = (await app.state._conn.execute(text(query))).scalar()
         assert n_notifications == self._n_notifications
 
-    async def test_admin_can_delete_a_notification(
-        self,
-        app: FastAPI,
-        create_authorized_client: Callable,
-        authorized_client: AsyncClient,
-        superuser_client: AsyncClient,
-        test_admin_user: UserInDB,
-        test_user: UserPublic,
-        db: Database,
-    ) -> None:
-        # we need to use db through app.state._db or replace the app.state._db
-        # Database object with a new one that has ``force_rollback=True`` for transactions
-        # to work properly
-        async with app.state._db.transaction(force_rollback=True):
-            query = f"SELECT id FROM global_notifications WHERE receiver_role = '{Role.user.value}' ORDER BY id DESC LIMIT 1"
-            notification_id = await db.fetch_val(query)
-            assert notification_id is not None
+        await app.state._conn.commit()
 
-            res = await superuser_client.delete(
-                app.url_path_for("admin:delete-notification", id=notification_id),
-            )
-            assert res.status_code == HTTP_200_OK
-            assert res.json()["id"] == notification_id
+        query = f"""
+            SELECT global_notification_id
+            FROM global_notifications
+            WHERE receiver_role = '{Role.USER.value}'
+            ORDER BY global_notification_id DESC
+            LIMIT 1
+        """
+        notification_id = (await app.state._conn.execute(text(query))).fetchone()[0]
+        assert notification_id is not None
 
-            query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.user.value}'"
-            n_notifications = await db.fetch_val(query)
+        res = await superuser_client.delete(
+            app.url_path_for("admin:delete-global-notification", id=notification_id),
+        )
+        assert res.status_code == status.HTTP_204_NO_CONTENT
 
-            # transaction should have been rolled back
-            assert n_notifications == self._n_notifications
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.USER.value}'"
+        n_notifications = (await app.state._conn.execute(text(query))).scalar()
+        assert n_notifications == self._n_notifications - 1
 
-    async def test_user_receives_has_new_notification_alert(
-        self,
-        app: FastAPI,
-        authorized_client: AsyncClient,
-        test_user: UserPublic,
-    ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
-        assert res.status_code == HTTP_200_OK
-        assert res.json() is True
+        await app.state._conn.rollback()
 
-    async def test_user_can_fetch_all_unread_notifications(
-        self,
-        app: FastAPI,
-        authorized_client: AsyncClient,
-        test_user: UserPublic,
-    ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == self._n_notifications
+        # in the event transaction rollback is not working again this should fail
+        query = f"SELECT COUNT(*) FROM global_notifications WHERE receiver_role = '{Role.USER.value}'"
+        n_notifications = (await app.state._conn.execute(text(query))).scalar()
+        assert n_notifications == self._n_notifications
 
-    async def test_user_does_not_receive_a_has_new_notification_alert_for_old_notifications(
-        self, app: FastAPI, authorized_client: AsyncClient, test_user
-    ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
-        assert res.status_code == HTTP_200_OK
-        assert res.json() is False
+        await app.state._conn.commit()
 
-    async def test_user_gets_no_new_notifications_when_loading_more_if_all_are_read(
-        self,
-        app: FastAPI,
-        authorized_client: AsyncClient,
-        test_user: UserPublic,
-    ) -> None:
-        # this will fail if the user is created after the notification is sent
-        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == 0
+        async def __fetch_stream(
+            max_messages,
+            stream_ctx_manager: _AsyncGeneratorContextManager[Response],
+            expected_response,
+        ):
+            async with stream_ctx_manager as response:
+                assert response.status_code == status.HTTP_200_OK
+                assert "text/event-stream" in response.headers["Content-Type"]
+                res = await response.aread()
+                jsons = parse_jsons(res)
+                logger.critical(f"jsons: {jsons}")
+                assert len(jsons) == max_messages
+                res_last_message = jsons[-1]
+                assert res_last_message["has_new_global_notifications"] == expected_response
 
-    async def test_user_does_not_see_notifications_out_of_role_scope(
-        self,
-        app: FastAPI,
-        create_authorized_client: Callable,
-        authorized_client: AsyncClient,
-        superuser_client: AsyncClient,
-        test_admin_user: UserInDB,
-        test_user: UserPublic,
-        db: Database,
-    ) -> None:
-        notification = GlobalNotificationCreate(
-            sender=test_admin_user.email,
-            receiver_role=Role.manager.value,
-            title="Test notification for manager",
-            body="This is test notification for manager",
-            label="Test label for manager",
-            link="https://www.google.com",
+        import app.api.routes.sse as sse
+
+        sse.MESSAGE_STREAM_DELAY = 0.2
+
+        token = authorized_client.headers.get("Authorization").split(" ")[1]
+        max_messages = 3
+        url_path = app.url_path_for("sse:notifications-stream")
+        async_gen_ctx_manager = authorized_client.stream(
+            "get",
+            url_path,
+            params={"token": token, "max_messages": max_messages},
         )
 
+        # user receives a new notification alert
+        await __fetch_stream(max_messages, async_gen_ctx_manager, "true")
+
+        # user can fetch all unread notifications
+        res = await authorized_client.get(
+            app.url_path_for("users:get-global-notifications"), params={"page_chunk_size": 50}
+        )
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == self._n_notifications
+        # user does not receive a has new notification alert for old notifications
+        async_gen_ctx_manager = authorized_client.stream(
+            "get",
+            url_path,
+            params={"token": token, "max_messages": max_messages},
+        )
+        await __fetch_stream(max_messages, async_gen_ctx_manager, "false")
+        await app.state._conn.commit()
+
+        # user can fetch notifications even if they're read
+        res = await authorized_client.get(
+            app.url_path_for("users:get-global-notifications"), params={"page_chunk_size": 5}
+        )
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == 5
+
+        await app.state._conn.commit()
+
+    @pytest.mark.timeout(25)
+    async def test_user_does_not_see_global_notifications_out_of_role_scope(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: RegisterNewUserRow,
+        test_user: RegisterNewUserRow,
+    ) -> None:
+        notification = CreateGlobalNotificationParams(
+            sender=test_admin_user.email,
+            receiver_role=Role.MANAGER,
+            title="Test notification for manager",
+            body="Manager info",
+            label="Test label",
+            link="https://www.google.com",
+        )
         await superuser_client.post(
-            app.url_path_for("admin:create-notification"),
+            app.url_path_for("admin:create-global-notification"),
             json={"notification": notification.dict()},
         )
 
-        # alert that new feed is available
-        res = await authorized_client.get(app.url_path_for("users:check-user-has-unread-notifications"))
-        assert res.status_code == HTTP_200_OK
-        assert res.json() is False
+        import app.api.routes.sse as sse
 
-        # feed itself
-        res = await authorized_client.get(app.url_path_for("users:get-feed-by-last-read"))
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == 0
+        sse.MESSAGE_STREAM_DELAY = 0.1
 
-    async def test_user_can_arbitrarily_fetch_notification_feed_by_date(
+        token = authorized_client.headers.get("Authorization").split(" ")[1]
+        max_messages = 2
+        url_path = app.url_path_for("sse:notifications-stream")
+
+        async_gen_ctx_manager = authorized_client.stream(
+            "get",
+            url_path,
+            params={"token": token, "max_messages": max_messages},
+        )
+        async with async_gen_ctx_manager as response:
+            assert response.status_code == status.HTTP_200_OK
+            assert "text/event-stream" in response.headers["Content-Type"]
+            res = await response.aread()
+            # b'{"id": "user@myapp.com-2022-03-19T19:11:53.597102", "has_new_global_notifications": "false"}{"id": "user@myapp.com-2022-03-19T19:11:54.703096", "has_new_global_notifications": "false"}'
+            jsons = parse_jsons(res)
+            res_last_message = jsons[-1]
+            assert res_last_message["has_new_global_notifications"] == "false"
+
+        await app.state._conn.commit()
+
+    async def test_user_can_arbitrarily_fetch_global_notification_feed_by_date(
         self,
         app: FastAPI,
         authorized_client: AsyncClient,
-        test_user: UserPublic,
-        db: Database,
+        test_user: RegisterNewUserRow,
     ) -> None:
-        global_notification_repo = GlobalNotificationsRepository(db)
-        # this will fail if the user is created after the notification is sent
+        # all have same create date up until ns, must update:
+        for i in range(self._n_notifications):
+            await app.state._conn.execute(
+                text(
+                    f"""
+                UPDATE global_notifications
+                SET created_at = created_at - interval '{i+1} hour',
+                    updated_at = updated_at - interval '{i+1} hour'
+                WHERE global_notification_id = {i}
+                """
+                )
+            )
+
+        # TODO server side cursor worth it?
+        gn_service = GlobalNotificationsService(app.state._conn)
         res = await authorized_client.get(
-            app.url_path_for("users:get-feed"),
-            # params={"starting_date": starting_date},
+            app.url_path_for("users:get-global-notifications"),
         )
-        assert res.status_code == HTTP_200_OK
-        assert len(res.json()) == global_notification_repo.page_chunk_size
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == gn_service.page_chunk_size
 
-        starting_date = str(datetime.now() + timedelta(minutes=10))
-        combos: List[Set[str]] = []
-        total_feed_items_to_fetch = 30
-
+        page_chunk_size = 3
+        total_feed_items_to_fetch = 9
+        assert total_feed_items_to_fetch % page_chunk_size == 0
         assert self._n_notifications > total_feed_items_to_fetch
 
-        for _ in range(total_feed_items_to_fetch // global_notification_repo.page_chunk_size):
+        starting_date = str(datetime.now() + timedelta(minutes=10))
+        combos: list[Set[str]] = []
+        for _ in range(total_feed_items_to_fetch // page_chunk_size):
+            logger.critical(f"starting_date: {starting_date}")
             res = await authorized_client.get(
-                app.url_path_for("users:get-feed"),
-                params={"starting_date": starting_date},
+                app.url_path_for("users:get-global-notifications"),
+                params={"starting_date": starting_date, "page_chunk_size": page_chunk_size},
             )
-            assert res.status_code == status.HTTP_200_OK
             paginated_json = res.json()
-            assert len(paginated_json) <= global_notification_repo.page_chunk_size
-            id_and_event_combo = set(f"{item['id']}-{item['event_type']}" for item in paginated_json)
+            id_and_event_combo = set(
+                f"{item['global_notification_id']}-{item['event_type']}" for item in paginated_json
+            )
             combos.append(id_and_event_combo)
             starting_date = paginated_json[-1]["event_timestamp"]
+            assert res.status_code == status.HTTP_200_OK
+            assert len(paginated_json) <= page_chunk_size
 
-        # Ensure that none of the items in any response exist in any other response
         length_of_all_id_combos = sum(len(combo) for combo in combos)
         id_set: Set[str] = set.union(*combos)
         assert len(id_set) == length_of_all_id_combos
         assert len(id_set) == total_feed_items_to_fetch
+
+        await app.state._conn.rollback()
+
+
+class TestAdminPersonalNotifications:
+    _n_notifications = 11
+
+    async def test_admin_can_create_and_delete_personal_notifications(
+        self,
+        app: FastAPI,
+        # create_authorized_client: Callable,
+        # authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: RegisterNewUserRow,
+        test_user: RegisterNewUserRow,
+        authorized_client: AsyncClient,
+        # test_user: RegisterNewUserRow,
+    ) -> None:
+
+        for i in range(self._n_notifications):
+            notification = CreatePersonalNotificationParams(
+                sender=test_admin_user.email,
+                receiver_email=test_user.email,
+                title=f"Test notification {i}",
+                body=f"This is test notification {i}",
+                label=f"Test label {i}",
+                link=None,
+            )
+            res = await superuser_client.post(
+                app.url_path_for("users:create-personal-notification"),
+                json={"notification": notification.dict()},
+            )
+            assert res.status_code == status.HTTP_201_CREATED
+
+        query = f"SELECT COUNT(*) FROM personal_notifications WHERE receiver_email= '{test_user.email}'"
+        n_notifications = (await app.state._conn.execute(text(query))).scalar()
+        assert n_notifications == self._n_notifications
+
+        await app.state._conn.commit()
+
+        query = f"""
+            SELECT personal_notification_id
+            FROM personal_notifications
+            WHERE receiver_email = '{test_user.email}'
+            ORDER BY personal_notification_id DESC
+            LIMIT 1
+        """
+        notification_id = (await app.state._conn.execute(text(query))).fetchone()[0]
+        assert notification_id is not None
+
+        res = await authorized_client.delete(
+            app.url_path_for("users:delete-personal-notification", id=notification_id),
+        )
+        assert res.status_code == status.HTTP_403_FORBIDDEN
+
+        res = await superuser_client.delete(
+            app.url_path_for("users:delete-personal-notification", id=notification_id),
+        )
+        assert res.status_code == status.HTTP_204_NO_CONTENT
+
+        query = f"SELECT COUNT(*) FROM personal_notifications WHERE receiver_email= '{test_user.email}'"
+        n_notifications = (await app.state._conn.execute(text(query))).scalar()
+        assert n_notifications == self._n_notifications - 1
+
+        await app.state._conn.rollback()
+
+        # in the event transaction rollback is not working again this should fail
+        query = f"SELECT COUNT(*) FROM personal_notifications WHERE receiver_email= '{test_user.email}'"
+        n_notifications = (await app.state._conn.execute(text(query))).scalar()
+        assert n_notifications == self._n_notifications
+
+        await app.state._conn.commit()
+
+        async def __fetch_stream(
+            max_messages,
+            stream_ctx_manager: _AsyncGeneratorContextManager[Response],
+            expected_response,
+        ):
+            async with stream_ctx_manager as response:
+                assert response.status_code == status.HTTP_200_OK
+                assert "text/event-stream" in response.headers["Content-Type"]
+                res = await response.aread()
+                jsons = parse_jsons(res)
+                logger.critical(f"jsons: {jsons}")
+                assert len(jsons) == max_messages
+                res_last_message = jsons[-1]
+                assert res_last_message["has_new_personal_notifications"] == expected_response
+
+        import app.api.routes.sse as sse
+
+        sse.MESSAGE_STREAM_DELAY = 0.2
+
+        token = authorized_client.headers.get("Authorization").split(" ")[1]
+        max_messages = 3
+        url_path = app.url_path_for("sse:notifications-stream")
+        async_gen_ctx_manager = authorized_client.stream(
+            "get",
+            url_path,
+            params={"token": token, "max_messages": max_messages},
+        )
+
+        # user receives a new notification alert
+        await __fetch_stream(max_messages, async_gen_ctx_manager, "true")
+
+        # user can fetch all unread notifications
+        res = await authorized_client.get(
+            app.url_path_for("users:get-personal-notifications"), params={"page_chunk_size": 50}
+        )
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == self._n_notifications
+        # user does not receive a has new notification alert for old notifications
+        async_gen_ctx_manager = authorized_client.stream(
+            "get",
+            url_path,
+            params={"token": token, "max_messages": max_messages},
+        )
+        await __fetch_stream(max_messages, async_gen_ctx_manager, "false")
+        await app.state._conn.commit()
+
+        # user can fetch notifications even if they're read
+        res = await authorized_client.get(
+            app.url_path_for("users:get-personal-notifications"), params={"page_chunk_size": 5}
+        )
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == 5
+
+        await app.state._conn.commit()
+
+    @pytest.mark.timeout(25)
+    async def test_user_cannot_not_see_external_personal_notifications(
+        self,
+        app: FastAPI,
+        create_authorized_client: Callable,
+        authorized_client: AsyncClient,
+        superuser_client: AsyncClient,
+        test_admin_user: RegisterNewUserRow,
+        test_user: RegisterNewUserRow,
+    ) -> None:
+        notification = CreatePersonalNotificationParams(
+            sender=test_admin_user.email,
+            receiver_email=test_user.email,
+            title="Test notification for manager",
+            body="Manager info",
+            label="Test label",
+            link="https://www.google.com",
+        )
+        await superuser_client.post(
+            app.url_path_for("users:create-personal-notification"),
+            json={"notification": notification.dict()},
+        )
+
+        import app.api.routes.sse as sse
+
+        sse.MESSAGE_STREAM_DELAY = 0.1
+
+        token = authorized_client.headers.get("Authorization").split(" ")[1]
+        max_messages = 2
+        url_path = app.url_path_for("sse:notifications-stream")
+
+        async_gen_ctx_manager = authorized_client.stream(
+            "get",
+            url_path,
+            params={"token": token, "max_messages": max_messages},
+        )
+        async with async_gen_ctx_manager as response:
+            assert response.status_code == status.HTTP_200_OK
+            assert "text/event-stream" in response.headers["Content-Type"]
+            res = await response.aread()
+            # b'{"id": "user@myapp.com-2022-03-19T19:11:53.597102", "has_new_personal_notifications": "false"}{"id": "user@myapp.com-2022-03-19T19:11:54.703096", "has_new_personal_notifications": "false"}'
+            jsons = parse_jsons(res)
+            res_last_message = jsons[-1]
+            assert res_last_message["has_new_personal_notifications"] == "false"
+
+        await app.state._conn.commit()
+
+    async def test_user_can_arbitrarily_fetch_personal_notification_feed_by_date(
+        self,
+        app: FastAPI,
+        authorized_client: AsyncClient,
+        test_user: RegisterNewUserRow,
+    ) -> None:
+        # all have same create date up until ns, must update:
+        for i in range(self._n_notifications):
+            await app.state._conn.execute(
+                text(
+                    f"""
+                UPDATE personal_notifications
+                SET created_at = created_at - interval '{i+1} hour',
+                    updated_at = updated_at - interval '{i+1} hour'
+                WHERE personal_notification_id = {i}
+                """
+                )
+            )
+
+        # TODO server side cursor worth it?
+        pn_service = PersonalNotificationsService(app.state._conn)
+        res = await authorized_client.get(
+            app.url_path_for("users:get-personal-notifications"),
+        )
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.json()) == pn_service.page_chunk_size
+
+        page_chunk_size = 3
+        total_feed_items_to_fetch = 9
+        assert total_feed_items_to_fetch % page_chunk_size == 0
+        assert self._n_notifications > total_feed_items_to_fetch
+
+        starting_date = str(datetime.now() + timedelta(minutes=10))
+        combos: list[Set[str]] = []
+        for _ in range(total_feed_items_to_fetch // page_chunk_size):
+            logger.critical(f"starting_date: {starting_date}")
+            res = await authorized_client.get(
+                app.url_path_for("users:get-personal-notifications"),
+                params={"starting_date": starting_date, "page_chunk_size": page_chunk_size},
+            )
+            paginated_json = res.json()
+            id_and_event_combo = set(
+                f"{item['personal_notification_id']}-{item['event_type']}" for item in paginated_json
+            )
+            combos.append(id_and_event_combo)
+            starting_date = paginated_json[-1]["event_timestamp"]
+            assert res.status_code == status.HTTP_200_OK
+            assert len(paginated_json) <= page_chunk_size
+
+        length_of_all_id_combos = sum(len(combo) for combo in combos)
+        id_set: Set[str] = set.union(*combos)
+        assert len(id_set) == length_of_all_id_combos
+        assert len(id_set) == total_feed_items_to_fetch
+
+        await app.state._conn.rollback()

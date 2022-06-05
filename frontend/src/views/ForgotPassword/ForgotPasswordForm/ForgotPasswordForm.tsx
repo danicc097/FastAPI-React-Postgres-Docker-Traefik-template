@@ -8,25 +8,18 @@ import {
   EuiRange,
   EuiTextArea,
 } from '@elastic/eui'
-import styled from 'styled-components'
 import React, { useState } from 'react'
 
 import { AuthActionType } from 'src/redux/modules/auth/auth'
 import { handleInputChange, validateFormBeforeSubmit, validateInput } from 'src/utils/validation'
 import { useForgotPasswordForm } from 'src/hooks/forms/useForgotPasswordForm'
-
-const ForgotPasswordFormWrapper = styled.div`
-  padding: 2rem;
-  min-width: 700px;
-`
+import { ForgotPasswordFormWrapper } from './ForgotPasswordForm.styles'
 
 export default function ForgotPasswordForm() {
-  // destructure the needed values from the hook's return
   const [isDisabled, setIsDisabled] = useState(false)
   const { form, setForm, errors, setErrors, getFormErrors, setHasSubmitted, requestPasswordReset } =
     useForgotPasswordForm()
 
-  // don't forget async...
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -39,7 +32,6 @@ export default function ForgotPasswordForm() {
 
     const action = await requestPasswordReset({ email: form.email, message: form.message })
 
-    // reset the password form state if the login attempt is not successful
     if (action?.type !== AuthActionType.REQUEST_PASSWORD_RESET_SUCCESS) {
       setForm((form) => ({ ...form, message: '', email: '' }))
     } else {
@@ -49,9 +41,6 @@ export default function ForgotPasswordForm() {
 
   return (
     <ForgotPasswordFormWrapper>
-      {/* EuiForm component renders as a div by default, but we can pass in component="form"
-        EuiForm and EuiFormRow both accept an isInvalid flag and error prop (error text to display)
-        We can also pass isInvalid to EuiFieldText and EuiFieldPassword to give additional feedback */}
       <EuiForm
         name="forgotPasswordForm"
         component="form"
@@ -67,7 +56,7 @@ export default function ForgotPasswordForm() {
           fullWidth
         >
           <EuiFieldText
-            name="email" //
+            name="email"
             data-test-subj="email-input"
             fullWidth
             icon="email"

@@ -1,51 +1,12 @@
 import { EuiTitle } from '@elastic/eui'
 import { motion, AnimatePresence } from 'framer-motion'
-import styled from 'styled-components'
 import { CarouselProps } from '../Carousel/Carousel'
 import React from 'react'
+import { AnimatedCarouselTitle, AnimatedTitle, TitleWrapper } from './CarouselTitle.styles'
 
-const AnimatedTitle = styled.div`
-  margin-bottom: 1rem;
-  & h1 {
-    display: flex;
-    color: #212121;
-    margin: 0 0.25rem;
-  }
-`
-
-const TitleWrapper = styled.span`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-`
-
-const width = '110px'
-
-const AnimatedCarouselTitle = styled.span`
-  position: relative;
-  display: flex;
-  justify-content: center;
-  margin: 0 10px;
-  width: ${width};
-  white-space: nowrap;
-  & .underline {
-    width: ${width};
-    height: 2px;
-    border-radius: 4px;
-    position: absolute;
-    bottom: -4px;
-    background: black;
-    background: dodgerblue;
-  }
-`
 const transitionDuration = 0.8
 const transitionEase = [0.68, -0.55, 0.265, 1.55]
 
-// This component looks very similar to the iamge Carousel, with a few key differences.
-// We're animating from top down - a change of the y position from -150 to 150.
-// We're also animating words instead of images, so the layout and styles are changed considerably.
-// We're also adding an underline to the animated word, so that the animation appears
-// to go down through the underline.
 export default function CarouselTitle({ items = [], current }: CarouselProps) {
   const animatedKeyword = (
     <AnimatePresence exitBeforeEnter>
@@ -59,6 +20,7 @@ export default function CarouselTitle({ items = [], current }: CarouselProps) {
                   initial="top"
                   animate="present"
                   exit="bottom"
+                  style={{ color: 'dodgerblue' }}
                   variants={{
                     top: { opacity: 0, y: -150 },
                     present: { opacity: 1, y: 0 },

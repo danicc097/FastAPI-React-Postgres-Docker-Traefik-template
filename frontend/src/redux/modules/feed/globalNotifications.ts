@@ -3,17 +3,17 @@ import apiClient from 'src/services/apiClient'
 import { AnyAction } from '@reduxjs/toolkit'
 import { AppDispatch } from '../../store'
 import { AuthActionType } from 'src/redux/modules/auth/auth'
-import { schema } from 'src/types/schema_override'
+import { schema } from 'src/types/schemaOverride'
 import { errorState, loadingState, successState } from 'src/redux/utils/slices'
 import { UiActionCreators } from 'src/redux/modules/ui/ui'
 
-type initialStateType = {
+export type initialStateType = {
   feed: {
     globalNotifications: {
-      data?: Array<schema['GlobalNotificationFeedItem']> | []
-      unreadData?: Array<schema['GlobalNotificationFeedItem']> | []
+      data?: Array<schema['GlobalNotificationFeedItem']>
+      unreadData?: Array<schema['GlobalNotificationFeedItem']['global_notification_id']>
       canLoadMore: boolean
-      hasNewNotifications: boolean
+      hasNewGlobalNotifications: boolean
       isLoading: boolean
       error: schema['HTTPValidationError']
     }
@@ -23,10 +23,10 @@ type initialStateType = {
 const initialState: initialStateType = {
   feed: {
     globalNotifications: {
-      data: [],
-      unreadData: [],
+      data: null,
+      unreadData: null,
       canLoadMore: false,
-      hasNewNotifications: false,
+      hasNewGlobalNotifications: false,
       isLoading: false,
       error: null,
     },
@@ -37,10 +37,6 @@ export enum GlobalNotificationsActionType {
   FETCH_NOTIFICATIONS = 'globalNotifications/FETCH_NOTIFICATIONS',
   FETCH_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_NOTIFICATIONS_SUCCESS',
   FETCH_NOTIFICATIONS_FAILURE = 'globalNotifications/FETCH_NOTIFICATIONS_FAILURE',
-
-  FETCH_UNREAD_NOTIFICATIONS = 'globalNotifications/FETCH_UNREAD_NOTIFICATIONS',
-  FETCH_UNREAD_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_UNREAD_NOTIFICATIONS_SUCCESS',
-  FETCH_UNREAD_NOTIFICATIONS_FAILURE = 'globalNotifications/FETCH_UNREAD_NOTIFICATIONS_FAILURE',
 
   FETCH_HAS_NEW_NOTIFICATIONS = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS',
   FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS = 'globalNotifications/FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS',
@@ -74,35 +70,46 @@ export default function globalNotificationsReducer(
     case GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS:
       return {
         ...state,
-        hasNewNotifications: action.hasNewNotifications,
+        hasNewGlobalNotifications: action.hasNewGlobalNotifications,
       }
 
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS:
       return loadingState(state)
 
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_SUCCESS:
+      const lastDateUTC = state.data?.[state.data?.length - 1]?.event_timestamp
+      console.log(`LastDateUTC: ${lastDateUTC}`)
       return {
         ...state,
         isLoading: false,
         error: null,
-        data: [...(state.data || []), ...action.data],
+        data: [...action.data, ...(state.data || [])]
+          .filter(
+            (item, index, self) =>
+              index === self.findIndex((t) => t.global_notification_id === item.global_notification_id),
+          )
+          .sort((a, b) => {
+            if (a.event_timestamp > b.event_timestamp) {
+              return -1
+            }
+            if (a.event_timestamp < b.event_timestamp) {
+              return 1
+            }
+            return 0
+          }),
+        unreadData: action.data?.reduce((acc, item) => {
+          if (
+            !state.data?.find((notification) => notification?.global_notification_id === item.global_notification_id) &&
+            action.data?.find((notification) => notification?.event_timestamp > lastDateUTC) &&
+            state.data.length > 0
+          ) {
+            acc.push(item.global_notification_id)
+          }
+          return acc
+        }, []),
       }
 
     case GlobalNotificationsActionType.FETCH_NOTIFICATIONS_FAILURE:
-      return errorState(state, action)
-
-    case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS:
-      return loadingState(state)
-
-    case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_SUCCESS:
-      return {
-        ...state,
-        isLoading: false,
-        error: null,
-        unreadData: [...action.data], // override each time
-      }
-
-    case GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_FAILURE:
       return errorState(state, action)
 
     case GlobalNotificationsActionType.CLEAR_NOTIFICATIONS:
@@ -128,13 +135,12 @@ export default function globalNotificationsReducer(
         ...state,
         isLoading: false,
         error: null,
-        data: state.data.filter((item: any) => item.id !== action.id),
+        data: state.data?.filter((notification) => notification?.global_notification_id !== action.id),
       }
 
     case GlobalNotificationsActionType.DELETE_NOTIFICATION_FAILURE:
       return errorState(state, action)
 
-    // remove data when user logs out
     case AuthActionType.REQUEST_LOG_USER_OUT:
       return initialState.feed.globalNotifications
 
@@ -144,23 +150,23 @@ export default function globalNotificationsReducer(
 }
 
 type ActionCreatorsParams = {
-  id?: schema['GlobalNotification']['id']
-  notification?: schema['GlobalNotificationCreate']
+  id?: schema['GlobalNotificationFeedItem']['global_notification_id']
+  notification?: schema['CreateGlobalNotificationParams']
   starting_date?: Date
+  hasNewGlobalNotifications?: boolean
 }
 
 type ActionCreators = {
-  clearFeedItemsFromStore: () => any
+  clearFeedItems: () => any
   fetchFeedItems: ({ starting_date }: ActionCreatorsParams) => any
-  fetchFeedItemsByLastRead: () => any
-  updateHasNewNotifications: () => any
+  setHasNewGlobalNotifications: ({ hasNewGlobalNotifications }) => any
   createNotification: ({ notification }: ActionCreatorsParams) => any
   deleteNotification: ({ id }: ActionCreatorsParams) => any
 }
 
 export const GlobalNotificationsActionCreators: Partial<ActionCreators> = {}
 
-GlobalNotificationsActionCreators.clearFeedItemsFromStore = () => ({
+GlobalNotificationsActionCreators.clearFeedItems = () => ({
   type: GlobalNotificationsActionType.CLEAR_NOTIFICATIONS,
 })
 
@@ -170,7 +176,7 @@ GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date }) => {
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
-        url: '/users/notifications/', // /notifications-by-last-read/
+        url: '/users/global-notifications/',
         method: 'get',
         types: {
           REQUEST: GlobalNotificationsActionType.FETCH_NOTIFICATIONS,
@@ -179,7 +185,6 @@ GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date }) => {
         },
         options: {
           data: {},
-          // endpoint is expecting them as query parameters, not data
           params: {
             starting_date: starting_date.toISOString(),
             page_chunk_size: PAGE_CHUNK_SIZE,
@@ -188,67 +193,24 @@ GlobalNotificationsActionCreators.fetchFeedItems = ({ starting_date }) => {
         onSuccess: (res) => {
           dispatch({
             type: GlobalNotificationsActionType.SET_CAN_LOAD_MORE_NOTIFICATIONS,
-            // assume that there are more items if we receive the max chunk size
-            canLoadMore: Boolean(res?.data?.length === PAGE_CHUNK_SIZE),
+            canLoadMore: Boolean(res?.data?.length === PAGE_CHUNK_SIZE), // assume there's more
           })
-          return { success: true, status: res.status, data: res.data }
+          return dispatch({
+            type: GlobalNotificationsActionType.FETCH_NOTIFICATIONS_SUCCESS,
+            data: res?.data,
+          })
         },
       }),
     )
   }
 }
 
-GlobalNotificationsActionCreators.fetchFeedItemsByLastRead = () => {
+GlobalNotificationsActionCreators.setHasNewGlobalNotifications = ({ hasNewGlobalNotifications }) => {
   return async (dispatch: AppDispatch) => {
-    return dispatch(
-      apiClient({
-        url: '/users/notifications-by-last-read/',
-        method: 'get',
-        types: {
-          REQUEST: GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS,
-          SUCCESS: GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_SUCCESS,
-          FAILURE: GlobalNotificationsActionType.FETCH_UNREAD_NOTIFICATIONS_FAILURE,
-        },
-        options: {
-          data: {},
-          params: {},
-        },
-        onSuccess: (res) => {
-          dispatch({
-            type: GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS,
-            setHasNewNotifications: false,
-          })
-          return { success: true, status: res.status, data: res.data }
-        },
-      }),
-    )
-  }
-}
-
-GlobalNotificationsActionCreators.updateHasNewNotifications = () => {
-  return async (dispatch: AppDispatch) => {
-    return dispatch(
-      apiClient({
-        url: '/users/check-user-has-unread-notifications/',
-        method: 'get',
-        types: {
-          REQUEST: GlobalNotificationsActionType.FETCH_HAS_NEW_NOTIFICATIONS,
-          SUCCESS: GlobalNotificationsActionType.FETCH_HAS_NEW_NOTIFICATIONS_SUCCESS,
-          FAILURE: GlobalNotificationsActionType.FETCH_HAS_NEW_NOTIFICATIONS_FAILURE,
-        },
-        options: {
-          data: {},
-          params: {},
-        },
-        onSuccess: (res) => {
-          dispatch({
-            type: GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS,
-            hasNewNotifications: res.data, // boolean returned by backend
-          })
-          return { success: true, status: res.status, data: res.data }
-        },
-      }),
-    )
+    return dispatch({
+      type: GlobalNotificationsActionType.SET_HAS_NEW_NOTIFICATIONS,
+      hasNewGlobalNotifications,
+    })
   }
 }
 
@@ -256,7 +218,7 @@ GlobalNotificationsActionCreators.createNotification = ({ notification }) => {
   return async (dispatch: AppDispatch) => {
     return dispatch(
       apiClient({
-        url: '/admin/create-notification/',
+        url: '/admin/create-global-notification/',
         method: 'post',
         types: {
           REQUEST: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION,
@@ -270,12 +232,14 @@ GlobalNotificationsActionCreators.createNotification = ({ notification }) => {
         onSuccess: (res) => {
           dispatch(
             UiActionCreators.addToast({
-              id: 'create-global-notification-success',
-              title: `Successfully created the notification!`,
-              color: 'success',
-              iconType: 'checkInCircleFilled',
-              toastLifeTimeMs: 5000,
-              text: `Users with role '${notification.receiver_role}' will receive it.`,
+              toast: {
+                id: 'create-global-notification-success',
+                title: `Successfully created the notification!`,
+                color: 'success',
+                iconType: 'checkInCircleFilled',
+                toastLifeTimeMs: 5000,
+                text: `Users with role '${notification.receiver_role}' will receive it.`,
+              },
             }),
           )
           return dispatch({ type: GlobalNotificationsActionType.CREATE_NEW_NOTIFICATION_SUCCESS })
@@ -301,8 +265,7 @@ GlobalNotificationsActionCreators.deleteNotification = ({ id }) => {
           params: {},
         },
         onSuccess: (res) => {
-          dispatch({ type: GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS, id })
-          return { success: true, status: res.status, data: res.data }
+          return dispatch({ type: GlobalNotificationsActionType.DELETE_NOTIFICATION_SUCCESS, id })
         },
       }),
     )

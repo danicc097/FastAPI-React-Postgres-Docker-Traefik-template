@@ -13,12 +13,10 @@ import React, { Fragment, useState } from 'react'
 import { usePasswordResetUsers } from 'src/hooks/admin/usePasswordResetUsers'
 import { AdminActionType } from 'src/redux/modules/admin/admin'
 import { createTextFileWithCreds } from 'src/utils/files'
-import AdminPageTemplate from '../AdminPageTemplate/AdminPageTemplate'
+import AdminPageBase from '../AdminPageBase/AdminPageBase'
 
 export default function PasswordResetRequestsPage() {
-  //   const [pageIndex, setPageIndex] = useState(0)
-  //   const [pageSize, setPageSize] = useState(5)
-  const [sortField, setSortField] = useState('') // broken when specifying any field first
+  const [sortField, setSortField] = useState('')
   const [sortDirection, setSortDirection] = useState<Direction>('asc')
 
   const { deletePasswordResetRequest, resetPasswordForUser, passwordResetRequests } = usePasswordResetUsers()
@@ -31,12 +29,12 @@ export default function PasswordResetRequestsPage() {
   }
 
   const resetPassword = async (user: ArrayElement<typeof passwordResetRequests>) => {
-    const action = await resetPasswordForUser({ email: user.email })
+    const action = await resetPasswordForUser({ email: user?.email })
 
     if (action?.type === AdminActionType.RESET_PASSWORD_FOR_USER_SUCCESS) {
-      createTextFileWithCreds({ email: user.email, password: action.data })
+      createTextFileWithCreds({ email: user?.email, password: action.data })
     }
-    console.log(`user`, user.email)
+    console.log(`user`, user?.email)
   }
 
   const deleteRequest = async (request: ArrayElement<typeof passwordResetRequests>) => {
@@ -69,7 +67,6 @@ export default function PasswordResetRequestsPage() {
     },
   ]
 
-  // field must match the object field name
   const columns: any = [
     {
       field: 'email',
@@ -147,7 +144,7 @@ export default function PasswordResetRequestsPage() {
         })}
         items={passwordResetRequests ?? []}
         message={passwordResetRequests?.length ? null : 'There are no password reset requests.'}
-        itemId="email" // how to extract a unique ID from each item, for selections & expanded rows
+        itemId="email"
         columns={columns}
         sorting={sorting}
         onChange={onTableChange}
@@ -157,5 +154,5 @@ export default function PasswordResetRequestsPage() {
     </Fragment>
   )
 
-  return <AdminPageTemplate title={title} element={element} />
+  return <AdminPageBase title={title} element={element} />
 }

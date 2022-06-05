@@ -7,7 +7,7 @@ export const useAllUsers = () => {
   const dispatch = useAppDispatch()
 
   const adminError = useAppSelector((state) => state.admin.error)
-  const isAdmin = useAppSelector((state) => state.auth.user.is_superuser)
+  const isAdmin = useAppSelector((state) => state.auth.user?.is_superuser)
   const allUsers = useAppSelector((state) => state.admin.data.allUsers, shallowEqual)
 
   useEffect(() => {

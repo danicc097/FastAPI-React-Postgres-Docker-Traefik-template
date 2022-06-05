@@ -5,7 +5,9 @@ Revises: ${down_revision | comma,n}
 Create Date: ${create_date}
 
 """
+import app.db.migrations.sql
 from alembic import op
+import app.db.migrations.sql as sql
 import sqlalchemy as sa
 import sys
 import pathlib
@@ -14,6 +16,8 @@ import pathlib
 sys.path.append(str(pathlib.Path(__file__).resolve().parents[4]))  # change depth to root accordingly
 
 ${imports if imports else ""}
+
+SQL_DIR = pathlib.Path(sql.__file__).parent
 
 # revision identifiers, used by Alembic
 revision = ${repr(up_revision)}

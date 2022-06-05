@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# set -e
+
+# REPO_NAME="$(basename "$(git rev-parse --show-toplevel)")"
+# if [[ $(basename "$PWD") != "$REPO_NAME" ]]; then
+#   echo "Please run this script from the root repo's directory: '$REPO_NAME'"
+#   echo "Current directory: $PWD"
+#   exit 1
+# fi
+
+# cd backend
+
+# if [ -d "myapp-client" ]; then
+#   mode="update"
+# else
+#   mode="generate"
+# fi
+# openapi-python-client $mode --path <(curl https://myapp.dev.localhost/api/openapi.json)
