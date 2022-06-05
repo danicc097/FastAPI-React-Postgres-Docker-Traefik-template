@@ -16,7 +16,7 @@ OCR_files
 *.tar.gz
 *.tar*
 *.tar.gz*
-
+**/initial_data/*.json
 # Testing
 *.test
 *.tmp
