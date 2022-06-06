@@ -105,11 +105,11 @@ CREATE TABLE global_notifications (
     FOREIGN KEY(sender) REFERENCES users (email) ON DELETE CASCADE
 );
 
-CREATE INDEX ix_global_notifications_created_at ON global_notifications (created_at);
-
 CREATE INDEX ix_global_notifications_updated_at ON global_notifications (updated_at);
 
 CREATE INDEX ix_global_notifications_receiver_role ON global_notifications (receiver_role);
+
+CREATE INDEX ix_global_notifications_created_at ON global_notifications (created_at);
 
 CREATE TYPE event_type AS ENUM ('is_update', 'is_create');
 

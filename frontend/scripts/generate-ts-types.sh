@@ -51,9 +51,7 @@ echo "Wrote schema changes to $SCHEMA_OUT"
 cp "$SCHEMA_OUT" "$SCHEMA_OUT_E2E"
 
 echo "Generating initial data types..."
-cd "$BACKEND_DIR"
-source "$BACKEND_DIR"/.venv/bin/activate
-cd initial_data
+cd "$BACKEND_DIR"/initial_data
 pydantic2ts --module models.py --output initialData.ts
 mv initialData.ts "$(dirname "$SCHEMA_OUT")"
 cp "$(dirname "$SCHEMA_OUT")"/initialData.ts "$(dirname "$SCHEMA_OUT_E2E")"

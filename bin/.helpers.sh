@@ -73,6 +73,7 @@ function docker_compose_in_env {
   ENV="$(get_env_suffix "$1")"
   PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
   deploy=false
+  cicd=false
 
   case $ENV in
   dev | prod)
@@ -95,6 +96,10 @@ function docker_compose_in_env {
           echo "$(yellow WARNING): --deploy is only available for the 'prod' environment. Ignoring flag."
         fi
         ;;
+      -c | --ci)
+        cicd=true
+        echo "$(yellow WARNING): Running in CICD pipeline."
+        ;;
       -p | --pull)
         pull=true
         ;;
@@ -111,6 +116,7 @@ function docker_compose_in_env {
     done
 
     echo "- deploy: $(bool "$deploy")"
+    echo "- ci: $(bool "$cicd")"
     echo "- docker-compose extra args: $(green "$COMPOSE_ARGS")"
     _confirm "Do you want to run $(green docker-compose "$COMPOSE_COMMAND" "$COMPOSE_ARGS" \[...\]) in the $(red "$ENV") environment?"
 
@@ -123,6 +129,12 @@ function docker_compose_in_env {
       echo "Current user: $UID:$GROUPS"
       # shellcheck disable=SC2086
       chown -R $UID:$GROUPS "$ROOT_DIR" 2>/dev/null || true
+    fi
+
+    if [[ $cicd == true ]]; then
+      replace_env_var ".env" "CONTAINER_USER" "root"
+    else
+      replace_env_var ".env" "CONTAINER_USER" "rootless"
     fi
 
     docker network create traefik-net || true

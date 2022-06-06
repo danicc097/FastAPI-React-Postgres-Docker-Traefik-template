@@ -48,7 +48,7 @@ variables:
   # REMOTE_SERVER_URL_STAGING: https://myapp-backend.testing.localhost/api
 
 
-  # # System.Debug: true # see debug logs for every pipeline
+  System.Debug: true # see debug logs for every pipeline
   # tag: "$(Build.BuildNumber)" # incremental build id as image tag
   # DOCKER_HUB_FRONTEND: danicc097/fastapi-react-postgres-docker-traefik-template-frontend
   # DOCKER_HUB_BACKEND: danicc097/fastapi-react-postgres-docker-traefik-template-backend
@@ -187,7 +187,7 @@ stages:
               script: |
                 wget --no-verbose -O mkcert https://github.com/FiloSottile/mkcert/releases/download/v1.4.3/mkcert-v1.4.3-linux-amd64
                 chmod +x ./mkcert
-                sudo apt install libnss3-tools
+                sudo apt-get install libnss3-tools
                 ./mkcert -install
                 ./mkcert --cert-file localhost.pem --key-file localhost-key.pem \
                   "app.localhost" "*.app.localhost" \
@@ -207,16 +207,19 @@ stages:
               abortOnContainerExit: true
 
           - task: Bash@3
-            displayName: tooling installation
+            displayName: Tooling installation
             inputs:
               targetType: inline
               script: |
-                sudo bash backend/docs/sudo_install_tooling.sh && bash backend/docs/install_sqlc_custom.sh
+                sudo bash backend/docs/sudo_install_tooling.sh && \
+                bash backend/docs/install_sqlc_custom.sh && \
+                pip install pydantic-to-typescript alembic && \
+                sudo apt-get install -y npm && sudo npm install -g pnpm
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
 
           - task: Bash@3
-            displayName: frontend package installation
+            displayName: Frontend package installation
             inputs:
               targetType: inline
               script: |
@@ -225,7 +228,7 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: e2e package installation
+            displayName: E2E package installation
             inputs:
               targetType: inline
               script: |
@@ -234,13 +237,15 @@ stages:
               failOnStderr: false
 
           - task: Bash@3
-            displayName: dcompose up
+            displayName: Build with dcompose
+            timeoutInMinutes: 10
             inputs:
               targetType: inline
               script: |
                 bin/run-e2e-tests ci
               workingDirectory: "$(Build.SourcesDirectory)"
               failOnStderr: false
+
 
           # - bash: |
           #     docker exec backend_myapp_ci /bin/bash -c "

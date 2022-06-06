@@ -13,7 +13,7 @@ SCRIPTS_DIR="$(dirname "$(readlink -f "$0")")"
 BACKEND_DIR="$(dirname "$SCRIPTS_DIR")"
 DB_FOLDER="$BACKEND_DIR/app/db"
 cd backend
-source "$BACKEND_DIR"/.venv/bin/activate
+source "$BACKEND_DIR"/.venv/bin/activate || exit 1
 rm -r "$DB_FOLDER"/gen
 mkdir -p "$DB_FOLDER"/gen/queries
 touch "$DB_FOLDER"/gen/__init__.py

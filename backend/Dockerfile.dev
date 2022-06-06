@@ -7,6 +7,7 @@ FROM python:3.9.5-slim-buster
 
 ARG USER_ID=1000
 ARG GROUP_ID=1000
+ARG CONTAINER_USER
 
 WORKDIR /backend
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -41,4 +42,4 @@ RUN touch /backend/celery-dev.log
 
 ENV TESSDATA_PREFIX /usr/share/tesseract-ocr/4.00/tessdata
 
-USER rootless
+USER $CONTAINER_USER

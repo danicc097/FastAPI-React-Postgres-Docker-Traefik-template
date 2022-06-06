@@ -4,20 +4,27 @@ set -e
 
 source "${BASH_SOURCE%/*}/.helpers.sh"
 
-BASEDIR=$(dirname "$0")
-PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
+BIN_DIR="$(
+  cd -- "$(dirname "$0")" >/dev/null 2>&1 || exit
+  pwd -P
+)"
+ROOT_DIR="$(dirname "$BIN_DIR")"
 
 if [ "$1" = "ci" ]; then
   red "Running E2E tests for CI..."
-  mv .env.ci .env
-  mv .env.ci .env.dev
-  mv backend/.env.ci backend/.env.dev
-  mv frontend/.env.ci frontend/.env.development
+  cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env
+  cp "$ROOT_DIR"/.env.ci "$ROOT_DIR"/.env.dev
+  cp "$ROOT_DIR"/backend/.env.ci "$ROOT_DIR"/backend/.env.dev
+  cp "$ROOT_DIR"/frontend/.env.ci "$ROOT_DIR"/frontend/.env.development
+  extra_args=" --ci"
 else # dev
   red "Running E2E tests for $PROJECT_PREFIX..."
 fi
 
-yes | dcompose dev up --build
+BASEDIR=$(dirname "$0")
+PROJECT_PREFIX="$(get_env_var_value ".env" "PROJECT_PREFIX")"
+
+yes | bash -c "$BIN_DIR/dcompose dev up --build $extra_args"
 
 # shellcheck disable=SC2086
 DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker-compose --project-name "$PROJECT_PREFIX"_e2e -f docker-compose.e2e.yml --env-file ".env.dev" up -d --build
