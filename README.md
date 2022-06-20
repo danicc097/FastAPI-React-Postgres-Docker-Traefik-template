@@ -4,20 +4,20 @@
 
 <div>
   <p align="center">
-    <img align="center" src=".github/1.png" alt="1" width="400" height="200" />
-    <img align="center" src=".github/2.png" alt="2" width="400" height="200" />
+    <img src=".github/1.png" alt="1" width="400" height="200" />
+    <img src=".github/2.png" alt="2" width="400" height="200" />
   </p>
   <p align="center">
-    <img align="center" src=".github/3.png" alt="3" width="400" height="200" />
-    <img align="center" src=".github/4.png" alt="4" width="400" height="200" />
+    <img src=".github/3.png" alt="3" width="400" height="200" />
+    <img src=".github/4.png" alt="4" width="400" height="200" />
   </p>
   <p align="center">
-    <img align="center" src=".github/5.png" alt="5" width="400" height="200" />
-    <img align="center" src=".github/6.png" alt="6" width="400" height="200" />
+    <img src=".github/5.png" alt="5" width="400" height="200" />
+    <img src=".github/6.png" alt="6" width="400" height="200" />
   </p>
   <p align="center">
-    <img align="center" src=".github/7.png" alt="7" width="400" height="200" />
-    <img align="center" src=".github/8.png" alt="8" width="400" height="200" />
+    <img src=".github/7.png" alt="7" width="400" height="200" />
+    <img src=".github/8.png" alt="8" width="400" height="200" />
   </p>
 </div>
 
