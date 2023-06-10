@@ -1,6 +1,6 @@
 # FastAPI-React-Postgres-Docker-Traefik-template
 
-[![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev) ![Size](https://github-size-badge.herokuapp.com/danicc097/FastAPI-React-Postgres-Docker-Traefik-template.svg)
+[![Build Status](https://dev.azure.com/danicc097/devops-tests/_apis/build/status/danicc097.FastAPI-React-Postgres-Docker-Traefik-template?branchName=dev)](https://dev.azure.com/danicc097/devops-tests/_build/latest?definitionId=5&branchName=dev)
 
 <div>
   <p align="center">
